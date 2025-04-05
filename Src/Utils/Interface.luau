@@ -63,14 +63,11 @@ function Interface.New(ClassName: string, Properties: { [string]: any })
 	return Object
 end
 
-function Interface.NewIconButton(IconName: string, Callbacks: { [string]: () -> () })
-	local Button = Interface.New("ImageButton", {})
+function Interface.NewIcon(IconName: string, Properties: { [string]: any })
+	local Image: ImageLabel = Interface.New("ImageLabel", Properties)
+	wax.shared.Icons.SetIcon(Image, IconName)
 
-	wax.shared.Icons.SetIcon(Button, IconName)
-
-	Button.MouseButton1Click:Connect(Callback)
-
-	return Button
+	return Image
 end
 
 function Interface.HideCorner(Frame: GuiObject, Size: UDim2, Offset: Vector2): Frame
@@ -99,19 +96,6 @@ function Interface.GetScreenParent(): Instance
 	end
 
 	return wax.shared.LocalPlayer:WaitForChild("PlayerGui")
-end
-
-function Interface.IsClickInput(Input: InputObject): boolean
-	return Input.UserInputState == Enum.UserInputState.Begin
-		and (Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch)
-end
-
-function Interface.IsMouseOverFrame(Frame: GuiObject, Position: Vector2): boolean
-	local AbsPos, AbsSize = Frame.AbsolutePosition, Frame.AbsoluteSize
-	return Position.X >= AbsPos.X
-		and Position.X <= AbsPos.X + AbsSize.X
-		and Position.Y >= AbsPos.Y
-		and Position.Y <= AbsPos.Y + AbsSize.Y
 end
 
 return Interface

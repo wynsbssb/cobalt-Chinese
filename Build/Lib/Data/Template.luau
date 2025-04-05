@@ -370,14 +370,14 @@ local function LoadScript(scriptRef)
     -- If it's a BaseScript, we'll just run it directly!
     if ScriptClassName == "LocalScript" or ScriptClassName == "Script" then
         local RunSuccess, ErrorMessage = xpcall(Closure, function(msg)
-            return debug.traceback(msg, 2)
+            return msg
         end)
         if not RunSuccess then
             error(FormatError(ErrorMessage), 0)
         end
     else
         local PCallReturn = {xpcall(Closure, function(msg)
-            return debug.traceback(msg, 2)
+            return msg
         end)}
 
         local RunSuccess = table_remove(PCallReturn, 1)

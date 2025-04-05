@@ -1,0 +1,117 @@
+local Interface = {}
+
+local DefaultFont = Font.fromId(12187365364)
+local _DefaultFontBold = Font.fromId(12187365364, Enum.FontWeight.Bold)
+
+local DefaultProperties = {
+	["Frame"] = {
+		BorderSizePixel = 0,
+	},
+
+	["ImageLabel"] = {
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+	},
+	["ImageButton"] = {
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+	},
+
+	["TextLabel"] = {
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		FontFace = DefaultFont,
+		RichText = true,
+		TextColor3 = Color3.new(1, 1, 1),
+	},
+	["TextButton"] = {
+		BorderSizePixel = 0,
+		FontFace = DefaultFont,
+		RichText = true,
+		TextColor3 = Color3.new(1, 1, 1),
+	},
+}
+
+function Interface.New(ClassName: string, Properties: { [string]: any })
+	local Object = Instance.new(ClassName)
+
+	for Key, Value in pairs(DefaultProperties[ClassName] or {}) do
+		if Properties and Properties[Key] ~= nil then
+			continue
+		end
+
+		Object[Key] = Value
+	end
+
+	for Key, Value in pairs(Properties or {}) do
+		if typeof(Value) == "table" then
+			local SubObject = Interface.New(Key, Value)
+			print("here")
+			SubObject.Parent = Object
+
+			continue
+		elseif typeof(Key) ~= "string" and typeof(Value) == "Instance" then
+			local SubObject = Value:Clone()
+			SubObject.Parent = Object
+
+			continue
+		end
+
+		Object[Key] = Value
+	end
+
+	return Object
+end
+
+function Interface.NewIconButton(IconName: string, Callbacks: { [string]: () -> () })
+	local Button = Interface.New("ImageButton", {})
+
+	wax.shared.Icons.SetIcon(Button, IconName)
+
+	Button.MouseButton1Click:Connect(Callback)
+
+	return Button
+end
+
+function Interface.HideCorner(Frame: GuiObject, Size: UDim2, Offset: Vector2): Frame
+	local Hider = Interface.New("Frame", {
+		AnchorPoint = Offset or Vector2.zero,
+		BackgroundColor3 = Frame.BackgroundColor3,
+		Position = UDim2.fromScale(Offset.X or 0, Offset.Y or 0),
+		Size = Size,
+		ZIndex = Frame.ZIndex,
+
+		Parent = Frame,
+	})
+
+	return Hider
+end
+
+function Interface.GetScreenParent(): Instance
+	local ScreenGui = wax.shared.Interface.New("ScreenGui")
+	local HiddenUI = wax.shared.CoreGui
+
+	if pcall(function()
+		ScreenGui.Parent = HiddenUI
+		ScreenGui:Destroy()
+	end) then
+		return HiddenUI
+	end
+
+	return wax.shared.LocalPlayer:WaitForChild("PlayerGui")
+end
+
+function Interface.IsClickInput(Input: InputObject): boolean
+	return Input.UserInputState == Enum.UserInputState.Begin
+		and (Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch)
+end
+
+function Interface.IsMouseOverFrame(Frame: GuiObject, Position: Vector2): boolean
+	local AbsPos, AbsSize = Frame.AbsolutePosition, Frame.AbsoluteSize
+	return Position.X >= AbsPos.X
+		and Position.X <= AbsPos.X + AbsSize.X
+		and Position.Y >= AbsPos.Y
+		and Position.Y <= AbsPos.Y + AbsSize.Y
+end
+
+return Interface

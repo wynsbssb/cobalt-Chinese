@@ -29,12 +29,20 @@
             "label": "[WB] Build Project",
             "dependsOn": "[WB] Erase Build History",
             "type": "shell",
+            "windows": {
+                "command": "cmd",
+                "args": [
+                    "/c", 
+                    "where wsl >nul 2>nul && (wsl -e bash -c \"cd $(wsl wslpath '${workspaceFolder}') && lune run Build bundle header=Build/Header.luau ci-mode=true\") || (lune run Build bundle header=Build/Header.luau ci-mode=true)"
+                ]
+            },
             "command": "lune",
             "args": [
                 "run", 
                 "Build", 
                 "bundle", 
-                "header=Build/Header.luau"
+                "header=Build/Header.luau",
+                "ci-mode=true"
             ],
             "group": {
                 "kind": "build",

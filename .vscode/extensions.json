@@ -4,7 +4,7 @@
         "johnnymorganz.luau-lsp",
         "evaera.roblox-api-explorer",
         "johnnymorganz.stylua",
-
+        "ritwickdey.LiveServer"
     ],
     "unwantedRecommendations": [
         "nightrains.robloxlsp"

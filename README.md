@@ -35,5 +35,4 @@ To bundle all the scripts, you have to follow these steps:
 2. Open Powershell or the command-line shell of your liking and [cd to this repository](https://www.quora.com/What-does-it-mean-to-CD-into-a-directory-and-how-can-I-do-that-Can-someone-explain-it-in-a-laymans-term)
 3. Run `rokit install` and wait for it to install all the dependencies
 4. In VSCode, press CTRL + SHIFT + B to build or run this command `lune run Build bundle header=Build/Header.luau`
-
-You can find the bundled script in '/Distribution/Script.luau'.
+5. The bundled file will be located in `Build/Script.luau` and can be used in your executor via loadstring if you use live share plugin (`loadstring(game:HttpGet("http://localhost:5500/Distribution/Script.luau"))()`)

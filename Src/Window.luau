@@ -24,25 +24,35 @@ local TopBar = wax.shared.Interface.New("Frame", {
 
 	MainUICorner,
 	Parent = MainFrame,
+
+	["TextLabel"] = {
+		Text = "Cobalt",
+		TextSize = 18,
+		Position = UDim2.fromOffset(0, 1),
+		Size = UDim2.new(1, 0, 1, -1),
+		ZIndex = 2,
+	},
+
+	["ImageLabel"] = {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 6, 0.5, 0),
+		Size = UDim2.new(1, -12, 1, -12),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		Image = "rbxassetid://91685317120520",
+		ZIndex = 2,
+	},
 })
 wax.shared.Interface.HideCorner(TopBar, UDim2.fromScale(1, 0.5), Vector2.new(0, 1))
-
-wax.shared.Interface.New("TextLabel", {
-	Position = UDim2.fromOffset(0, 1),
-	Size = UDim2.new(1, 0, 1, -1),
-	Text = "Cobalt",
-	TextSize = 18,
-
-	Parent = TopBar,
-})
 
 local TopButtons = wax.shared.Interface.New("Frame", {
 	BackgroundTransparency = 1,
 	Size = UDim2.fromScale(1, 1),
+	ZIndex = 2,
 
 	["UIListLayout"] = {
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Right,
+		SortOrder = Enum.SortOrder.LayoutOrder,
 	},
 	["UIPadding"] = {
 		PaddingBottom = UDim.new(0, 4),
@@ -81,9 +91,30 @@ local function CreateTopButton(IconName: string, Order: number)
 	return Button, Image
 end
 
+local function CreateTopSeperator(Order: number)
+	wax.shared.Interface.New("ImageButton", {
+		LayoutOrder = Order,
+		Size = UDim2.fromScale(1, 1),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		BackgroundTransparency = 1,
+		Parent = TopButtons,
+
+		["Frame"] = {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+			Size = UDim2.fromOffset(4, 4),
+			Position = UDim2.fromScale(0.5, 0.5),
+
+			["UICorner"] = {
+				CornerRadius = UDim.new(1, 0),
+			},
+		},
+	})
+end
+
 local CloseButton = CreateTopButton("x", 4)
 local HideButton = CreateTopButton("minus", 3)
-CreateTopButton(nil, 2)
+CreateTopSeperator(2)
 local SettingsButton = CreateTopButton("settings", 1)
 local SearchButton = CreateTopButton("search", 0)
 

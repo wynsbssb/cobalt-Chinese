@@ -1,3 +1,5 @@
+local MAX_LOGS = 20
+
 local DefaultTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Exponential)
 local Images = {
 	RemoteEvent = "rbxassetid://110803789420086",
@@ -247,7 +249,33 @@ local RemoteList = wax.shared.Interface.New("ScrollingFrame", {
 	},
 })
 
-local function CreateRemoteButton(RemoteInfo: {}): (TextButton, TextLabel, TextLabel)
+local LogsList
+
+local CurrentLog
+function ShowLog(Log)
+	for _, Object in pairs(LogsList:GetChildren()) do
+		if Object.ClassName == "TextButton" then
+			Object:Destroy()
+		end
+	end
+
+	if CurrentLog then
+		wax.shared.TweenService
+			:Create(CurrentLog.Button.Instance, DefaultTweenInfo, {
+				BackgroundTransparency = 1,
+			})
+			:Play()
+	end
+
+	CurrentLog = Log
+	wax.shared.TweenService
+		:Create(CurrentLog.Button.Instance, DefaultTweenInfo, {
+			BackgroundTransparency = 0,
+		})
+		:Play()
+end
+
+local function CreateRemoteButton(Log): (TextButton, TextLabel, TextLabel)
 	local Button = wax.shared.Interface.New("TextButton", {
 		BackgroundColor3 = Color3.fromRGB(50, 50, 50),
 		BackgroundTransparency = 1,
@@ -255,7 +283,7 @@ local function CreateRemoteButton(RemoteInfo: {}): (TextButton, TextLabel, TextL
 		Text = "",
 
 		["ImageLabel"] = {
-			Image = Images[RemoteInfo.Class],
+			Image = Images[Log.Instance.ClassName],
 			Size = UDim2.fromScale(1, 1),
 			SizeConstraint = Enum.SizeConstraint.RelativeYY,
 		},
@@ -277,7 +305,7 @@ local function CreateRemoteButton(RemoteInfo: {}): (TextButton, TextLabel, TextL
 	local Text = wax.shared.Interface.New("TextLabel", {
 		Position = UDim2.fromOffset(24, 0),
 		Size = UDim2.new(1, -24, 1, 0),
-		Text = RemoteInfo.Name,
+		Text = "",
 		TextSize = 15,
 		TextXAlignment = Enum.TextXAlignment.Left,
 
@@ -286,12 +314,20 @@ local function CreateRemoteButton(RemoteInfo: {}): (TextButton, TextLabel, TextL
 
 	local Amount = wax.shared.Interface.New("TextLabel", {
 		Size = UDim2.fromScale(1, 1),
-		Text = "x1",
+		Text = "",
 		TextSize = 15,
 		TextXAlignment = Enum.TextXAlignment.Right,
 
 		Parent = Button,
 	})
+
+	Button.MouseButton1Click:Connect(function()
+		if CurrentLog == Log then
+			return
+		end
+
+		ShowLog(Log)
+	end)
 
 	return Button, Text, Amount
 end
@@ -346,7 +382,7 @@ local LogsWrapper = wax.shared.Interface.New("Frame", {
 	},
 })
 
-local LogsList = wax.shared.Interface.New("ScrollingFrame", {
+LogsList = wax.shared.Interface.New("ScrollingFrame", {
 	BackgroundTransparency = 1,
 	Size = UDim2.new(1, 0, 1, -38),
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
@@ -418,12 +454,6 @@ local function CreateLog(LogInfo: {
 				PaddingRight = UDim.new(0, 8),
 				PaddingTop = UDim.new(0, 8),
 				PaddingBottom = UDim.new(0, 8),
-			},
-
-			["UIStroke"] = {
-				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				Color = Color3.fromRGB(50, 50, 50),
-				Thickness = 1,
 			},
 
 			["TextLabel"] = {
@@ -501,33 +531,60 @@ wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: In
 	Info.Frame.Position = UDim2.new(FramePosition.X.Scale, Offset, FramePosition.Y.Scale, FramePosition.Y.Offset)
 
 	LeftList.Size = UDim2.new(0, Offset, 1, -36)
+	LogsWrapper.Size = UDim2.new(1, -(Offset + 2), 1, -36)
 end)
 
-CreateRemoteButton({
-	Name = "Testing",
-	Class = "RemoteEvent",
-})
-CreateRemoteButton({
-	Name = "GetBallers",
-	Class = "RemoteFunction",
-})
+wax.shared.CreateRemoteButton = CreateRemoteButton
+wax.shared.CreateLog = CreateLog
 
-CreateLog({
-	Type = "Outgoing",
-	Origin = "Executor",
-	Time = os.date("%X"),
-	Code = [[local args = {}
+function GetCalls(Log, Page)
+	local Start = ((Page - 1) * MAX_LOGS) + 1
+	local End = math.clamp(0, Start + (MAX_LOGS - 1), #Log.Calls)
 
-remote:FireServer(table.unpack(args))]],
-	Order = 1,
-})
+	print(Start, End)
+end
 
-CreateLog({
-	Type = "Outgoing",
-	Origin = "SigmaScript",
-	Time = os.date("%X"),
-	Code = [[local args = {}
+wax.shared.Communicator.Event:Connect(function(Instance)
+	local Log = wax.shared.Logs[Instance]
+	if not Log.Button then
+		local Button, Text, Calls = CreateRemoteButton(Log)
 
-remote:FireServer(table.unpack(args))]],
-	Order = 2,
-})
+		Log.Button = {
+			Instance = Button,
+			Name = Text,
+			Calls = Calls,
+		}
+	end
+
+	Log.Button.Name.Text = Log.Instance.Name
+	Log.Button.Calls.Text = `x{#Log.Calls}`
+end)
+
+-- CreateRemoteButton({
+-- 	Name = "Testing",
+-- 	Class = "RemoteEvent",
+-- })
+-- CreateRemoteButton({
+-- 	Name = "GetBallers",
+-- 	Class = "RemoteFunction",
+-- })
+
+-- CreateLog({
+-- 	Type = "Outgoing",
+-- 	Origin = "Executor",
+-- 	Time = os.date("%X"),
+-- 	Code = [[local args = {}
+
+-- remote:FireServer(table.unpack(args))]],
+-- 	Order = 1,
+-- })
+
+-- CreateLog({
+-- 	Type = "Outgoing",
+-- 	Origin = "SigmaScript",
+-- 	Time = os.date("%X"),
+-- 	Code = [[local args = {}
+
+-- remote:FireServer(table.unpack(args))]],
+-- 	Order = 2,
+-- })

@@ -61,25 +61,16 @@ wax.shared.Unload = function()
 end
 
 -- Load Script
-require("Window")
+wax.shared.Communicator = Instance.new("BindableEvent")
 
+wax.shared.Log = require("Utils/Log")
 wax.shared.Logs = {}
-wax.shared.LogRemote = function(RemoteInfo)
-	local Log = wax.shared.Logs[RemoteInfo[1]]
-	if not Log then
-		Log = {
-			Method = RemoteInfo[2],
-			Calls = {},
-		}
-		wax.shared.Logs[RemoteInfo[1]] = Log
-	end
 
-	table.insert(Log.Calls, {
-		IsExecutor = RemoteInfo[3],
-		Script = RemoteInfo[4],
-		Function = RemoteInfo[5],
-		Line = RemoteInfo[6],
-	})
+wax.shared.NewLog = function(Instance, Method)
+	local Log = wax.shared.Log.new(Instance, Method)
+	wax.shared.Logs[Instance] = Log
+	return Log
 end
 
+require("Window")
 require("Hooks/Spy")

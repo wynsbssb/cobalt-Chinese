@@ -18,6 +18,7 @@ local MainFrame = wax.shared.Interface.New("Frame", {
 	Parent = ScreenGui,
 })
 
+-- Topbar
 local TopBar = wax.shared.Interface.New("Frame", {
 	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
 	Size = UDim2.new(1, 0, 0, 36),
@@ -44,6 +45,7 @@ local TopBar = wax.shared.Interface.New("Frame", {
 })
 wax.shared.Interface.HideCorner(TopBar, UDim2.fromScale(1, 0.5), Vector2.new(0, 1))
 
+-- Topbar Buttons
 local TopButtons = wax.shared.Interface.New("Frame", {
 	BackgroundTransparency = 1,
 	Size = UDim2.fromScale(1, 1),
@@ -64,7 +66,7 @@ local TopButtons = wax.shared.Interface.New("Frame", {
 	Parent = TopBar,
 })
 
-local function CreateTopButton(IconName: string, Order: number)
+local function CreateTopButton(IconName, Order: number)
 	local Button = wax.shared.Interface.New("ImageButton", {
 		LayoutOrder = Order,
 		Size = UDim2.fromScale(1, 1),
@@ -119,3 +121,17 @@ local SettingsButton = CreateTopButton("settings", 1)
 local SearchButton = CreateTopButton("search", 0)
 
 wax.shared.Drag.Setup(MainFrame, TopBar)
+
+-- Remote List
+local LeftList = wax.shared.Interface.New("Frame", {
+	BackgroundTransparency = 1,
+	AnchorPoint = Vector2.new(0, 1),
+	Size = UDim2.new(0, 240, 1, -36),
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 6),
+		PaddingRight = UDim.new(0, 6),
+		PaddingTop = UDim.new(0, 6),
+		PaddingBottom = UDim.new(0, 6),
+	},
+})

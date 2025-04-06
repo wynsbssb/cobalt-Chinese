@@ -127,11 +127,157 @@ local LeftList = wax.shared.Interface.New("Frame", {
 	BackgroundTransparency = 1,
 	AnchorPoint = Vector2.new(0, 1),
 	Size = UDim2.new(0, 240, 1, -36),
+	Position = UDim2.fromScale(0, 1),
+	Parent = MainFrame,
 
 	["UIPadding"] = {
 		PaddingLeft = UDim.new(0, 6),
 		PaddingRight = UDim.new(0, 6),
 		PaddingTop = UDim.new(0, 6),
 		PaddingBottom = UDim.new(0, 6),
+	},
+})
+
+-- Tabs
+local RemoteTabContainer = wax.shared.Interface.New("Frame", {
+	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+	Size = UDim2.new(1, 0, 0, 30),
+	Parent = LeftList,
+
+	["UICorner"] = {
+		CornerRadius = UDim.new(0, 4),
+	},
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		HorizontalFlex = Enum.UIFlexAlignment.Fill,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	},
+})
+
+local function CreateRemoteListTab(TabName: string, Active: boolean)
+	local Button = wax.shared.Interface.New("TextButton", {
+		BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+		BackgroundTransparency = Active and 0 or 1,
+		Size = UDim2.fromScale(0, 1),
+		TextSize = 15,
+		Text = TabName,
+		Parent = RemoteTabContainer,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 4),
+		},
+	})
+
+	return Button
+end
+
+local OutgoingTab = CreateRemoteListTab("Outgoing", true)
+local IncomingTab = CreateRemoteListTab("Incoming", false)
+
+-- Remote List
+local RemoteListWrapper = wax.shared.Interface.New("Frame", {
+	AnchorPoint = Vector2.new(0, 1),
+	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+	Position = UDim2.fromScale(0, 1),
+	Size = UDim2.new(1, 0, 1, -36),
+	Parent = LeftList,
+
+	["UICorner"] = {
+		CornerRadius = UDim.new(0, 4),
+	},
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalFlex = Enum.UIFlexAlignment.Fill,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	},
+})
+
+local RemoteList = wax.shared.Interface.New("ScrollingFrame", {
+	BackgroundTransparency = 1,
+	Size = UDim2.fromScale(1, 1),
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	CanvasSize = UDim2.new(0, 0, 0, 0),
+	ScrollBarThickness = 2,
+	Parent = RemoteListWrapper,
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Vertical,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Padding = UDim.new(0, 6),
+	},
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 6),
+		PaddingRight = UDim.new(0, 6),
+		PaddingTop = UDim.new(0, 6),
+		PaddingBottom = UDim.new(0, 6),
+	},
+})
+
+local RemoteResizeLine = wax.shared.Interface.New("Frame", {
+	AnchorPoint = Vector2.new(0, 1),
+	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+	Position = UDim2.new(0, 240, 1, 0),
+	Size = UDim2.new(0, 2, 1, -36),
+	Parent = MainFrame,
+})
+
+-- Main Remote thing
+local MainLogWrapper = wax.shared.Interface.New("Frame", {
+	AnchorPoint = Vector2.new(1, 1),
+	BackgroundTransparency = 1,
+	Position = UDim2.fromScale(1, 1),
+	Size = UDim2.new(1, -242, 1, -36),
+	Parent = MainFrame,
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 6),
+		PaddingRight = UDim.new(0, 6),
+		PaddingTop = UDim.new(0, 6),
+		PaddingBottom = UDim.new(0, 6),
+	},
+})
+
+local MainLogs = wax.shared.Interface.New("ScrollingFrame", {
+	BackgroundTransparency = 1,
+	Size = UDim2.new(1, 0, 1, -38),
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	CanvasSize = UDim2.new(0, 0, 0, 0),
+	ScrollBarThickness = 0,
+	Parent = MainLogWrapper,
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Vertical,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Padding = UDim.new(0, 8),
+	},
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 2),
+		PaddingRight = UDim.new(0, 2),
+		PaddingTop = UDim.new(0, 2),
+		PaddingBottom = UDim.new(0, 2),
+	},
+})
+
+local MainLogsPaginationFrame = wax.shared.Interface.New("Frame", {
+	AnchorPoint = Vector2.new(0, 1),
+	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+	BackgroundTransparency = 1,
+	Position = UDim2.fromScale(0, 1),
+	Size = UDim2.new(1, 0, 0, 32),
+	Parent = MainLogWrapper,
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Padding = UDim.new(0, 6),
 	},
 })

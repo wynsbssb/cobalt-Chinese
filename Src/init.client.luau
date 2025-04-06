@@ -18,9 +18,6 @@ wax.shared.Interface = require("Utils/Interface")
 wax.shared.Icons = require("Utils/Icons")
 wax.shared.Sonner = require("Utils/Sonner")
 
--- Spy
-require("Hooks/Spy")
-
 -- Variables
 wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer
 
@@ -57,5 +54,6 @@ wax.shared.Unload = function()
 	wax.shared.ScreenGui:Destroy()
 end
 
--- Load UI
+-- Load Script
 require("Window")
+require("Hooks/Spy")

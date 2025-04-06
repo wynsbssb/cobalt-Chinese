@@ -69,7 +69,7 @@ local TopButtons = wax.shared.Interface.New("Frame", {
 	Parent = TopBar,
 })
 
-local function CreateTopButton(IconName, Order: number)
+local function CreateTopButton(IconName, Order: number, Callback: () -> ()?)
 	local Button = wax.shared.Interface.New("ImageButton", {
 		LayoutOrder = Order,
 		Size = UDim2.fromScale(1, 1),
@@ -107,6 +107,9 @@ local function CreateTopButton(IconName, Order: number)
 			})
 			:Play()
 	end)
+	if Callback then
+		Button.MouseButton1Click:Connect(Callback)
+	end
 
 	return Button, Image
 end
@@ -132,12 +135,7 @@ local function CreateTopSeperator(Order: number)
 	})
 end
 
-local CloseButton = CreateTopButton("x", 4)
-do
-	CloseButton.MouseButton1Click:Connect(function()
-		wax.shared.Unload()
-	end)
-end
+local CloseButton = CreateTopButton("x", 4, wax.shared.Unload)
 local HideButton = CreateTopButton("minus", 3)
 CreateTopSeperator(2)
 local SettingsButton = CreateTopButton("settings", 1)

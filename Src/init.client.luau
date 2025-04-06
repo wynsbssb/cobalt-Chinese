@@ -17,9 +17,11 @@ wax.shared.Drag = require("Utils/Drag")
 wax.shared.Interface = require("Utils/Interface")
 wax.shared.Icons = require("Utils/Icons")
 wax.shared.Sonner = require("Utils/Sonner")
+wax.shared.Highlighter = require("Utils/Highlighter")
 
 -- Variables
 wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer
+wax.shared.ExecutorName = string.split(identifyexecutor(), " ")[1]
 
 -- Functions
 wax.shared.gethui = gethui or function()

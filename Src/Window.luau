@@ -369,6 +369,113 @@ local LogsList = wax.shared.Interface.New("ScrollingFrame", {
 	},
 })
 
+local function CreateLog(LogInfo: {
+	Type: "Incoming" | "Outgoing",
+	Time: string,
+	Code: string?,
+	Arguments: { [any]: any }?,
+	Order: number,
+	Origin: "Executor" | string,
+})
+	local Log = wax.shared.Interface.New("Frame", {
+		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+		Size = UDim2.new(1, 0, 0, 104),
+		Parent = LogsList,
+		LayoutOrder = LogInfo.Order,
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 6),
+			PaddingRight = UDim.new(0, 6),
+			PaddingTop = UDim.new(0, 6),
+			PaddingBottom = UDim.new(0, 6),
+		},
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 6),
+		},
+	})
+
+	local LogHighlightedStroke = wax.shared.Interface.New("UIStroke", {
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		Color = Color3.fromRGB(75, 75, 75),
+		Thickness = 2,
+		Transparency = 1,
+		Parent = Log,
+	})
+
+	if LogInfo.Type == "Outgoing" and LogInfo.Code then
+		local CodeFrame = wax.shared.Interface.New("Frame", {
+			BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+			Size = UDim2.new(1, 0, 1, -28),
+			Parent = Log,
+
+			["UICorner"] = {
+				CornerRadius = UDim.new(0, 6),
+			},
+
+			["UIPadding"] = {
+				PaddingLeft = UDim.new(0, 8),
+				PaddingRight = UDim.new(0, 8),
+				PaddingTop = UDim.new(0, 8),
+				PaddingBottom = UDim.new(0, 8),
+			},
+
+			["UIStroke"] = {
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				Color = Color3.fromRGB(50, 50, 50),
+				Thickness = 1,
+			},
+
+			["TextLabel"] = {
+				Size = UDim2.fromScale(1, 1),
+				FontFace = Font.fromId(16658246179),
+				Text = wax.shared.Highlighter.Run(LogInfo.Code),
+				TextColor3 = Color3.fromHex(wax.shared.Highlighter.Colors.Text),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				RichText = true,
+				TextSize = 16,
+			},
+		})
+	end
+
+	local RemoteOriginImage = wax.shared.Interface.New("ImageLabel", {
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.new(0, 2, 1, 0),
+		Size = UDim2.fromOffset(22, 22),
+		BackgroundTransparency = 1,
+		ImageTransparency = 0.5,
+		Parent = Log,
+	})
+
+	wax.shared.Icons.SetIcon(RemoteOriginImage, LogInfo.Origin == "Executor" and "terminal" or "gamepad-2")
+
+	wax.shared.Interface.New("TextLabel", {
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.new(0, 30, 1, 0),
+		Size = UDim2.new(0.5, -24, 0, 22),
+		BackgroundTransparency = 1,
+		Text = LogInfo.Origin == "Executor" and wax.shared.ExecutorName or LogInfo.Origin,
+		TextSize = 16,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTransparency = 0.5,
+		Parent = Log,
+	})
+
+	wax.shared.Interface.New("TextLabel", {
+		AnchorPoint = Vector2.new(1, 1),
+		Position = UDim2.new(1, -2, 1, 0),
+		Size = UDim2.new(0.5, -2, 0, 22),
+		BackgroundTransparency = 1,
+		Text = "Time: " .. LogInfo.Time,
+		TextSize = 16,
+		TextTransparency = 0.5,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = Log,
+	})
+
+	return Log
+end
+
 local LogsPagination = wax.shared.Interface.New("Frame", {
 	AnchorPoint = Vector2.new(0, 1),
 	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
@@ -403,4 +510,24 @@ CreateRemoteButton({
 CreateRemoteButton({
 	Name = "GetBallers",
 	Class = "RemoteFunction",
+})
+
+CreateLog({
+	Type = "Outgoing",
+	Origin = "Executor",
+	Time = os.date("%X"),
+	Code = [[local args = {}
+
+remote:FireServer(table.unpack(args))]],
+	Order = 1,
+})
+
+CreateLog({
+	Type = "Outgoing",
+	Origin = "SigmaScript",
+	Time = os.date("%X"),
+	Code = [[local args = {}
+
+remote:FireServer(table.unpack(args))]],
+	Order = 2,
 })

@@ -6,9 +6,9 @@ local Hooks = {}
 
 -- metamethod hooks
 Hooks["namecall"] = hookmetamethod(game, "__namecall", function(self, ...)
-	local method = getnamecallmethod():lower()
+	local method = getnamecallmethod()
 
-	if table.find(NamecallMethods, method) and table.find(AllowedClassNames, self.ClassName) then
+	if table.find(AllowedClassNames, self.ClassName) and table.find(NamecallMethods, string.lower(method)) then
 	end
 end)
 

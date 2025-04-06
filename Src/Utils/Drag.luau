@@ -4,9 +4,24 @@ local Drag = {
 	FramePosition = nil,
 	StartPosition = nil,
 	ChangedConnection = nil,
+	Callback = nil,
 }
 
-function Drag.Setup(Frame: GuiObject, DragFrame: GuiObject)
+local function DefaultCallback(_, Input: InputObject)
+	local Delta = Input.Position - Drag.StartPosition
+	local FramePosition: UDim2 = Drag.FramePosition
+
+	Drag.Frame.Position = UDim2.new(
+		FramePosition.X.Scale,
+		FramePosition.X.Offset + Delta.X,
+		FramePosition.Y.Scale,
+		FramePosition.Y.Offset + Delta.Y
+	)
+end
+
+function Drag.Setup(Frame: GuiObject, DragFrame: GuiObject, Callback: (Info: {}, Input: InputObject) -> ())
+	Callback = Callback or DefaultCallback
+
 	DragFrame.InputBegan:Connect(function(Input: InputObject)
 		if not wax.shared.IsClickInput(Input) then
 			return
@@ -16,16 +31,16 @@ function Drag.Setup(Frame: GuiObject, DragFrame: GuiObject)
 		Drag.Frame = Frame
 		Drag.FramePosition = Frame.Position
 		Drag.StartPosition = Input.Position
+		Drag.Callback = Callback
 
 		Drag.ChangedConnection = Input.Changed:Connect(function()
 			if Input.UserInputState ~= Enum.UserInputState.End then
 				return
 			end
 
-			print("ended")
-
 			Drag.Dragging = false
 			Drag.Frame = nil
+			Drag.Callback = nil
 
 			if Drag.ChangedConnection and Drag.ChangedConnection.Connected then
 				Drag.ChangedConnection:Disconnect()
@@ -37,15 +52,7 @@ end
 
 wax.shared.Connect(wax.shared.UserInputService.InputChanged:Connect(function(Input: InputObject)
 	if Drag.Dragging and wax.shared.IsMoveInput(Input) then
-		local Delta = Input.Position - Drag.StartPosition
-		local FramePosition: UDim2 = Drag.FramePosition
-
-		Drag.Frame.Position = UDim2.new(
-			FramePosition.X.Scale,
-			FramePosition.X.Offset + Delta.X,
-			FramePosition.Y.Scale,
-			FramePosition.Y.Offset + Delta.Y
-		)
+		Drag.Callback(Drag, Input)
 	end
 end))
 

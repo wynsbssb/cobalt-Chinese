@@ -25,6 +25,7 @@ local DefaultProperties = {
 		TextColor3 = Color3.new(1, 1, 1),
 	},
 	["TextButton"] = {
+		AutoButtonColor = false,
 		BorderSizePixel = 0,
 		FontFace = DefaultFont,
 		RichText = true,

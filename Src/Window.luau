@@ -1,3 +1,5 @@
+local DefaultTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Exponential)
+
 local ScreenGui = wax.shared.Interface.New("ScreenGui", {
 	Name = "Cobalt",
 	ResetOnSpawn = false,
@@ -90,11 +92,26 @@ local function CreateTopButton(IconName, Order: number)
 		Parent = Button,
 	})
 
+	Button.MouseEnter:Connect(function()
+		wax.shared.TweenService
+			:Create(Image, DefaultTweenInfo, {
+				ImageTransparency = 0.25,
+			})
+			:Play()
+	end)
+	Button.MouseLeave:Connect(function()
+		wax.shared.TweenService
+			:Create(Image, DefaultTweenInfo, {
+				ImageTransparency = 0.5,
+			})
+			:Play()
+	end)
+
 	return Button, Image
 end
 
 local function CreateTopSeperator(Order: number)
-	wax.shared.Interface.New("ImageButton", {
+	wax.shared.Interface.New("ImageLabel", {
 		LayoutOrder = Order,
 		Size = UDim2.fromScale(1, 1),
 		SizeConstraint = Enum.SizeConstraint.RelativeYY,
@@ -219,7 +236,7 @@ local RemoteList = wax.shared.Interface.New("ScrollingFrame", {
 	},
 })
 
-local RemoteResizeLine = wax.shared.Interface.New("Frame", {
+local RemoteListLine = wax.shared.Interface.New("Frame", {
 	AnchorPoint = Vector2.new(0, 1),
 	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
 	Position = UDim2.new(0, 240, 1, 0),
@@ -227,8 +244,34 @@ local RemoteResizeLine = wax.shared.Interface.New("Frame", {
 	Parent = MainFrame,
 })
 
+local RemoteListResize = wax.shared.Interface.New("TextButton", {
+	AnchorPoint = Vector2.new(0.5, 0),
+	BackgroundTransparency = 1,
+	Position = UDim2.fromScale(0.5, 0),
+	Size = UDim2.new(1, 4, 1, 0),
+	Text = "",
+
+	Parent = RemoteListLine,
+})
+do
+	RemoteListResize.MouseEnter:Connect(function()
+		wax.shared.TweenService
+			:Create(RemoteListLine, DefaultTweenInfo, {
+				BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+			})
+			:Play()
+	end)
+	RemoteListResize.MouseLeave:Connect(function()
+		wax.shared.TweenService
+			:Create(RemoteListLine, DefaultTweenInfo, {
+				BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+			})
+			:Play()
+	end)
+end
+
 -- Main Remote thing
-local MainLogWrapper = wax.shared.Interface.New("Frame", {
+local LogsWrapper = wax.shared.Interface.New("Frame", {
 	AnchorPoint = Vector2.new(1, 1),
 	BackgroundTransparency = 1,
 	Position = UDim2.fromScale(1, 1),
@@ -243,13 +286,13 @@ local MainLogWrapper = wax.shared.Interface.New("Frame", {
 	},
 })
 
-local MainLogs = wax.shared.Interface.New("ScrollingFrame", {
+local LogsList = wax.shared.Interface.New("ScrollingFrame", {
 	BackgroundTransparency = 1,
 	Size = UDim2.new(1, 0, 1, -38),
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
 	CanvasSize = UDim2.new(0, 0, 0, 0),
 	ScrollBarThickness = 0,
-	Parent = MainLogWrapper,
+	Parent = LogsWrapper,
 
 	["UIListLayout"] = {
 		FillDirection = Enum.FillDirection.Vertical,
@@ -266,13 +309,13 @@ local MainLogs = wax.shared.Interface.New("ScrollingFrame", {
 	},
 })
 
-local MainLogsPaginationFrame = wax.shared.Interface.New("Frame", {
+local LogsPagination = wax.shared.Interface.New("Frame", {
 	AnchorPoint = Vector2.new(0, 1),
 	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
 	BackgroundTransparency = 1,
 	Position = UDim2.fromScale(0, 1),
 	Size = UDim2.new(1, 0, 0, 32),
-	Parent = MainLogWrapper,
+	Parent = LogsWrapper,
 
 	["UIListLayout"] = {
 		FillDirection = Enum.FillDirection.Horizontal,
@@ -281,3 +324,13 @@ local MainLogsPaginationFrame = wax.shared.Interface.New("Frame", {
 		Padding = UDim.new(0, 6),
 	},
 })
+
+wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: InputObject)
+	local Delta = Input.Position - Info.StartPosition
+	local FramePosition: UDim2 = Info.FramePosition
+	local Offset = math.clamp(FramePosition.X.Offset + Delta.X, 120, (MainFrame.AbsoluteSize.X - 2) / 2)
+
+	Info.Frame.Position = UDim2.new(FramePosition.X.Scale, Offset, FramePosition.Y.Scale, FramePosition.Y.Offset)
+
+	LeftList.Size = UDim2.new(0, Offset, 1, -36)
+end)

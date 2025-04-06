@@ -21,13 +21,6 @@ wax.shared.Sonner = require("Utils/Sonner")
 -- Variables
 wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer
 
-wax.shared.DragInfo = {
-	Dragging = false,
-	StartPos = nil,
-	FramePos = nil,
-	ChangedConnection = nil,
-}
-
 -- Functions
 wax.shared.gethui = gethui or function()
 	return wax.shared.CoreGui

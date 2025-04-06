@@ -3,6 +3,8 @@ local AllowedClassNames =
 	{ "RemoteEvent", "RemoteFunction", "UnreliableRemoteEvent", "BindableEvent", "BindableFunction" }
 
 wax.shared.Hooks = {}
+wax.shared.Ignored = {}
+wax.shared.Blocked = {}
 
 local function getcallingfunction()
 	return debug.info(4, "f")
@@ -16,10 +18,15 @@ wax.shared.MetaHook = hookmetamethod(game, "__namecall", function(self, ...)
 	local Method = getnamecallmethod()
 
 	if table.find(AllowedClassNames, self.ClassName) and table.find(NamecallMethods, string.lower(Method)) then
-		local Function = getcallingfunction()
-		local Line = getcallingline()
-
-		print("should log this bitch", self.Name, Method, Line)
+		local Data = {
+			self,
+			Method,
+			wax.shared.checkcaller(),
+			getcallingscript(),
+			getcallingfunction(),
+			getcallingline(),
+		}
+		wax.shared.LogEvent(Data)
 	end
 
 	return wax.shared.MetaHook(self, ...)

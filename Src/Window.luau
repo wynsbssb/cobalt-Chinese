@@ -1,4 +1,11 @@
 local DefaultTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Exponential)
+local Images = {
+	RemoteEvent = "rbxassetid://110803789420086",
+	UnreliableRemoteEvent = "rbxassetid://126244162339059",
+	RemoteFunction = "rbxassetid://108537517159060",
+	BindableEvent = "rbxassetid://116839398727495",
+	BindableFunction = "rbxassetid://112264959079193",
+}
 
 local ScreenGui = wax.shared.Interface.New("ScreenGui", {
 	Name = "Cobalt",
@@ -240,6 +247,55 @@ local RemoteList = wax.shared.Interface.New("ScrollingFrame", {
 	},
 })
 
+local function CreateRemoteButton(RemoteInfo: {}): (TextButton, TextLabel, TextLabel)
+	local Button = wax.shared.Interface.New("TextButton", {
+		BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 30),
+		Text = "",
+
+		["ImageLabel"] = {
+			Image = Images[RemoteInfo.Class],
+			Size = UDim2.fromScale(1, 1),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		},
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 4),
+		},
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 6),
+			PaddingRight = UDim.new(0, 6),
+			PaddingTop = UDim.new(0, 6),
+			PaddingBottom = UDim.new(0, 6),
+		},
+
+		Parent = RemoteList,
+	})
+
+	local Text = wax.shared.Interface.New("TextLabel", {
+		Position = UDim2.fromOffset(24, 0),
+		Size = UDim2.new(1, -24, 1, 0),
+		Text = RemoteInfo.Name,
+		TextSize = 15,
+		TextXAlignment = Enum.TextXAlignment.Left,
+
+		Parent = Button,
+	})
+
+	local Amount = wax.shared.Interface.New("TextLabel", {
+		Size = UDim2.fromScale(1, 1),
+		Text = "x1",
+		TextSize = 15,
+		TextXAlignment = Enum.TextXAlignment.Right,
+
+		Parent = Button,
+	})
+
+	return Button, Text, Amount
+end
+
 local RemoteListLine = wax.shared.Interface.New("Frame", {
 	AnchorPoint = Vector2.new(0, 1),
 	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
@@ -329,6 +385,7 @@ local LogsPagination = wax.shared.Interface.New("Frame", {
 	},
 })
 
+-- UI Handling
 wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: InputObject)
 	local Delta = Input.Position - Info.StartPosition
 	local FramePosition: UDim2 = Info.FramePosition
@@ -338,3 +395,12 @@ wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: In
 
 	LeftList.Size = UDim2.new(0, Offset, 1, -36)
 end)
+
+CreateRemoteButton({
+	Name = "Testing",
+	Class = "RemoteEvent",
+})
+CreateRemoteButton({
+	Name = "GetBallers",
+	Class = "RemoteFunction",
+})

@@ -25,6 +25,10 @@ wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer
 wax.shared.gethui = gethui or function()
 	return wax.shared.CoreGui
 end
+wax.shared.checkcaller = checkcaller or function()
+	return nil
+end
+
 wax.shared.IsClickInput = function(Input: InputObject): boolean
 	return Input.UserInputState == Enum.UserInputState.Begin
 		and (Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch)
@@ -56,4 +60,24 @@ end
 
 -- Load Script
 require("Window")
+
+wax.shared.Logs = {}
+wax.shared.LogRemote = function(RemoteInfo)
+	local Log = wax.shared.Logs[RemoteInfo[1]]
+	if not Log then
+		Log = {
+			Method = RemoteInfo[2],
+			Calls = {},
+		}
+		wax.shared.Logs[RemoteInfo[1]] = Log
+	end
+
+	table.insert(Log.Calls, {
+		IsExecutor = RemoteInfo[3],
+		Script = RemoteInfo[4],
+		Function = RemoteInfo[5],
+		Line = RemoteInfo[6],
+	})
+end
+
 require("Hooks/Spy")

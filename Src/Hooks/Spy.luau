@@ -2,14 +2,27 @@ local NamecallMethods = { "fireserver", "invokeserver", "fire", "invoke" }
 local AllowedClassNames =
 	{ "RemoteEvent", "RemoteFunction", "UnreliableRemoteEvent", "BindableEvent", "BindableFunction" }
 
-local Hooks = {}
+wax.shared.Hooks = {}
+
+local function getcallingfunction()
+	return debug.info(4, "f")
+end
+local function getcallingline()
+	return debug.info(4, "l")
+end
 
 -- metamethod hooks
-Hooks["namecall"] = hookmetamethod(game, "__namecall", function(self, ...)
-	local method = getnamecallmethod()
+wax.shared.MetaHook = hookmetamethod(game, "__namecall", function(self, ...)
+	local Method = getnamecallmethod()
 
-	if table.find(AllowedClassNames, self.ClassName) and table.find(NamecallMethods, string.lower(method)) then
+	if table.find(AllowedClassNames, self.ClassName) and table.find(NamecallMethods, string.lower(Method)) then
+		local Function = getcallingfunction()
+		local Line = getcallingline()
+
+		print("should log this bitch", self.Name, Method, Line)
 	end
+
+	return wax.shared.MetaHook(self, ...)
 end)
 
 -- function hooks
@@ -24,6 +37,10 @@ local FunctionsToHook = {
 for _, Function in pairs(FunctionsToHook) do
 	local Method = debug.info(Function, "n")
 
-	local Hook
-	Hook = hookfunction(Function, function(self, ...) end)
+	wax.shared.Hooks[Function] = hookfunction(Function, function(self, ...)
+		local Line = getcallingline()
+		print("What??", self.Name, Method, Line)
+
+		return wax.shared.Hooks[Method](self, ...)
+	end)
 end

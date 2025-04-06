@@ -5,6 +5,7 @@ local ScreenGui = wax.shared.Interface.New("ScreenGui", {
 	ResetOnSpawn = false,
 	Parent = wax.shared.Interface.GetScreenParent(),
 })
+wax.shared.ScreenGui = ScreenGui
 
 local MainUICorner = wax.shared.Interface.New("UICorner", {
 	CornerRadius = UDim.new(0, 6),
@@ -132,6 +133,11 @@ local function CreateTopSeperator(Order: number)
 end
 
 local CloseButton = CreateTopButton("x", 4)
+do
+	CloseButton.MouseButton1Click:Connect(function()
+		wax.shared.Unload()
+	end)
+end
 local HideButton = CreateTopButton("minus", 3)
 CreateTopSeperator(2)
 local SettingsButton = CreateTopButton("settings", 1)

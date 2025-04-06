@@ -18,6 +18,9 @@ wax.shared.Interface = require("Utils/Interface")
 wax.shared.Icons = require("Utils/Icons")
 wax.shared.Sonner = require("Utils/Sonner")
 
+-- Spy
+require("Hooks/Spy")
+
 -- Variables
 wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer
 
@@ -39,6 +42,19 @@ wax.shared.IsMouseOverFrame = function(Frame: GuiObject, Position: Vector2): boo
 		and Position.X <= AbsPos.X + AbsSize.X
 		and Position.Y >= AbsPos.Y
 		and Position.Y <= AbsPos.Y + AbsSize.Y
+end
+
+wax.shared.Unload = function()
+	for _, Connection in pairs(wax.shared.Connections) do
+		wax.shared.Disconnect(Connection)
+	end
+
+	hookmetamethod(game, "__namecall", wax.shared.MetaHook)
+	for Function, Original in pairs(wax.shared.Hooks) do
+		hookfunction(Function, Original)
+	end
+
+	wax.shared.ScreenGui:Destroy()
 end
 
 -- Load UI

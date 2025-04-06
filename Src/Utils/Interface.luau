@@ -47,7 +47,6 @@ function Interface.New(ClassName: string, Properties: { [string]: any })
 	for Key, Value in pairs(Properties or {}) do
 		if typeof(Value) == "table" then
 			local SubObject = Interface.New(Key, Value)
-			print("here")
 			SubObject.Parent = Object
 
 			continue

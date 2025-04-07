@@ -47,6 +47,14 @@ wax.shared.IsMouseOverFrame = function(Frame: GuiObject, Position: Vector2): boo
 		and Position.Y <= AbsPos.Y + AbsSize.Y
 end
 
+wax.shared.DisplayArgument = function(Argument)
+	if typeof(Argument) == "string" then
+		return string.format('"%s"', Argument)
+	end
+
+	return tostring(Argument)
+end
+
 wax.shared.Unload = function()
 	for _, Connection in pairs(wax.shared.Connections) do
 		wax.shared.Disconnect(Connection)

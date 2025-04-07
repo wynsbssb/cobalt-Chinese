@@ -64,7 +64,11 @@ wax.shared.Unload = function()
 
 	hookmetamethod(game, "__namecall", wax.shared.MetaHook)
 	for Function, Original in pairs(wax.shared.Hooks) do
-		hookfunction(Function, Original)
+		if restorefunction then
+			restorefunction(Function)
+		else
+			hookfunction(Function, Original)
+		end
 	end
 
 	wax.shared.Communicator:Destroy()

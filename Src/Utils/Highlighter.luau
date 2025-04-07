@@ -144,6 +144,22 @@ local function GetHighlightColor(tokens, index)
 	return nil
 end
 
+function Highlighter.GetArgumentColor(Argument)
+	if typeof(Argument) == "boolean" then
+		return Highlighter.Colors.Boolean
+	elseif typeof(Argument) == "number" then
+		return Highlighter.Colors.Number
+	elseif typeof(Argument) == "string" then
+		return Highlighter.Colors.String
+	elseif typeof(Argument) == "EnumItem" then
+		return Highlighter.Colors.BuiltIn
+	elseif typeof(Argument) == nil then
+		return Highlighter.Colors.Nil
+	end
+
+	return Highlighter.Colors.Keyword
+end
+
 function Highlighter.Run(source)
 	local tokens = {}
 	local currentToken = ""

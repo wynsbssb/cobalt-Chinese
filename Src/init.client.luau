@@ -57,6 +57,7 @@ wax.shared.Unload = function()
 		hookfunction(Function, Original)
 	end
 
+	wax.shared.Communicator:Destroy()
 	wax.shared.ScreenGui:Destroy()
 end
 
@@ -73,4 +74,4 @@ wax.shared.NewLog = function(Instance, Method)
 end
 
 require("Window")
-require("Hooks/Spy")
+require("Spy")

@@ -13,13 +13,14 @@ function Log.new(Instance, Method)
 end
 
 function Log:Call(Info)
-	print("inserted call lol")
+	print("call:", Info[1][1])
 
 	table.insert(self.Calls, {
+		Arguments = Info[1],
 		Time = os.date("%X"),
-		Origin = Info[1],
-		Function = Info[2],
-		Line = Info[3],
+		Origin = Info[2],
+		Function = Info[3],
+		Line = Info[4],
 	})
 end
 

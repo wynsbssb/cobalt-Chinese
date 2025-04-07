@@ -31,6 +31,10 @@ local DefaultProperties = {
 		RichText = true,
 		TextColor3 = Color3.new(1, 1, 1),
 	},
+
+	["UIListLayout"] = {
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	},
 }
 
 function Interface.New(ClassName: string, Properties: { [string]: any })

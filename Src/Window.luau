@@ -55,7 +55,7 @@ local TopBar = wax.shared.Interface.New("Frame", {
 		ZIndex = 2,
 	},
 })
-wax.shared.Interface.HideCorner(TopBar, UDim2.fromScale(1, 0.5), Vector2.new(0, 1))
+wax.shared.Interface.HideCorner(TopBar, UDim2.fromScale(1, 0.5), Vector2.yAxis)
 
 -- Topbar Buttons
 local TopButtons = wax.shared.Interface.New("Frame", {
@@ -66,7 +66,6 @@ local TopButtons = wax.shared.Interface.New("Frame", {
 	["UIListLayout"] = {
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Right,
-		SortOrder = Enum.SortOrder.LayoutOrder,
 	},
 	["UIPadding"] = {
 		PaddingBottom = UDim.new(0, 4),
@@ -155,7 +154,7 @@ wax.shared.Drag.Setup(MainFrame, TopBar)
 -- Remote List
 local LeftList = wax.shared.Interface.New("Frame", {
 	BackgroundTransparency = 1,
-	AnchorPoint = Vector2.new(0, 1),
+	AnchorPoint = Vector2.yAxis,
 	Size = UDim2.new(0, 240, 1, -36),
 	Position = UDim2.fromScale(0, 1),
 	Parent = MainFrame,
@@ -182,7 +181,6 @@ local RemoteTabContainer = wax.shared.Interface.New("Frame", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Left,
 		HorizontalFlex = Enum.UIFlexAlignment.Fill,
-		SortOrder = Enum.SortOrder.LayoutOrder,
 	},
 })
 
@@ -208,7 +206,7 @@ local IncomingTab = CreateRemoteListTab("Incoming", false)
 
 -- Remote List
 local RemoteListWrapper = wax.shared.Interface.New("Frame", {
-	AnchorPoint = Vector2.new(0, 1),
+	AnchorPoint = Vector2.yAxis,
 	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
 	Position = UDim2.fromScale(0, 1),
 	Size = UDim2.new(1, 0, 1, -36),
@@ -222,7 +220,6 @@ local RemoteListWrapper = wax.shared.Interface.New("Frame", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalFlex = Enum.UIFlexAlignment.Fill,
 		HorizontalAlignment = Enum.HorizontalAlignment.Left,
-		SortOrder = Enum.SortOrder.LayoutOrder,
 	},
 })
 
@@ -237,7 +234,6 @@ local RemoteList = wax.shared.Interface.New("ScrollingFrame", {
 	["UIListLayout"] = {
 		FillDirection = Enum.FillDirection.Vertical,
 		HorizontalAlignment = Enum.HorizontalAlignment.Left,
-		SortOrder = Enum.SortOrder.LayoutOrder,
 		Padding = UDim.new(0, 6),
 	},
 
@@ -251,10 +247,98 @@ local RemoteList = wax.shared.Interface.New("ScrollingFrame", {
 
 local LogsList
 
+local RemoteListLine = wax.shared.Interface.New("Frame", {
+	AnchorPoint = Vector2.yAxis,
+	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+	Position = UDim2.new(0, 240, 1, 0),
+	Size = UDim2.new(0, 2, 1, -36),
+	Parent = MainFrame,
+})
+
+local RemoteListResize = wax.shared.Interface.New("TextButton", {
+	AnchorPoint = Vector2.new(0.5, 0),
+	BackgroundTransparency = 1,
+	Position = UDim2.fromScale(0.5, 0),
+	Size = UDim2.new(1, 4, 1, 0),
+	Text = "",
+
+	Parent = RemoteListLine,
+})
+do
+	RemoteListResize.MouseEnter:Connect(function()
+		wax.shared.TweenService
+			:Create(RemoteListLine, DefaultTweenInfo, {
+				BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+			})
+			:Play()
+	end)
+	RemoteListResize.MouseLeave:Connect(function()
+		wax.shared.TweenService
+			:Create(RemoteListLine, DefaultTweenInfo, {
+				BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+			})
+			:Play()
+	end)
+end
+
+-- Main Remote thing
+local LogsWrapper = wax.shared.Interface.New("Frame", {
+	AnchorPoint = Vector2.one,
+	BackgroundTransparency = 1,
+	Position = UDim2.fromScale(1, 1),
+	Size = UDim2.new(1, -242, 1, -36),
+	Parent = MainFrame,
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 4),
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 6),
+	},
+})
+
+LogsList = wax.shared.Interface.New("ScrollingFrame", {
+	BackgroundTransparency = 1,
+	Size = UDim2.new(1, 0, 1, -38),
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	CanvasSize = UDim2.new(0, 0, 0, 0),
+	ScrollBarThickness = 0,
+	Parent = LogsWrapper,
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Vertical,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		Padding = UDim.new(0, 6),
+	},
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 2),
+		PaddingRight = UDim.new(0, 2),
+		PaddingTop = UDim.new(0, 2),
+		PaddingBottom = UDim.new(0, 2),
+	},
+})
+
+local LogsPagination = wax.shared.Interface.New("Frame", {
+	AnchorPoint = Vector2.yAxis,
+	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+	BackgroundTransparency = 1,
+	Position = UDim2.fromScale(0, 1),
+	Size = UDim2.new(1, 0, 0, 32),
+	Parent = LogsWrapper,
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		Padding = UDim.new(0, 6),
+	},
+})
+
+-- Functions
 local CurrentLog
 function ShowLog(Log)
 	for _, Object in pairs(LogsList:GetChildren()) do
-		if Object.ClassName == "TextButton" then
+		if Object.ClassName == "Frame" then
 			Object:Destroy()
 		end
 	end
@@ -273,9 +357,12 @@ function ShowLog(Log)
 			BackgroundTransparency = 0,
 		})
 		:Play()
+
+	LogsList.CanvasPosition = Vector2.zero
+	ShowCalls(Log, 1)
 end
 
-local function CreateRemoteButton(Log): (TextButton, TextLabel, TextLabel)
+local function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 	local Button = wax.shared.Interface.New("TextButton", {
 		BackgroundColor3 = Color3.fromRGB(50, 50, 50),
 		BackgroundTransparency = 1,
@@ -332,92 +419,15 @@ local function CreateRemoteButton(Log): (TextButton, TextLabel, TextLabel)
 	return Button, Text, Amount
 end
 
-local RemoteListLine = wax.shared.Interface.New("Frame", {
-	AnchorPoint = Vector2.new(0, 1),
-	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-	Position = UDim2.new(0, 240, 1, 0),
-	Size = UDim2.new(0, 2, 1, -36),
-	Parent = MainFrame,
-})
-
-local RemoteListResize = wax.shared.Interface.New("TextButton", {
-	AnchorPoint = Vector2.new(0.5, 0),
-	BackgroundTransparency = 1,
-	Position = UDim2.fromScale(0.5, 0),
-	Size = UDim2.new(1, 4, 1, 0),
-	Text = "",
-
-	Parent = RemoteListLine,
-})
-do
-	RemoteListResize.MouseEnter:Connect(function()
-		wax.shared.TweenService
-			:Create(RemoteListLine, DefaultTweenInfo, {
-				BackgroundColor3 = Color3.fromRGB(50, 50, 50),
-			})
-			:Play()
-	end)
-	RemoteListResize.MouseLeave:Connect(function()
-		wax.shared.TweenService
-			:Create(RemoteListLine, DefaultTweenInfo, {
-				BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-			})
-			:Play()
-	end)
-end
-
--- Main Remote thing
-local LogsWrapper = wax.shared.Interface.New("Frame", {
-	AnchorPoint = Vector2.new(1, 1),
-	BackgroundTransparency = 1,
-	Position = UDim2.fromScale(1, 1),
-	Size = UDim2.new(1, -242, 1, -36),
-	Parent = MainFrame,
-
-	["UIPadding"] = {
-		PaddingLeft = UDim.new(0, 6),
-		PaddingRight = UDim.new(0, 6),
-		PaddingTop = UDim.new(0, 6),
-		PaddingBottom = UDim.new(0, 6),
-	},
-})
-
-LogsList = wax.shared.Interface.New("ScrollingFrame", {
-	BackgroundTransparency = 1,
-	Size = UDim2.new(1, 0, 1, -38),
-	AutomaticCanvasSize = Enum.AutomaticSize.Y,
-	CanvasSize = UDim2.new(0, 0, 0, 0),
-	ScrollBarThickness = 0,
-	Parent = LogsWrapper,
-
-	["UIListLayout"] = {
-		FillDirection = Enum.FillDirection.Vertical,
-		HorizontalAlignment = Enum.HorizontalAlignment.Left,
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		Padding = UDim.new(0, 8),
-	},
-
-	["UIPadding"] = {
-		PaddingLeft = UDim.new(0, 2),
-		PaddingRight = UDim.new(0, 2),
-		PaddingTop = UDim.new(0, 2),
-		PaddingBottom = UDim.new(0, 2),
-	},
-})
-
-local function CreateLog(LogInfo: {
-	Type: "Incoming" | "Outgoing",
-	Time: string,
-	Code: string?,
-	Arguments: { [any]: any }?,
-	Order: number,
-	Origin: "Executor" | string,
-})
-	local Log = wax.shared.Interface.New("Frame", {
+local function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
+	local Holder = wax.shared.Interface.New("Frame", {
 		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-		Size = UDim2.new(1, 0, 0, 104),
-		Parent = LogsList,
-		LayoutOrder = LogInfo.Order,
+		LayoutOrder = Index,
+		Size = UDim2.new(1, 0, 0, 27),
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 4),
+		},
 
 		["UIPadding"] = {
 			PaddingLeft = UDim.new(0, 6),
@@ -426,101 +436,145 @@ local function CreateLog(LogInfo: {
 			PaddingBottom = UDim.new(0, 6),
 		},
 
-		["UICorner"] = {
-			CornerRadius = UDim.new(0, 6),
-		},
+		Parent = Parent,
 	})
 
-	local LogHighlightedStroke = wax.shared.Interface.New("UIStroke", {
+	wax.shared.Interface.New("TextLabel", {
+		Size = UDim2.fromScale(1, 1),
+		Text = Index,
+		TextSize = 15,
+		TextTransparency = 0.5,
+		TextXAlignment = Enum.TextXAlignment.Left,
+
+		Parent = Holder,
+	})
+
+	wax.shared.Interface.New("TextLabel", {
+		Size = UDim2.fromScale(1, 1),
+		Text = typeof(Value),
+		TextSize = 15,
+		TextTransparency = 0.5,
+		TextXAlignment = Enum.TextXAlignment.Right,
+
+		Parent = Holder,
+	})
+
+	wax.shared.Interface.New("TextLabel", {
+		Position = UDim2.fromOffset(18, 0),
+		Size = UDim2.new(1, -18, 1, 0),
+		Text = `<font color={wax.shared.Highlighter.GetArgumentColor(Value)}>{Value}</font>`,
+		TextSize = 15,
+		TextXAlignment = Enum.TextXAlignment.Left,
+
+		Parent = Holder,
+	})
+
+	return Holder
+end
+
+local function CreateCallFrame(CallInfo: {
+	Time: string,
+	Arguments: { [any]: any },
+	Order: number,
+	Origin: BaseScript | nil,
+})
+	local CallFrame = wax.shared.Interface.New("Frame", {
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+		Size = UDim2.fromScale(1, 0),
+		Parent = LogsList,
+		LayoutOrder = CallInfo.Order,
+
+		["UIListLayout"] = {
+			Padding = UDim.new(0, 6),
+		},
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 6),
+			PaddingRight = UDim.new(0, 6),
+			PaddingTop = UDim.new(0, 6),
+			PaddingBottom = UDim.new(0, 6),
+		},
+
+		MainUICorner,
+	})
+
+	local _LogHighlightedStroke = wax.shared.Interface.New("UIStroke", {
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 		Color = Color3.fromRGB(75, 75, 75),
 		Thickness = 2,
 		Transparency = 1,
-		Parent = Log,
+
+		Parent = CallFrame,
 	})
 
-	if LogInfo.Type == "Outgoing" and LogInfo.Code then
-		local CodeFrame = wax.shared.Interface.New("Frame", {
-			BackgroundColor3 = Color3.fromRGB(15, 15, 15),
-			Size = UDim2.new(1, 0, 1, -28),
-			Parent = Log,
+	local ArgumentsFrame = wax.shared.Interface.New("Frame", {
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+		Size = UDim2.fromScale(1, 0),
+		Visible = #CallInfo.Arguments > 0,
 
-			["UICorner"] = {
-				CornerRadius = UDim.new(0, 6),
-			},
+		["UIListLayout"] = {
+			Padding = UDim.new(0, 6),
+		},
 
-			["UIPadding"] = {
-				PaddingLeft = UDim.new(0, 8),
-				PaddingRight = UDim.new(0, 8),
-				PaddingTop = UDim.new(0, 8),
-				PaddingBottom = UDim.new(0, 8),
-			},
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 6),
+			PaddingRight = UDim.new(0, 6),
+			PaddingTop = UDim.new(0, 6),
+			PaddingBottom = UDim.new(0, 6),
+		},
 
-			["TextLabel"] = {
-				Size = UDim2.fromScale(1, 1),
-				FontFace = Font.fromId(16658246179),
-				Text = wax.shared.Highlighter.Run(LogInfo.Code),
-				TextColor3 = Color3.fromHex(wax.shared.Highlighter.Colors.Text),
-				TextXAlignment = Enum.TextXAlignment.Left,
-				RichText = true,
-				TextSize = 16,
-			},
-		})
+		MainUICorner,
+
+		Parent = CallFrame,
+	})
+	do
+		for Index, Value in pairs(CallInfo.Arguments) do
+			print(CallInfo.Order, Index, Value)
+			CreateArgHolder(Index, Value, ArgumentsFrame)
+		end
 	end
 
-	local RemoteOriginImage = wax.shared.Interface.New("ImageLabel", {
-		AnchorPoint = Vector2.new(0, 1),
-		Position = UDim2.new(0, 2, 1, 0),
-		Size = UDim2.fromOffset(22, 22),
+	wax.shared.Interface.New("Frame", {
 		BackgroundTransparency = 1,
-		ImageTransparency = 0.5,
-		Parent = Log,
+		Size = UDim2.new(1, 0, 0, 22),
+
+		wax.shared.Interface.NewIcon(CallInfo.Origin and "gamepad-2" or "terminal", {
+			AnchorPoint = Vector2.yAxis,
+			ImageTransparency = 0.5,
+			Position = UDim2.new(0, 2, 1, 0),
+			Size = UDim2.fromOffset(22, 22),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		}),
+
+		wax.shared.Interface.New("TextLabel", {
+			AnchorPoint = Vector2.yAxis,
+			Position = UDim2.new(0, 30, 1, 0),
+			Size = UDim2.new(0.5, -24, 0, 22),
+			BackgroundTransparency = 1,
+			Text = CallInfo.Origin and CallInfo.Origin.Name or wax.shared.ExecutorName,
+			TextSize = 16,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTransparency = 0.5,
+		}),
+
+		wax.shared.Interface.New("TextLabel", {
+			AnchorPoint = Vector2.one,
+			Position = UDim2.new(1, -2, 1, 0),
+			Size = UDim2.new(0.5, -2, 0, 22),
+			BackgroundTransparency = 1,
+			Text = "Time: " .. CallInfo.Time,
+			TextSize = 16,
+			TextTransparency = 0.5,
+			TextXAlignment = Enum.TextXAlignment.Right,
+		}),
+
+		Parent = CallFrame,
 	})
 
-	wax.shared.Icons.SetIcon(RemoteOriginImage, LogInfo.Origin == "Executor" and "terminal" or "gamepad-2")
-
-	wax.shared.Interface.New("TextLabel", {
-		AnchorPoint = Vector2.new(0, 1),
-		Position = UDim2.new(0, 30, 1, 0),
-		Size = UDim2.new(0.5, -24, 0, 22),
-		BackgroundTransparency = 1,
-		Text = LogInfo.Origin == "Executor" and wax.shared.ExecutorName or LogInfo.Origin,
-		TextSize = 16,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		TextTransparency = 0.5,
-		Parent = Log,
-	})
-
-	wax.shared.Interface.New("TextLabel", {
-		AnchorPoint = Vector2.new(1, 1),
-		Position = UDim2.new(1, -2, 1, 0),
-		Size = UDim2.new(0.5, -2, 0, 22),
-		BackgroundTransparency = 1,
-		Text = "Time: " .. LogInfo.Time,
-		TextSize = 16,
-		TextTransparency = 0.5,
-		TextXAlignment = Enum.TextXAlignment.Right,
-		Parent = Log,
-	})
-
-	return Log
+	return CallFrame
 end
-
-local LogsPagination = wax.shared.Interface.New("Frame", {
-	AnchorPoint = Vector2.new(0, 1),
-	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-	BackgroundTransparency = 1,
-	Position = UDim2.fromScale(0, 1),
-	Size = UDim2.new(1, 0, 0, 32),
-	Parent = LogsWrapper,
-
-	["UIListLayout"] = {
-		FillDirection = Enum.FillDirection.Horizontal,
-		HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		Padding = UDim.new(0, 6),
-	},
-})
 
 -- UI Handling
 wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: InputObject)
@@ -534,20 +588,30 @@ wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: In
 	LogsWrapper.Size = UDim2.new(1, -(Offset + 2), 1, -36)
 end)
 
-wax.shared.CreateRemoteButton = CreateRemoteButton
-wax.shared.CreateLog = CreateLog
-
-function GetCalls(Log, Page)
+function ShowCalls(Log, Page)
 	local Start = ((Page - 1) * MAX_LOGS) + 1
-	local End = math.clamp(0, Start + (MAX_LOGS - 1), #Log.Calls)
+	local End = Start + (MAX_LOGS - 1)
 
-	print(Start, End)
+	for Index = Start, End do
+		local Call = Log.Calls[Index]
+		if not Call then
+			break
+		end
+
+		CreateCallFrame({
+			Arguments = Call.Arguments,
+			Time = Call.Time,
+			Origin = Call.Origin,
+			Order = Index,
+		})
+		print("got call:", Call)
+	end
 end
 
-wax.shared.Communicator.Event:Connect(function(Instance)
+wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance)
 	local Log = wax.shared.Logs[Instance]
 	if not Log.Button then
-		local Button, Text, Calls = CreateRemoteButton(Log)
+		local Button, Text, Calls = CreateLogButton(Log)
 
 		Log.Button = {
 			Instance = Button,
@@ -557,34 +621,5 @@ wax.shared.Communicator.Event:Connect(function(Instance)
 	end
 
 	Log.Button.Name.Text = Log.Instance.Name
-	Log.Button.Calls.Text = `x{#Log.Calls}`
-end)
-
--- CreateRemoteButton({
--- 	Name = "Testing",
--- 	Class = "RemoteEvent",
--- })
--- CreateRemoteButton({
--- 	Name = "GetBallers",
--- 	Class = "RemoteFunction",
--- })
-
--- CreateLog({
--- 	Type = "Outgoing",
--- 	Origin = "Executor",
--- 	Time = os.date("%X"),
--- 	Code = [[local args = {}
-
--- remote:FireServer(table.unpack(args))]],
--- 	Order = 1,
--- })
-
--- CreateLog({
--- 	Type = "Outgoing",
--- 	Origin = "SigmaScript",
--- 	Time = os.date("%X"),
--- 	Code = [[local args = {}
-
--- remote:FireServer(table.unpack(args))]],
--- 	Order = 2,
--- })
+	Log.Button.Calls.Text = "x" .. #Log.Calls
+end))

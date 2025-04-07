@@ -50,6 +50,8 @@ end
 wax.shared.DisplayArgument = function(Argument)
 	if typeof(Argument) == "string" then
 		return string.format('"%s"', Argument)
+	elseif typeof(Argument) == "table" then
+		return "{...}"
 	end
 
 	return tostring(Argument)

@@ -157,7 +157,7 @@ function Highlighter.GetArgumentColor(Argument)
 		return Highlighter.Colors.Nil
 	end
 
-	return Highlighter.Colors.Keyword
+	return Highlighter.Colors.Text
 end
 
 function Highlighter.Run(source)

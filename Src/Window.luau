@@ -604,7 +604,6 @@ function ShowCalls(Log, Page)
 			Origin = Call.Origin,
 			Order = Index,
 		})
-		print("got call:", Call)
 	end
 end
 
@@ -623,5 +622,7 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance)
 	Log.Button.Name.Text = Log.Instance.Name
 	Log.Button.Calls.Text = "x" .. #Log.Calls
 
-	ShowLog(Log)
+	if CurrentLog == Log then
+		ShowLog(Log)
+	end
 end))

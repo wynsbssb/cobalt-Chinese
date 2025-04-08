@@ -622,4 +622,6 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance)
 
 	Log.Button.Name.Text = Log.Instance.Name
 	Log.Button.Calls.Text = "x" .. #Log.Calls
+
+	ShowLog(Log)
 end))

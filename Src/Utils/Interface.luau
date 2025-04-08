@@ -31,6 +31,12 @@ local DefaultProperties = {
 		RichText = true,
 		TextColor3 = Color3.new(1, 1, 1),
 	},
+	["TextBox"] = {
+		BorderSizePixel = 0,
+		FontFace = DefaultFont,
+		RichText = false,
+		TextColor3 = Color3.new(1, 1, 1),
+	},
 
 	["UIListLayout"] = {
 		SortOrder = Enum.SortOrder.LayoutOrder,

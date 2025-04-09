@@ -47,8 +47,15 @@ local function HandleInstance(Instance: Instance)
 		end)
 
 		-- we can hook debug.getmetatable(bindablefunction.OnInvoke) and check for __newindex
-		wax.shared.Hooks[metatable.__newindex] = hookfunction(metatable.__newindex, function(...)
+		wax.shared.Hooks[metatable.__newindex] = hookfunction(metatable.__newindex, function(key, value)
 			-- do smthn i forgot
+			if key == "OnInvoke" and typeof(value) == "function" then
+				wax.shared.Hooks[Instance.OnInvoke] = hookfunction(value, function(...)
+					-- do smthn i forgot
+				end)
+			end
+
+			return wax.shared.Hooks[metatable.__newindex](key, value)
 		end)
 	end
 end

@@ -33,6 +33,22 @@ local MainFrame = wax.shared.Interface.New("Frame", {
 	Parent = ScreenGui,
 })
 
+-- Sonner toast
+local SonnerUI = wax.shared.Interface.New("ScrollingFrame", {
+	Name = "Sonner",
+	BackgroundTransparency = 1,
+	Size = UDim2.fromOffset(285, 115),
+	Position = UDim2.fromScale(1, 1),
+	AnchorPoint = Vector2.new(1, 1),
+	ZIndex = 5000,
+	CanvasSize = UDim2.new(0, 0, 0, 0),
+	ScrollingEnabled = false,
+	ClipsDescendants = true,
+	Parent = MainFrame,
+})
+
+wax.shared.Sonner.init(SonnerUI)
+
 -- Topbar
 local TopBar = wax.shared.Interface.New("Frame", {
 	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
@@ -437,14 +453,14 @@ function CreatePageElement(PageOrType, Order, Active, Log)
 				return
 			end
 
-			local Success, Error = pcall(function()
+			local Success, _Error = pcall(function()
 				PaginationHelper:SetPage(Page)
 				CurrentPage[Log] = Page
 				ShowLog(CurrentLog)
 			end)
 
 			if not Success then
-				warn(Error)
+				wax.shared.Sonner.error("Invalid page number provided!")
 			end
 		end))
 

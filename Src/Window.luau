@@ -1,4 +1,8 @@
-local MAX_LOGS = 20
+local PaginationHelper = wax.shared.Pagination.new({
+	MaxItems = 20,
+	TotalItems = 0,
+	MaximumButtonCount = 7,
+})
 
 local DefaultTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Exponential)
 local Images = {
@@ -360,13 +364,26 @@ function ShowLog(Log)
 		})
 		:Play()
 
+	local Page = CurrentPage[Log]
+	if not Page then
+		CurrentPage[Log] = 1
+		Page = 1
+	end
+
+	PaginationHelper:SetPage(Page)
+	PaginationHelper:Update({
+		Parent = LogsPagination,
+		Count = #Log.Calls,
+		CurrentPage = Page,
+	})
+
 	LogsList.CanvasPosition = Vector2.zero
-	ShowCalls(Log, 1)
+	ShowCalls(Log, Page)
+	ShowPagination(Log)
 end
 
 function ShowCalls(Log, Page)
-	local Start = ((Page - 1) * MAX_LOGS) + 1
-	local End = Start + (MAX_LOGS - 1)
+	local Start, End = PaginationHelper:GetIndexRanges(Page)
 
 	for Index = Start, End do
 		local Call = Log.Calls[Index]
@@ -381,6 +398,76 @@ function ShowCalls(Log, Page)
 			Order = Index,
 		})
 	end
+end
+
+function ShowPagination(Log)
+	local Pages = PaginationHelper:GetPaginationVisualInfo()
+
+	for Order, Info in pairs(Pages) do
+		CreatePaginationElement(Info, Order, Info == CurrentPage[Log], Log)
+	end
+end
+
+function CreatePaginationElement(PageOrType, Order, Active, Log)
+	if PageOrType == "ellipsis" then
+		local Ellipsis = wax.shared.Interface.New("TextBox", {
+			BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+			Size = UDim2.fromScale(1, 1),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+			LayoutOrder = 1,
+			PlaceholderText = "-",
+			TextSize = 15,
+			RichText = false,
+			Parent = LogsPagination,
+
+			["UICorner"] = {
+				CornerRadius = UDim.new(0, 4),
+			},
+		})
+
+		wax.shared.Cleaner(Ellipsis.FocusLost:Connect(function(EnterPressed)
+			if not EnterPressed then
+				return
+			end
+
+			local Page = tonumber(Ellipsis.Text)
+			if not Page then
+				return
+			end
+
+			local success, error = pcall(function()
+				PaginationHelper:SetPage(Page)
+				CurrentPage[Log] = Page
+				ShowLog(CurrentLog)
+			end)
+
+			if not success then
+				warn(error)
+			end
+		end))
+
+		return
+	end
+
+	local Button = wax.shared.Interface.New("TextButton", {
+		BackgroundColor3 = Active and Color3.fromRGB(50, 50, 50) or Color3.fromRGB(25, 25, 25),
+		Size = UDim2.fromScale(1, 1),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		Text = tostring(PageOrType),
+		LayoutOrder = 1,
+		TextSize = 15,
+		Parent = LogsPagination,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 4),
+		},
+	})
+
+	wax.shared.Cleaner(Button.MouseButton1Click:Connect(function()
+		PaginationHelper:SetPage(PageOrType)
+		CurrentPage[Log] = PageOrType
+		ShowLog(CurrentLog)
+	end))
 end
 
 function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
@@ -626,8 +713,13 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Call
 	Log.Button.Calls.Text = "x" .. #Log.Calls
 
 	if CurrentLog == Log then
-		local Start = ((Page - 1) * MAX_LOGS) + 1
-		local End = Start + (MAX_LOGS - 1)
+		PaginationHelper:Update({
+			Parent = LogsPagination,
+			Count = #Log.Calls,
+			CurrentPage = Page,
+		})
+
+		local Start, End = PaginationHelper:GetIndexRanges(Page)
 		if CallIndex < Start or CallIndex > End then
 			return
 		end

@@ -6,99 +6,99 @@ made by deivid and turned into module by upio
 ]]
 
 local Pagination = {}
+Pagination.__index = Pagination
 
-function Pagination.new(options: {
-	ItemsPerPage: number,
+function Pagination.new(Options: {
 	TotalItems: number,
+	ItemsPerPage: number,
 	CurrentPage: number?,
 	SiblingCount: number?,
-	MaximumButtonCount: number?,
 })
 	return setmetatable({
-		ItemsPerPage = options.ItemsPerPage,
-		TotalItems = options.TotalItems,
-		CurrentPage = options.CurrentPage or 1,
-		SiblingCount = options.SiblingCount or 2,
-		MaximumButtonCount = options.MaximumButtonCount or 5,
-	}, { __index = Pagination })
-end
-
-function Pagination:Update(options: {
-	ItemsPerPage: number?,
-	TotalItems: number?,
-})
-	self.ItemsPerPage = options.ItemsPerPage or self.ItemsPerPage
-	self.TotalItems = options.TotalItems or self.TotalItems
-end
-
-function Pagination:SetPage(page: number)
-	local TotalPages = math.ceil(self.TotalItems / self.ItemsPerPage)
-	assert(page <= TotalPages, "Atempted to set page out of range, got " .. page .. " but max is " .. TotalPages)
-
-	self.CurrentPage = page
+		TotalItems = Options.TotalItems,
+		ItemsPerPage = Options.ItemsPerPage,
+		CurrentPage = Options.CurrentPage or 1,
+		SiblingCount = Options.SiblingCount or 2,
+	}, Pagination)
 end
 
 function Pagination:GetInfo()
 	local TotalPages = math.ceil(self.TotalItems / self.ItemsPerPage)
 
 	return {
-		TotalPages = TotalPages,
-		CurrentPage = self.CurrentPage,
 		TotalItems = self.TotalItems,
 		ItemsPerPage = self.ItemsPerPage,
+		CurrentPage = self.CurrentPage,
+		TotalPages = TotalPages,
 	}
 end
 
-function Pagination:GetIndexRanges(pageArgument: number?)
-	local page = pageArgument or self.CurrentPage
+function Pagination:GetIndexRanges(Page: number?)
+	Page = Page or self.CurrentPage
 
 	local TotalPages = math.ceil(self.TotalItems / self.ItemsPerPage)
 	assert(
-		page <= TotalPages,
-		"Atempted to get invalid page out of range, got " .. page .. " but max is " .. TotalPages
+		Page <= TotalPages,
+		"Attempted to get invalid page out of range, got " .. Page .. " but max is " .. TotalPages
 	)
 
-	local Start = (((page or self.CurrentPage) - 1) * self.ItemsPerPage) + 1
+	local Start = (((Page or self.CurrentPage) - 1) * self.ItemsPerPage) + 1
 	local End = Start + (self.ItemsPerPage - 1)
 
 	return Start, End
 end
 
-local function CreateArray(first, final)
-	local array = {}
-	for i = first, final do
-		table.insert(array, i)
-	end
-	return array
+function Pagination:SetPage(Page: number)
+	local TotalPages = math.ceil(self.TotalItems / self.ItemsPerPage)
+	assert(Page <= TotalPages, "Attempted to set page out of range, got " .. Page .. " but max is " .. TotalPages)
+
+	self.CurrentPage = Page
 end
 
+function Pagination:Update(TotalItems: number?, ItemsPerPage: number?)
+	self.TotalItems = TotalItems or self.TotalItems
+	self.ItemsPerPage = ItemsPerPage or self.ItemsPerPage
+end
+
+local function CreateArray(Start, End)
+	local Array = {}
+	for Number = Start, End do
+		table.insert(Array, Number)
+	end
+	return Array
+end
 local function MergeTables(...)
-	local result = {}
-	for _, info in pairs({ ... }) do
-		if typeof(info) == "table" then
-			for _, subInfo in pairs(info) do
-				table.insert(result, subInfo)
+	local Result = {}
+	for _, Value in pairs({ ... }) do
+		if typeof(Value) == "table" then
+			for _, SubValue in pairs(Value) do
+				table.insert(Result, SubValue)
 			end
 		else
-			table.insert(result, info)
+			table.insert(Result, Value)
 		end
 	end
-	return result
+	return Result
 end
 
-function Pagination:GetPaginationVisualInfo(pageArgument: number?)
-	local page = pageArgument or self.CurrentPage
+function Pagination:GetVisualInfo(Page: number?)
+	Page = Page or self.CurrentPage
 
 	local TotalPages = math.ceil(self.TotalItems / self.ItemsPerPage)
 	assert(
-		page <= TotalPages,
-		"Atempted to get invalid page out of range, got " .. page .. " but max is " .. TotalPages
+		Page <= TotalPages,
+		"Attempted to get invalid page out of range, got " .. Page .. " but max is " .. TotalPages
 	)
 
-	local LeftSibling = math.max(page - self.SiblingCount, 1)
-	local RightSibling = math.min(page + self.SiblingCount, TotalPages)
+	local MaxButtons = 5 + self.SiblingCount * 2
+	if TotalPages <= MaxButtons then
+		return CreateArray(1, TotalPages)
+	end
 
-	local FakeLeft = LeftSibling > 1 + 1
+	local LeftSibling = math.max(Page - self.SiblingCount, 1)
+	local RightSibling = math.min(Page + self.SiblingCount, TotalPages)
+
+	local FakeLeft = LeftSibling > 2
 	local FakeRight = RightSibling < TotalPages - 1
 
 	local TotalPageNumbers = math.min(2 * self.SiblingCount + 5, TotalPages)

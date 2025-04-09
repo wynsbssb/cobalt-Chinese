@@ -1,7 +1,6 @@
 local PaginationHelper = wax.shared.Pagination.new({
-	MaxItems = 20,
+	ItemsPerPage = 20,
 	TotalItems = 0,
-	MaximumButtonCount = 7,
 })
 
 local DefaultTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Exponential)
@@ -370,16 +369,12 @@ function ShowLog(Log)
 		Page = 1
 	end
 
+	PaginationHelper:Update(#Log.Calls)
 	PaginationHelper:SetPage(Page)
-	PaginationHelper:Update({
-		Parent = LogsPagination,
-		Count = #Log.Calls,
-		CurrentPage = Page,
-	})
 
 	LogsList.CanvasPosition = Vector2.zero
-	ShowCalls(Log, Page)
 	ShowPagination(Log)
+	ShowCalls(Log, Page)
 end
 
 function ShowCalls(Log, Page)
@@ -401,14 +396,19 @@ function ShowCalls(Log, Page)
 end
 
 function ShowPagination(Log)
-	local Pages = PaginationHelper:GetPaginationVisualInfo()
+	for _, Object in pairs(LogsPagination:GetChildren()) do
+		if Object.ClassName == "TextButton" or Object.ClassName == "TextBox" then
+			Object:Destroy()
+		end
+	end
 
+	local Pages = PaginationHelper:GetVisualInfo()
 	for Order, Info in pairs(Pages) do
-		CreatePaginationElement(Info, Order, Info == CurrentPage[Log], Log)
+		CreatePageElement(Info, Order, Info == CurrentPage[Log], Log)
 	end
 end
 
-function CreatePaginationElement(PageOrType, Order, Active, Log)
+function CreatePageElement(PageOrType, Order, Active, Log)
 	if PageOrType == "ellipsis" then
 		local Ellipsis = wax.shared.Interface.New("TextBox", {
 			BackgroundColor3 = Color3.fromRGB(25, 25, 25),
@@ -416,6 +416,7 @@ function CreatePaginationElement(PageOrType, Order, Active, Log)
 			SizeConstraint = Enum.SizeConstraint.RelativeYY,
 			LayoutOrder = 1,
 			PlaceholderText = "-",
+			Text = "",
 			TextSize = 15,
 			RichText = false,
 			Parent = LogsPagination,
@@ -425,24 +426,25 @@ function CreatePaginationElement(PageOrType, Order, Active, Log)
 			},
 		})
 
-		wax.shared.Cleaner(Ellipsis.FocusLost:Connect(function(EnterPressed)
+		wax.shared.Connect(Ellipsis.FocusLost:Connect(function(EnterPressed)
 			if not EnterPressed then
 				return
 			end
 
 			local Page = tonumber(Ellipsis.Text)
 			if not Page then
+				Ellipsis.Text = ""
 				return
 			end
 
-			local success, error = pcall(function()
+			local Success, Error = pcall(function()
 				PaginationHelper:SetPage(Page)
 				CurrentPage[Log] = Page
 				ShowLog(CurrentLog)
 			end)
 
-			if not success then
-				warn(error)
+			if not Success then
+				warn(Error)
 			end
 		end))
 
@@ -463,7 +465,7 @@ function CreatePaginationElement(PageOrType, Order, Active, Log)
 		},
 	})
 
-	wax.shared.Cleaner(Button.MouseButton1Click:Connect(function()
+	wax.shared.Connect(Button.MouseButton1Click:Connect(function()
 		PaginationHelper:SetPage(PageOrType)
 		CurrentPage[Log] = PageOrType
 		ShowLog(CurrentLog)
@@ -713,14 +715,11 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Call
 	Log.Button.Calls.Text = "x" .. #Log.Calls
 
 	if CurrentLog == Log then
-		PaginationHelper:Update({
-			Parent = LogsPagination,
-			Count = #Log.Calls,
-			CurrentPage = Page,
-		})
+		PaginationHelper:Update(#Log.Calls)
 
 		local Start, End = PaginationHelper:GetIndexRanges(Page)
 		if CallIndex < Start or CallIndex > End then
+			ShowPagination(Log)
 			return
 		end
 

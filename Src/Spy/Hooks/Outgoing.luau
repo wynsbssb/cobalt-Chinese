@@ -2,8 +2,6 @@ local NamecallMethods = { "fireserver", "invokeserver", "fire", "invoke" }
 local AllowedClassNames =
 	{ "RemoteEvent", "RemoteFunction", "UnreliableRemoteEvent", "BindableEvent", "BindableFunction" }
 
-wax.shared.Hooks = {}
-
 local function getcallingfunction()
 	return debug.info(4, "f")
 end

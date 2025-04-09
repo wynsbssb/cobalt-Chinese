@@ -89,4 +89,4 @@ wax.shared.NewLog = function(Instance, Method)
 end
 
 require("Window")
-require("Spy")
+require("Spy/Init")

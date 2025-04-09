@@ -13,14 +13,12 @@ function Log.new(Instance, Method)
 end
 
 function Log:Call(Info)
-	print("call:", Info[1][1])
-
 	table.insert(self.Calls, {
 		Arguments = Info[1],
-		Time = os.date("%X"),
-		Origin = Info[2],
-		Function = Info[3],
-		Line = Info[4],
+		Time = Info[2],
+		Origin = Info[3],
+		Function = Info[4],
+		Line = Info[5],
 	})
 end
 
@@ -30,6 +28,14 @@ end
 
 function Log:Block()
 	self.Blocked = not self.Blocked
+end
+
+function Log:SetButton(Instance, Name, Calls)
+	self.Button = {
+		Instance = Instance,
+		Name = Name,
+		Calls = Calls,
+	}
 end
 
 return Log

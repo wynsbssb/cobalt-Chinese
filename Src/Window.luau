@@ -336,6 +336,8 @@ local LogsPagination = wax.shared.Interface.New("Frame", {
 
 -- Functions
 local CurrentLog
+local CurrentPage = {}
+
 function ShowLog(Log)
 	for _, Object in pairs(LogsList:GetChildren()) do
 		if Object.ClassName == "Frame" then
@@ -362,7 +364,26 @@ function ShowLog(Log)
 	ShowCalls(Log, 1)
 end
 
-local function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
+function ShowCalls(Log, Page)
+	local Start = ((Page - 1) * MAX_LOGS) + 1
+	local End = Start + (MAX_LOGS - 1)
+
+	for Index = Start, End do
+		local Call = Log.Calls[Index]
+		if not Call then
+			break
+		end
+
+		CreateCallFrame({
+			Arguments = Call.Arguments,
+			Time = Call.Time,
+			Origin = Call.Origin,
+			Order = Index,
+		})
+	end
+end
+
+function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 	local Button = wax.shared.Interface.New("TextButton", {
 		BackgroundColor3 = Color3.fromRGB(50, 50, 50),
 		BackgroundTransparency = 1,
@@ -419,7 +440,7 @@ local function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 	return Button, Text, Amount
 end
 
-local function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
+function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
 	local Holder = wax.shared.Interface.New("Frame", {
 		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
 		LayoutOrder = Index,
@@ -472,7 +493,7 @@ local function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
 	return Holder
 end
 
-local function CreateCallFrame(CallInfo: {
+function CreateCallFrame(CallInfo: {
 	Time: string,
 	Arguments: { [any]: any },
 	Order: number,
@@ -531,7 +552,6 @@ local function CreateCallFrame(CallInfo: {
 	})
 	do
 		for Index, Value in pairs(CallInfo.Arguments) do
-			print(CallInfo.Order, Index, Value)
 			CreateArgHolder(Index, Value, ArgumentsFrame)
 		end
 	end
@@ -588,41 +608,35 @@ wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: In
 	LogsWrapper.Size = UDim2.new(1, -(Offset + 2), 1, -36)
 end)
 
-function ShowCalls(Log, Page)
-	local Start = ((Page - 1) * MAX_LOGS) + 1
-	local End = Start + (MAX_LOGS - 1)
-
-	for Index = Start, End do
-		local Call = Log.Calls[Index]
-		if not Call then
-			break
-		end
-
-		CreateCallFrame({
-			Arguments = Call.Arguments,
-			Time = Call.Time,
-			Origin = Call.Origin,
-			Order = Index,
-		})
-	end
-end
-
-wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance)
+wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, CallInfo, CallIndex)
 	local Log = wax.shared.Logs[Instance]
-	if not Log.Button then
-		local Button, Text, Calls = CreateLogButton(Log)
 
-		Log.Button = {
-			Instance = Button,
-			Name = Text,
-			Calls = Calls,
-		}
+	local Page = CurrentPage[Log]
+	if not Page then
+		Page = 1
+		CurrentPage[Log] = Page
+	end
+
+	if not Log.Button then
+		local Button, Name, Calls = CreateLogButton(Log)
+		Log:SetButton(Button, Name, Calls)
 	end
 
 	Log.Button.Name.Text = Log.Instance.Name
 	Log.Button.Calls.Text = "x" .. #Log.Calls
 
 	if CurrentLog == Log then
-		ShowLog(Log)
+		local Start = ((Page - 1) * MAX_LOGS) + 1
+		local End = Start + (MAX_LOGS - 1)
+		if CallIndex < Start or CallIndex > End then
+			return
+		end
+
+		CreateCallFrame({
+			Arguments = CallInfo[1],
+			Time = CallInfo[2],
+			Origin = CallInfo[3],
+			Order = CallIndex,
+		})
 	end
 end))

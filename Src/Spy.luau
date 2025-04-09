@@ -31,13 +31,15 @@ wax.shared.MetaHook = hookmetamethod(
 			if Log.Blocked then
 				return
 			elseif not Log.Ignored then
-				Log:Call({
+				local Info = {
 					{ ... },
+					os.date("%X"),
 					getcallingscript(),
 					getcallingfunction(),
 					getcallingline(),
-				})
-				wax.shared.Communicator.Fire(wax.shared.Communicator, self)
+				}
+				Log:Call(Info)
+				wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, Info, #Log.Calls)
 			end
 		end
 
@@ -69,13 +71,15 @@ for _, Function in pairs(FunctionsToHook) do
 				if Log.Blocked then
 					return
 				elseif not Log.Ignored then
-					Log:Call({
+					local Info = {
 						{ ... },
+						os.date("%X"),
 						getcallingscript(),
 						getcallingfunction(),
 						getcallingline(),
-					})
-					wax.shared.Communicator:Fire(self)
+					}
+					Log:Call(Info)
+					wax.shared.Communicator:Fire(Log.Instance, Info, #Log.Calls)
 				end
 			end
 

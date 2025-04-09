@@ -16,6 +16,6 @@ end
 
 wax.shared.Connect(game.DescendantAdded:Connect(HandleInstance))
 
-for _, Instance in pairs(game:GetDescendants()) do
+for _, Instance in pairs(getinstances()) do
 	HandleInstance(Instance)
 end

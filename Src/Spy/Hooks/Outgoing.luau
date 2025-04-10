@@ -21,9 +21,9 @@ wax.shared.MetaHook = hookmetamethod(
 			and self ~= wax.shared.Communicator
 			and table.find(NamecallMethods, string.lower(Method))
 		then
-			local Log = wax.shared.Logs[self]
+			local Log = wax.shared.Logs.Outgoing[self]
 			if not Log then
-				Log = wax.shared.NewLog(self, Method)
+				Log = wax.shared.NewLog(self, Method, "Outgoing")
 			end
 
 			if Log.Blocked then
@@ -37,7 +37,7 @@ wax.shared.MetaHook = hookmetamethod(
 					getcallingline(),
 				}
 				Log:Call(Info)
-				wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, Info, #Log.Calls)
+				wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, "Outgoing", Info, #Log.Calls)
 			end
 		end
 
@@ -61,9 +61,9 @@ for _, Function in pairs(FunctionsToHook) do
 		Function,
 		newcclosure(function(self, ...)
 			if self ~= wax.shared.Communicator then
-				local Log = wax.shared.Logs[self]
+				local Log = wax.shared.Logs.Outgoing[self]
 				if not Log then
-					Log = wax.shared.NewLog(self, Method)
+					Log = wax.shared.NewLog(self, Method, "Outgoing")
 				end
 
 				if Log.Blocked then
@@ -77,7 +77,7 @@ for _, Function in pairs(FunctionsToHook) do
 						getcallingline(),
 					}
 					Log:Call(Info)
-					wax.shared.Communicator:Fire(Log.Instance, Info, #Log.Calls)
+					wax.shared.Communicator:Fire(Log.Instance, "Outgoing", Info, #Log.Calls)
 				end
 			end
 

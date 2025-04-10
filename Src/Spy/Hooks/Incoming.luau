@@ -1,5 +1,10 @@
-local AllowedClassNames =
-	{ "RemoteEvent", "RemoteFunction", "UnreliableRemoteEvent", "BindableEvent", "BindableFunction" }
+local ClassesToHook = {
+	RemoteEvent = "OnClientEvent",
+	RemoteFunction = "OnClientInvoke",
+	UnreliableRemoteEvent = "OnClientEvent",
+	BindableEvent = "Event",
+	BindableFunction = "OnInvoke",
+}
 
 local function getcallingfunction()
 	return debug.info(4, "f")
@@ -8,55 +13,69 @@ local function getcallingline()
 	return debug.info(4, "l")
 end
 
-local function HandleInstance(Instance: Instance)
-	if not table.find(AllowedClassNames, Instance.ClassName) then
+local function HandleInstance(Instance: RemoteEvent | any)
+	if not ClassesToHook[Instance.ClassName] then
 		return
 	end
 
-	local metatable = debug.getmetatable(Instance)
+	-- local metatable = debug.getmetatable(Instance)
 	if Instance.ClassName == "RemoteEvent" then
-		wax.shared.Connect(Instance.OnClientEvent:Connect(function(...)
-			-- do smthn i forgot
-		end))
+		local Method = ClassesToHook[Instance.ClassName]
 
-		-- we can hook debug.getmetatable(remoteevent.OnClientEvent) and check if it indexed/namecalled Connect to check for newer connections
 		for _, Connection in pairs(getconnections(Instance.OnClientEvent)) do
-			-- something
+			local Function = Connection.Function
+
+			wax.shared.Hooks[Function] = hookfunction(
+				Function,
+				newcclosure(function(...)
+					local Log = wax.shared.Logs.Incoming[Instance]
+					if not Log then
+						Log = wax.shared.NewLog(Instance, Method, "Incoming")
+					end
+
+					if Log.Blocked then
+						return
+					elseif not Log.Ignored then
+						local Info = {
+							{ ... },
+							os.date("%X"),
+							getcallingscript(),
+							getcallingfunction(),
+							getcallingline(),
+						}
+						Log:Call(Info)
+						wax.shared.Communicator:Fire(Log.Instance, "Incoming", Info, #Log.Calls)
+					end
+
+					return wax.shared.Hooks[Function](...)
+				end)
+			)
 		end
+		--[[
 	elseif Instance.ClassName == "RemoteFunction" then
-		wax.shared.Connect(Instance.OnClientInvoke:Connect(function(...)
-			-- do smthn i forgot
-		end))
-
-		-- we can hook debug.getmetatable(remotefunction.OnClientInvoke) and check if it indexed/namecalled Connect to check for newer connections
-		for _, Connection in pairs(getconnections(Instance.OnClientInvoke)) do
-			-- something
+		local Success, Callback = pcall(getcallbackvalue, Instance, "OnClientInvoke")
+		if not Success then
+			print("no callback", Instance:GetFullName())
+			return
 		end
+		wax.shared.Hooks[Callback] = hookfunction(Callback, function(...)
+			return wax.shared.Hooks[Callback](...)
+		end)
 	elseif Instance.ClassName == "BindableEvent" then
-		wax.shared.Connect(Instance.Event:Connect(function(...)
-			-- do smthn i forgot
-		end))
-
-		-- we can hook debug.getmetatable(bindableevent.Event) and check if it indexed/namecalled Connect to check for newer connections
 		for _, Connection in pairs(getconnections(Instance.Event)) do
-			-- something
+			print("client got connection", Connection.Function)
 		end
 	elseif Instance.ClassName == "BindableFunction" then
-		wax.shared.Hooks[Instance.OnInvoke] = hookfunction(Instance.OnInvoke, function(...)
+		local Success, Callback = pcall(getcallbackvalue, Instance, "OnInvoke")
+		if not Success then
+			print("no callback", Instance:GetFullName())
+			return
+		end
+		wax.shared.Hooks[Callback] = hookfunction(Callback, function(...)
 			-- do smthn i forgot
-		end)
-
-		-- we can hook debug.getmetatable(bindablefunction.OnInvoke) and check for __newindex
-		wax.shared.Hooks[metatable.__newindex] = hookfunction(metatable.__newindex, function(key, value)
-			-- do smthn i forgot
-			if key == "OnInvoke" and typeof(value) == "function" then
-				wax.shared.Hooks[Instance.OnInvoke] = hookfunction(value, function(...)
-					-- do smthn i forgot
-				end)
-			end
-
-			return wax.shared.Hooks[metatable.__newindex](key, value)
-		end)
+			print("Hello world", ...)
+			return wax.shared.Hooks[Callback](...)
+		end)]]
 	end
 end
 

@@ -162,7 +162,7 @@ local function CreateTopSeperator(Order: number)
 	})
 end
 
-local CloseButton = CreateTopButton("x", 4, wax.shared.Unload)
+CreateTopButton("x", 4, wax.shared.Unload)
 local HideButton = CreateTopButton("minus", 3)
 CreateTopSeperator(2)
 local SettingsButton = CreateTopButton("settings", 1)
@@ -202,26 +202,6 @@ local RemoteTabContainer = wax.shared.Interface.New("Frame", {
 		HorizontalFlex = Enum.UIFlexAlignment.Fill,
 	},
 })
-
-local function CreateRemoteListTab(TabName: string, Active: boolean)
-	local Button = wax.shared.Interface.New("TextButton", {
-		BackgroundColor3 = Color3.fromRGB(50, 50, 50),
-		BackgroundTransparency = Active and 0 or 1,
-		Size = UDim2.fromScale(0, 1),
-		TextSize = 15,
-		Text = TabName,
-		Parent = RemoteTabContainer,
-
-		["UICorner"] = {
-			CornerRadius = UDim.new(0, 4),
-		},
-	})
-
-	return Button
-end
-
-local OutgoingTab = CreateRemoteListTab("Outgoing", true)
-local IncomingTab = CreateRemoteListTab("Incoming", false)
 
 -- Remote List
 local RemoteListWrapper = wax.shared.Interface.New("Frame", {
@@ -354,8 +334,43 @@ local LogsPagination = wax.shared.Interface.New("Frame", {
 })
 
 -- Functions
+local CurrentTab
 local CurrentLog
 local CurrentPage = {}
+
+function ShowTab(Tab)
+	for _, Object in pairs(RemoteList:GetChildren()) do
+		if Object.ClassName == "TextButton" then
+			Object.Parent = nil
+		end
+	end
+
+	if CurrentTab then
+		wax.shared.TweenService
+			:Create(CurrentTab.Instance, DefaultTweenInfo, {
+				BackgroundTransparency = 1,
+			})
+			:Play()
+	end
+
+	CurrentTab = Tab
+	wax.shared.TweenService
+		:Create(CurrentTab.Instance, DefaultTweenInfo, {
+			BackgroundTransparency = 0,
+		})
+		:Play()
+
+	for _, Log in pairs(Tab.Logs) do
+		if not Log.Button then
+			local Button, Name, Calls = CreateLogButton(Log)
+			Log:SetButton(Button, Name, Calls)
+		end
+
+		Log.Button.Name.Text = Log.Instance.Name
+		Log.Button.Calls.Text = "x" .. #Log.Calls
+		Log.Button.Instance.Parent = RemoteList
+	end
+end
 
 function ShowLog(Log)
 	for _, Object in pairs(LogsList:GetChildren()) do
@@ -424,6 +439,41 @@ function ShowPagination(Log)
 	end
 end
 
+function CreateRemoteTab(TabName: string, Active: boolean, Logs)
+	local Button = wax.shared.Interface.New("TextButton", {
+		BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+		BackgroundTransparency = Active and 0 or 1,
+		Size = UDim2.fromScale(0, 1),
+		TextSize = 15,
+		Text = TabName,
+		Parent = RemoteTabContainer,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 4),
+		},
+	})
+
+	local Tab = {
+		Name = TabName,
+		Logs = Logs,
+		Instance = Button,
+	}
+
+	if Active then
+		CurrentTab = Tab
+	end
+
+	wax.shared.Connect(Button.MouseButton1Click:Connect(function()
+		if CurrentTab == Tab then
+			return
+		end
+
+		ShowTab(Tab)
+	end))
+
+	return Button
+end
+
 function CreatePageElement(PageOrType, Order, Active, Log)
 	if PageOrType == "ellipsis" then
 		local Ellipsis = wax.shared.Interface.New("TextBox", {
@@ -453,7 +503,7 @@ function CreatePageElement(PageOrType, Order, Active, Log)
 				return
 			end
 
-			local Success, _Error = pcall(function()
+			local Success = pcall(function()
 				PaginationHelper:SetPage(Page)
 				CurrentPage[Log] = Page
 				ShowLog(CurrentLog)
@@ -492,6 +542,7 @@ function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 	local Button = wax.shared.Interface.New("TextButton", {
 		BackgroundColor3 = Color3.fromRGB(50, 50, 50),
 		BackgroundTransparency = 1,
+		LayoutOrder = Log.Index or 1,
 		Size = UDim2.new(1, 0, 0, 30),
 		Text = "",
 
@@ -702,6 +753,9 @@ function CreateCallFrame(CallInfo: {
 end
 
 -- UI Handling
+CreateRemoteTab("Outgoing", true, wax.shared.Logs.Outgoing)
+CreateRemoteTab("Incoming", false, wax.shared.Logs.Incoming)
+
 wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: InputObject)
 	local Delta = Input.Position - Info.StartPosition
 	local FramePosition: UDim2 = Info.FramePosition
@@ -713,8 +767,12 @@ wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: In
 	LogsWrapper.Size = UDim2.new(1, -(Offset + 2), 1, -36)
 end)
 
-wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, CallInfo, CallIndex)
-	local Log = wax.shared.Logs[Instance]
+wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type, CallInfo, CallIndex)
+	if not (CurrentTab and CurrentTab.Name == Type) then
+		return
+	end
+
+	local Log = wax.shared.Logs[Type][Instance]
 
 	local Page = CurrentPage[Log]
 	if not Page then

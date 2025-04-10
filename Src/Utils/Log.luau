@@ -1,10 +1,11 @@
 local Log = {}
 Log.__index = Log
 
-function Log.new(Instance, Method)
+function Log.new(Instance, Method, Index)
 	return setmetatable({
 		Instance = Instance,
 		Method = Method,
+		Index = Index,
 		Calls = {},
 		Ignored = false,
 		Blocked = false,

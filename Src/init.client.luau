@@ -58,6 +58,14 @@ wax.shared.DisplayArgument = function(Argument)
 	return tostring(Argument)
 end
 
+wax.shared.GetTableLength = function(Table)
+	local Length = 0
+	for _, _ in pairs(Table) do
+		Length += 1
+	end
+	return Length
+end
+
 wax.shared.Unload = function()
 	for _, Connection in pairs(wax.shared.Connections) do
 		wax.shared.Disconnect(Connection)
@@ -80,11 +88,14 @@ end
 wax.shared.Communicator = Instance.new("BindableEvent")
 
 wax.shared.Log = require("Utils/Log")
-wax.shared.Logs = {}
+wax.shared.Logs = {
+	Outgoing = {},
+	Incoming = {},
+}
 
-wax.shared.NewLog = function(Instance, Method)
-	local Log = wax.shared.Log.new(Instance, Method)
-	wax.shared.Logs[Instance] = Log
+wax.shared.NewLog = function(Instance, Method, Type)
+	local Log = wax.shared.Log.new(Instance, Method, wax.shared.GetTableLength(wax.shared.Logs[Type]) + 1)
+	wax.shared.Logs[Type][Instance] = Log
 	return Log
 end
 

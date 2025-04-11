@@ -639,7 +639,9 @@ function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
 	wax.shared.Interface.New("TextLabel", {
 		Position = UDim2.fromOffset(18, 0),
 		Size = UDim2.new(1, -18, 1, 0),
-		Text = `<font color="{wax.shared.Highlighter.GetArgumentColor(Value)}">{wax.shared.DisplayArgument(Value)}</font>`,
+		TextColor3 = Color3.fromHex(wax.shared.Highlighter.GetArgumentColor(Value)),
+		Text = wax.shared.DisplayArgument(Value),
+		RichText = false,
 		TextSize = 15,
 		TextXAlignment = Enum.TextXAlignment.Left,
 

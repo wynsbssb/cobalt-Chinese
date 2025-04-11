@@ -10,7 +10,7 @@ local function getcallingline()
 end
 
 -- metamethod hooks
-wax.shared.MetaHook = hookmetamethod(
+wax.shared.NamecallHook = hookmetamethod(
 	game,
 	"__namecall",
 	newcclosure(function(self, ...)
@@ -41,7 +41,7 @@ wax.shared.MetaHook = hookmetamethod(
 			end
 		end
 
-		return wax.shared.MetaHook(self, ...)
+		return wax.shared.NamecallHook(self, ...)
 	end)
 )
 

@@ -31,6 +31,23 @@ end
 wax.shared.checkcaller = checkcaller or function()
 	return nil
 end
+wax.shared.restorefunction = function(Function: (...any) -> ...any, Silent: boolean?)
+	local Original = wax.shared.Hooks[Function]
+
+	if Silent and not Original then
+		return
+	end
+
+	assert(Original, "Function not hooked")
+
+	if restorefunction then
+		restorefunction(Function)
+	else
+		hookfunction(Function, Original)
+	end
+
+	wax.shared.Hooks[Function] = nil
+end
 
 wax.shared.IsClickInput = function(Input: InputObject): boolean
 	return Input.UserInputState == Enum.UserInputState.Begin
@@ -71,13 +88,11 @@ wax.shared.Unload = function()
 		wax.shared.Disconnect(Connection)
 	end
 
-	hookmetamethod(game, "__namecall", wax.shared.MetaHook)
+	hookmetamethod(game, "__namecall", wax.shared.NamecallHook)
+	hookmetamethod(game, "__newindex", wax.shared.NewIndexHook)
+
 	for Function, Original in pairs(wax.shared.Hooks) do
-		if restorefunction then
-			restorefunction(Function)
-		else
-			hookfunction(Function, Original)
-		end
+		wax.shared.restorefunction(Function, true)
 	end
 
 	wax.shared.Communicator:Destroy()

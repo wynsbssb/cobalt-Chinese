@@ -95,6 +95,10 @@ wax.shared.Unload = function()
 		wax.shared.restorefunction(Function, true)
 	end
 
+	for _, Thread in pairs(wax.shared.ConnectionListeners) do
+		coroutine.close(Thread)
+	end
+
 	wax.shared.Communicator:Destroy()
 	wax.shared.ScreenGui:Destroy()
 end

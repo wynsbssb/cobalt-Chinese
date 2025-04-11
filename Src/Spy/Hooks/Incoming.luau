@@ -6,6 +6,8 @@ local ClassesToHook = {
 	BindableFunction = "OnInvoke",
 }
 
+wax.shared.ConnectionListeners = {}
+
 local function getcallingfunction()
 	return debug.info(4, "f")
 end
@@ -45,9 +47,9 @@ local function HandleInstance(Instance: RemoteEvent | any)
 		return
 	end
 
-	if Instance.ClassName == "RemoteEvent" then
-		local Method = ClassesToHook[Instance.ClassName]
+	local Method = ClassesToHook[Instance.ClassName]
 
+	if Instance.ClassName == "RemoteEvent" then
 		for _, Connection in pairs(getconnections(Instance.OnClientEvent)) do
 			local Function = Connection.Function
 			if not Function then
@@ -56,30 +58,62 @@ local function HandleInstance(Instance: RemoteEvent | any)
 
 			ListenToFunction(Instance, Function, Method)
 		end
-	elseif Instance.ClassName == "RemoteFunction" then
-		local Success, Callback = pcall(getcallbackvalue, Instance, "OnClientInvoke")
+
+		-- TODO: Optimize with hookmetamethod
+		if wax.shared.ConnectionListeners[Instance] then
+			coroutine.close(wax.shared.ConnectionListeners[Instance])
+		end
+
+		wax.shared.ConnectionListeners[Instance] = task.spawn(function()
+			while task.wait() do
+				for _, Connection in pairs(getconnections(Instance.OnClientEvent)) do
+					local Function = Connection.Function
+					if not Function then
+						continue
+					end
+
+					if not wax.shared.Hooks[Function] then
+						ListenToFunction(Instance, Function, Method)
+					end
+				end
+			end
+		end)
+	elseif Instance.ClassName == "BindableEvent" then
+		for _, Connection in pairs(getconnections(Instance.Event)) do
+			local Function = Connection.Function
+			if not Function then
+				continue
+			end
+
+			ListenToFunction(Instance, Function, Method)
+		end
+
+		-- TODO: Optimize with hookmetamethod
+		if wax.shared.ConnectionListeners[Instance] then
+			coroutine.close(wax.shared.ConnectionListeners[Instance])
+		end
+
+		wax.shared.ConnectionListeners[Instance] = task.spawn(function()
+			while task.wait() do
+				for _, Connection in pairs(getconnections(Instance.Event)) do
+					local Function = Connection.Function
+					if not Function then
+						continue
+					end
+
+					if not wax.shared.Hooks[Function] then
+						ListenToFunction(Instance, Function, Method)
+					end
+				end
+			end
+		end)
+	elseif Instance.ClassName == "RemoteFunction" or Instance.ClassName == "BindableFunction" then
+		local Success, Callback = pcall(getcallbackvalue, Instance, Method)
 		if not Success or typeof(Callback) ~= "function" then
-			print("no callback", Instance:GetFullName())
 			return
 		end
 
-		ListenToFunction(Instance, Callback, "OnClientInvoke")
-		--[[
-	elseif Instance.ClassName == "BindableEvent" then
-		for _, Connection in pairs(getconnections(Instance.Event)) do
-			print("client got connection", Connection.Function)
-		end
-	elseif Instance.ClassName == "BindableFunction" then
-		local Success, Callback = pcall(getcallbackvalue, Instance, "OnInvoke")
-		if not Success then
-			print("no callback", Instance:GetFullName())
-			return
-		end
-		wax.shared.Hooks[Callback] = hookfunction(Callback, function(...)
-			-- do smthn i forgot
-			print("Hello world", ...)
-			return wax.shared.Hooks[Callback](...)
-		end)]]
+		ListenToFunction(Instance, Callback, Method)
 	end
 end
 
@@ -91,13 +125,17 @@ wax.shared.NewIndexHook = hookmetamethod(
 			return wax.shared.NewIndexHook(self, key, value)
 		end
 
-		if self.ClassName == "RemoteFunction" and key == "OnClientInvoke" and typeof(value) == "function" then
-			local Success, Callback = pcall(getcallbackvalue, self, "OnClientInvoke")
-			if Success and typeof(Callback) ~= "function" then
-				wax.shared.restorefunction(Callback, true)
-			end
+		local Method = ClassesToHook[self.ClassName]
 
-			ListenToFunction(self, value, "OnClientInvoke")
+		if self.ClassName == "RemoteFunction" or self.ClassName == "BindableFunction" then
+			if key == Method and typeof(value) == "function" then
+				local Success, Callback = pcall(getcallbackvalue, self, Method)
+				if Success and typeof(Callback) ~= "function" then
+					wax.shared.restorefunction(Callback, true)
+				end
+
+				ListenToFunction(self, value, "OnClientInvoke")
+			end
 		end
 
 		return wax.shared.NewIndexHook(self, key, value)

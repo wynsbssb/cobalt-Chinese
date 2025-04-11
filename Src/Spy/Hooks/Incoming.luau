@@ -134,7 +134,7 @@ wax.shared.NewIndexHook = hookmetamethod(
 					wax.shared.restorefunction(Callback, true)
 				end
 
-				ListenToFunction(self, value, "OnClientInvoke")
+				ListenToFunction(self, value, Method)
 			end
 		end
 

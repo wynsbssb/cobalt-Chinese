@@ -49,7 +49,7 @@ local function HandleInstance(Instance: RemoteEvent | any)
 
 	local Method = ClassesToHook[Instance.ClassName]
 
-	if Instance.ClassName == "RemoteEvent" then
+	if Instance.ClassName == "RemoteEvent" or Instance.ClassName == "UnreliableRemoteEvent" then
 		for _, Connection in pairs(getconnections(Instance.OnClientEvent)) do
 			local Function = Connection.Function
 			if not Function then

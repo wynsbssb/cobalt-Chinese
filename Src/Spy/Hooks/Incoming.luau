@@ -125,9 +125,9 @@ wax.shared.NewIndexHook = hookmetamethod(
 			return wax.shared.NewIndexHook(self, key, value)
 		end
 
-		local Method = ClassesToHook[self.ClassName]
-
 		if self.ClassName == "RemoteFunction" or self.ClassName == "BindableFunction" then
+			local Method = ClassesToHook[self.ClassName]
+
 			if key == Method and typeof(value) == "function" then
 				local Success, Callback = pcall(getcallbackvalue, self, Method)
 				if Success and typeof(Callback) ~= "function" then

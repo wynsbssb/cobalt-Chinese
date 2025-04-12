@@ -42,8 +42,8 @@ local function ListenToFunction(Instance, Function, Method)
 	)
 end
 
-local function HandleInstance(Instance: RemoteEvent | any)
-	if not ClassesToHook[Instance.ClassName] then
+local function HandleInstance(Instance: any)
+	if not ClassesToHook[Instance.ClassName] or Instance == wax.shared.Communicator then
 		return
 	end
 

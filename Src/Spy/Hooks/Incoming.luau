@@ -6,7 +6,7 @@ local ClassesToHook = {
 	BindableFunction = "OnInvoke",
 }
 
-wax.shared.ConnectionListeners = {}
+local SignalMapping = {}
 
 local function getcallingfunction()
 	return debug.info(4, "f")
@@ -59,25 +59,7 @@ local function HandleInstance(Instance: any)
 			ListenToFunction(Instance, Function, Method)
 		end
 
-		-- TODO: Optimize with hookmetamethod
-		if wax.shared.ConnectionListeners[Instance] then
-			coroutine.close(wax.shared.ConnectionListeners[Instance])
-		end
-
-		wax.shared.ConnectionListeners[Instance] = task.spawn(function()
-			while task.wait() do
-				for _, Connection in pairs(getconnections(Instance.OnClientEvent)) do
-					local Function = Connection.Function
-					if not Function then
-						continue
-					end
-
-					if not wax.shared.Hooks[Function] then
-						ListenToFunction(Instance, Function, Method)
-					end
-				end
-			end
-		end)
+		SignalMapping[Instance.OnClientEvent] = Instance
 	elseif Instance.ClassName == "BindableEvent" then
 		for _, Connection in pairs(getconnections(Instance.Event)) do
 			local Function = Connection.Function
@@ -88,25 +70,7 @@ local function HandleInstance(Instance: any)
 			ListenToFunction(Instance, Function, Method)
 		end
 
-		-- TODO: Optimize with hookmetamethod
-		if wax.shared.ConnectionListeners[Instance] then
-			coroutine.close(wax.shared.ConnectionListeners[Instance])
-		end
-
-		wax.shared.ConnectionListeners[Instance] = task.spawn(function()
-			while task.wait() do
-				for _, Connection in pairs(getconnections(Instance.Event)) do
-					local Function = Connection.Function
-					if not Function then
-						continue
-					end
-
-					if not wax.shared.Hooks[Function] then
-						ListenToFunction(Instance, Function, Method)
-					end
-				end
-			end
-		end)
+		SignalMapping[Instance.Event] = Instance
 	elseif Instance.ClassName == "RemoteFunction" or Instance.ClassName == "BindableFunction" then
 		local Success, Callback = pcall(getcallbackvalue, Instance, Method)
 		if not Success or typeof(Callback) ~= "function" then
@@ -147,3 +111,28 @@ wax.shared.Connect(game.DescendantAdded:Connect(HandleInstance))
 for _, Instance in pairs(getinstances()) do
 	HandleInstance(Instance)
 end
+
+local SignalMetatable = getrawmetatable(Instance.new("Part").Touched)
+wax.shared.Hooks[SignalMetatable.__index] = hookfunction(SignalMetatable.__index, function(self, key)
+	if key == "Connect" then
+		local Instance = SignalMapping[self]
+		local Connect = wax.shared.Hooks[SignalMetatable.__index](self, key)
+
+		if not Instance then
+			return Connect
+		end
+
+		local Method = ClassesToHook[Instance.ClassName]
+		wax.shared.Hooks[Connect] = hookfunction(
+			Connect,
+			newcclosure(function(self, callback)
+				ListenToFunction(Instance, callback, Method)
+				return wax.shared.Hooks[Connect](self, callback)
+			end)
+		)
+
+		return Connect
+	end
+
+	return wax.shared.Hooks[SignalMetatable.__index](self, key)
+end)

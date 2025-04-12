@@ -114,7 +114,7 @@ end
 
 local SignalMetatable = getrawmetatable(Instance.new("Part").Touched)
 wax.shared.Hooks[SignalMetatable.__index] = hookfunction(SignalMetatable.__index, function(self, key)
-	if key == "Connect" then
+	if key == "Connect" or key == "ConnectParallel" then
 		local Instance = SignalMapping[self]
 		local Connect = wax.shared.Hooks[SignalMetatable.__index](self, key)
 

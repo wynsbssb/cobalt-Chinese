@@ -112,7 +112,7 @@ for _, Instance in pairs(getinstances()) do
 	HandleInstance(Instance)
 end
 
-local SignalMetatable = getrawmetatable(Instance.new("Part").Touched)
+local SignalMetatable = wax.shared.getrawmetatable(Instance.new("Part").Touched)
 wax.shared.Hooks[SignalMetatable.__index] = hookfunction(SignalMetatable.__index, function(self, key)
 	if key == "Connect" or key == "ConnectParallel" then
 		local Instance = SignalMapping[self]

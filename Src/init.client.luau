@@ -48,6 +48,7 @@ wax.shared.restorefunction = function(Function: (...any) -> ...any, Silent: bool
 
 	wax.shared.Hooks[Function] = nil
 end
+wax.shared.getrawmetatable = getrawmetatable or debug.getmetatable
 
 wax.shared.IsClickInput = function(Input: InputObject): boolean
 	return Input.UserInputState == Enum.UserInputState.Begin

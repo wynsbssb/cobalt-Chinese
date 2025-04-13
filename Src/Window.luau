@@ -49,6 +49,374 @@ local SonnerUI = wax.shared.Interface.New("ScrollingFrame", {
 
 wax.shared.Sonner.init(SonnerUI)
 
+-- Modal
+local ModalBackground = wax.shared.Interface.New("Frame", {
+	BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+	BackgroundTransparency = 1,
+	Size = UDim2.fromScale(1, 1),
+	Visible = false,
+	ZIndex = 2,
+
+	MainUICorner,
+	Parent = MainFrame,
+})
+
+local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
+	local ModalTop = wax.shared.Interface.New("Frame", {
+		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+		Size = UDim2.new(1, 0, 0, 36),
+		Parent = Parent,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 4),
+		},
+	})
+
+	local ModalTitle = wax.shared.Interface.New("TextLabel", {
+		Text = Title,
+		TextSize = 17,
+		Size = UDim2.new(1, 0, 1, 0),
+		TextTransparency = 0.5,
+		Parent = ModalTop,
+	})
+
+	local ModalIcon
+
+	if Icon:match("rbxasset") then
+		ModalIcon = wax.shared.Interface.New("ImageLabel", {
+			Image = Icon,
+			Size = UDim2.new(1, -2, 1, -2),
+			AnchorPoint = Vector2.new(0, 0.5),
+			Position = UDim2.fromScale(0, 0.5),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+
+			Parent = ModalTop,
+		})
+	else
+		ModalIcon = wax.shared.Interface.NewIcon(Icon, {
+			ImageTransparency = 0.5,
+			Size = UDim2.new(1, -2, 1, -2),
+			AnchorPoint = Vector2.new(0, 0.5),
+			Position = UDim2.fromScale(0, 0.5),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+
+			Parent = ModalTop,
+		})
+	end
+
+	local CloseButton = wax.shared.Interface.New("ImageButton", {
+		Size = UDim2.fromScale(1, 1),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.fromScale(0, 1),
+		Parent = ModalTop,
+	})
+
+	wax.shared.Interface.NewIcon(Icon, {
+		ImageTransparency = 0.5,
+		Size = UDim2.fromOffset(22, 22),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+
+		Parent = CloseButton,
+	})
+
+	return ModalTop, ModalTitle, ModalIcon
+end
+
+-- Settings
+local SettingsFrame = wax.shared.Interface.New("Frame", {
+	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+	Size = UDim2.new(0.65, 0, 0, 285),
+	Position = UDim2.fromScale(0.5, 0.5),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Visible = false,
+	Parent = ModalBackground,
+
+	["UICorner"] = {
+		CornerRadius = UDim.new(0, 8),
+	},
+
+	["UIStroke"] = {
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		Color = Color3.fromRGB(25, 25, 25),
+		Thickness = 1,
+	},
+})
+
+local SettingsTop = CreateModalTop("Settings", "settings", SettingsFrame)
+
+-- Info
+local InfoFrame = wax.shared.Interface.New("Frame", {
+	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+	Size = UDim2.new(0.65, 0, 0, 285),
+	Position = UDim2.fromScale(0.5, 0.5),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Visible = false,
+	Parent = ModalBackground,
+
+	["UICorner"] = {
+		CornerRadius = UDim.new(0, 8),
+	},
+
+	["UIStroke"] = {
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		Color = Color3.fromRGB(25, 25, 25),
+		Thickness = 1,
+	},
+})
+
+local InfoTop, InfoTitle, InfoIcon = CreateModalTop("Loading...", Images["RemoteEvent"], InfoFrame)
+
+-- Search
+local SearchFrame = wax.shared.Interface.New("Frame", {
+	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+	Size = UDim2.new(0.5, 0, 0.8, 0),
+	Position = UDim2.fromScale(0.5, 0.5),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Visible = false,
+	Parent = ModalBackground,
+
+	["UICorner"] = {
+		CornerRadius = UDim.new(0, 8),
+	},
+
+	["UIStroke"] = {
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		Color = Color3.fromRGB(25, 25, 25),
+		Thickness = 1,
+	},
+})
+
+local SearchTop = wax.shared.Interface.New("Frame", {
+	BackgroundTransparency = 1,
+	Size = UDim2.new(1, 0, 0, 36),
+	Parent = SearchFrame,
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 12),
+		PaddingRight = UDim.new(0, 6),
+		PaddingTop = UDim.new(0, 6),
+		PaddingBottom = UDim.new(0, 6),
+	},
+})
+
+local SearchBox = wax.shared.Interface.New("TextBox", {
+	BackgroundTransparency = 1,
+	Size = UDim2.new(1, -30, 1, 0),
+	PlaceholderText = "Search for remotes...",
+	PlaceholderColor3 = Color3.fromRGB(127, 127, 127),
+	Text = "",
+	TextSize = 17,
+	Parent = SearchTop,
+})
+
+local SearchClose = wax.shared.Interface.New("ImageButton", {
+	Size = UDim2.fromScale(1, 1),
+	SizeConstraint = Enum.SizeConstraint.RelativeYY,
+	Parent = SearchTop,
+})
+
+wax.shared.Interface.NewIcon("x", {
+	ImageTransparency = 0.5,
+	Size = UDim2.fromOffset(22, 22),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.5),
+	SizeConstraint = Enum.SizeConstraint.RelativeYY,
+
+	Parent = SearchBox,
+})
+
+wax.shared.Interface.New("Frame", {
+	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+	Size = UDim2.new(1, 0, 0, 1),
+	Position = UDim2.fromOffset(0, 36),
+	Parent = SearchFrame,
+})
+
+local SearchFilterList = wax.shared.Interface.New("ScrollingFrame", {
+	AutomaticCanvasSize = Enum.AutomaticSize.X,
+	CanvasSize = UDim2.fromOffset(0, 0),
+	ScrollBarThickness = 2,
+	Position = UDim2.fromOffset(0, 37),
+	Size = UDim2.new(1, 0, 0, 36),
+	BackgroundTransparency = 1,
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		Padding = UDim.new(0, 6),
+	},
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 6),
+		PaddingRight = UDim.new(0, 6),
+		PaddingTop = UDim.new(0, 6),
+		PaddingBottom = UDim.new(0, 6),
+	},
+})
+
+-- Search Filter
+local CurrentSearchFilters = {}
+local SearchFilterOrder = 0
+
+local FilterAllButton = wax.shared.Interface.New("TextButton", {
+	BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+	Size = UDim2.fromScale(0, 1),
+	AutomaticSize = Enum.AutomaticSize.X,
+	TextSize = 15,
+	Text = "All",
+	LayoutOrder = SearchFilterOrder,
+	Parent = SearchFilterList,
+
+	["UICorner"] = {
+		CornerRadius = UDim.new(0, 4),
+	},
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 12),
+		PaddingRight = UDim.new(0, 12),
+		PaddingTop = UDim.new(0, 0),
+		PaddingBottom = UDim.new(0, 0),
+	},
+})
+
+wax.shared.Connect(FilterAllButton.MouseButton1Click:Connect(function()
+	for _, Object in pairs(SearchFilterList:GetChildren()) do
+		if Object.ClassName == "TextButton" then
+			Object.BackgroundTransparency = 1
+		end
+	end
+
+	CurrentSearchFilters = {}
+	FilterAllButton.BackgroundTransparency = 0
+end))
+
+for ClassName, Image in pairs(Images) do
+	SearchFilterOrder += 1
+
+	local ClassNameFilterButton = wax.shared.Interface.New("TextButton", {
+		BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+		Size = UDim2.fromScale(0, 1),
+		AutomaticSize = Enum.AutomaticSize.X,
+		TextSize = 15,
+		Text = "",
+		LayoutOrder = SearchFilterOrder,
+		Parent = SearchFilterList,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 4),
+		},
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 12),
+			PaddingRight = UDim.new(0, 12),
+			PaddingTop = UDim.new(0, 0),
+			PaddingBottom = UDim.new(0, 0),
+		},
+
+		["UIListLayout"] = {
+			FillDirection = Enum.FillDirection.Horizontal,
+			HorizontalAlignment = Enum.HorizontalAlignment.Left,
+			Padding = UDim.new(0, 6),
+		},
+
+		["ImageLabel"] = {
+			Image = Image,
+			Size = UDim2.new(1, -7, 1, -7),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+			BackgroundTransparency = 1,
+		},
+
+		["TextLabel"] = {
+			Text = ClassName,
+			TextSize = 15,
+			Size = UDim2.fromScale(0, 1),
+			AutomaticSize = Enum.AutomaticSize.X,
+		},
+	})
+
+	wax.shared.Connect(ClassNameFilterButton.MouseButton1Click:Connect(function()
+		local FoundIndex = table.find(CurrentSearchFilters, ClassName)
+		if FoundIndex then
+			table.remove(CurrentSearchFilters, FoundIndex)
+			ClassNameFilterButton.BackgroundTransparency = 1
+
+			return
+		end
+
+		table.insert(CurrentSearchFilters, ClassName)
+		ClassNameFilterButton.BackgroundTransparency = 0
+	end))
+end
+
+wax.shared.Interface.New("Frame", {
+	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+	Size = UDim2.new(1, 0, 0, 1),
+	Position = UDim2.fromOffset(0, 72),
+	Parent = SearchFrame,
+})
+
+local SearchResults = wax.shared.Interface.New("ScrollingFrame", {
+	BackgroundTransparency = 1,
+	Position = UDim2.fromOffset(0, 73),
+	Size = UDim2.new(1, 0, 1, -73),
+	Parent = SearchFrame,
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	CanvasSize = UDim2.new(0, 0, 0, 0),
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Vertical,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		Padding = UDim.new(0, 6),
+	},
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 6),
+		PaddingRight = UDim.new(0, 6),
+		PaddingTop = UDim.new(0, 6),
+		PaddingBottom = UDim.new(0, 6),
+	},
+})
+
+local function CreateSearchResult(Instance: Instance, Active: boolean)
+	local SearchResult = wax.shared.Interface.New("TextButton", {
+		Text = "",
+		BackgroundTransparency = Active and 0 or 1,
+		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+		Size = UDim2.new(1, 0, 0, 36),
+		Parent = SearchResults,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 6),
+		},
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 6),
+			PaddingRight = UDim.new(0, 6),
+			PaddingTop = UDim.new(0, 6),
+			PaddingBottom = UDim.new(0, 6),
+		},
+
+		["ImageLabel"] = {
+			BackgroundTransparency = 1,
+			Size = UDim2.fromScale(1, 1),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+			Image = Images[Instance.ClassName],
+		},
+
+		["TextLabel"] = {
+			Text = Instance.Name,
+			TextSize = 17,
+			Size = UDim2.new(1, -30, 1, 0),
+			Position = UDim2.fromOffset(30, 0),
+		},
+	})
+
+	return SearchResult
+end
+
 -- Topbar
 local TopBar = wax.shared.Interface.New("Frame", {
 	BackgroundColor3 = Color3.fromRGB(25, 25, 25),

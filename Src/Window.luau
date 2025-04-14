@@ -33,6 +33,87 @@ local MainFrame = wax.shared.Interface.New("Frame", {
 	Parent = ScreenGui,
 })
 
+-- Context Menus
+local function CreateContextMenu(Options: {
+	[number]: {
+		["Icon"]: string,
+		["Text"]: string,
+		["Callback"]: () -> (),
+		["CloseOnClick"]: boolean?,
+	}
+})
+	local ContextMenu = wax.shared.Interface.New("Frame", {
+		BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+		Size = UDim2.fromScale(0, 0),
+		AutomaticSize = Enum.AutomaticSize.XY,
+		ZIndex = 10000,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 8),
+		},
+
+		["UIListLayout"] = {
+			FillDirection = Enum.FillDirection.Vertical,
+			HorizontalAlignment = Enum.HorizontalAlignment.Left,
+			Padding = UDim.new(0, 0),
+		},
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 6),
+			PaddingRight = UDim.new(0, 6),
+			PaddingTop = UDim.new(0, 6),
+			PaddingBottom = UDim.new(0, 6),
+		},
+
+		["UIStroke"] = {
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			Color = Color3.fromRGB(25, 25, 25),
+			Thickness = 1,
+		},
+	})
+
+	for Order, Data in pairs(Options) do
+		local TextButton = wax.shared.Interface.New("TextButton", {
+			Text = "",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 0, 30),
+			Parent = ContextMenu,
+
+			["UIPadding"] = {
+				PaddingLeft = UDim.new(0, 6),
+				PaddingRight = UDim.new(0, 6),
+				PaddingTop = UDim.new(0, 6),
+				PaddingBottom = UDim.new(0, 6),
+			},
+
+			["TextLabel"] = {
+				Position = UDim2.fromOffset(26, 0),
+				Size = UDim2.new(0, 73, 1, 0),
+				Text = Data.Text,
+			}
+		})
+
+		wax.shared.Interface.NewIcon(Data.Icon, {
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+			Size = UDim2.fromScale(1, 1),
+
+			Parent = TextButton,
+		})
+
+		wax.shared.Connect(TextButton.MouseButton1Click:Connect(function()
+			if Data.Callback then
+				Data.Callback()
+			end
+
+			if Data.CloseOnClick ~= false then
+				ContextMenu:Destroy()
+			end
+		end))
+	end
+
+	return ContextMenu
+end
+
 -- Sonner toast
 local SonnerUI = wax.shared.Interface.New("ScrollingFrame", {
 	Name = "Sonner",

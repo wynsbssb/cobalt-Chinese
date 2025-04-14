@@ -147,6 +147,97 @@ local SettingsFrame = wax.shared.Interface.New("Frame", {
 
 local SettingsTop = CreateModalTop("Settings", "settings", SettingsFrame)
 
+local SettingsScrollingFrame = wax.shared.Interface.New("ScrollingFrame", {
+	AnchorPoint = Vector2.new(0, 1),
+	BackgroundTransparency = 1,
+	Position = UDim2.fromScale(0, 1),
+	Size = UDim2.new(1, 0, 1, -37),
+	ClipsDescendants = true,
+	Parent = SettingsFrame,
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Vertical,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		Padding = UDim.new(0, 15),
+	},
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 8),
+		PaddingRight = UDim.new(0, 8),
+		PaddingTop = UDim.new(0, 8),
+		PaddingBottom = UDim.new(0, 8),
+	}
+})
+
+local function CreateSettingsSection(SectionName: string)
+	return wax.shared.Interface.New("Frame", {
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		Parent = SettingsScrollingFrame,
+
+		["UIListLayout"] = {
+			FillDirection = Enum.FillDirection.Vertical,
+			HorizontalAlignment = Enum.HorizontalAlignment.Left,
+			Padding = UDim.new(0, 6),
+		},
+
+		["TextLabel"] = {
+			Text = SectionName,
+			FontFace = Font.fromId(12187365364, Enum.FontWeight.Bold),
+			TextSize = 18,
+			Size = UDim2.fromScale(1, 0),
+			TextXAlignment = Enum.TextXAlignment.Left,
+			LayoutOrder = -1,
+		},
+	})
+end
+
+local FilterSection = CreateSettingsSection("Filter")
+
+local IgnoredSection = CreateSettingsSection("Ignored")
+
+local BlockedSection = CreateSettingsSection("Blocked")
+
+local CreditsSection = CreateSettingsSection("Credits")
+
+local Credits = {
+	{
+		Credit = "shadcn",
+		Description = "UI Design Insipration (<font color=\"#3798ff\">https://ui.shadcn.com/</font>)"
+	},
+	{
+		Credit = "lucide",
+		Description = "Consistent and clean icons (<font color=\"#3798ff\">https://lucide.dev/</font>)"
+	},
+	{
+		Credit = "Emil Kowalski",
+		Description = "Creator of Sonner component (<font color=\"#3798ff\">https://sonner.emilkowal.ski/</font>)"
+	}
+}
+
+local CreditsWrapper = wax.shared.Interface.New("Frame", {
+	BackgroundTransparency = 1,
+	Size = UDim2.fromScale(1, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	Parent = CreditsSection,
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Vertical,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		Padding = UDim.new(0, 10),
+	}
+})
+
+for Order, Data in pairs(Credits) do
+	wax.shared.Interface.New("TextLabel", {
+		Text = `<b>{Data.Credit}</b>\n{Data.Description}`,
+		Size = UDim2.fromScale(1, 0),
+		TextSize = 14,
+		LayoutOrder = Order,
+		Parent = CreditsWrapper
+	})
+end
+
 -- Info
 local InfoFrame = wax.shared.Interface.New("Frame", {
 	BackgroundColor3 = Color3.fromRGB(10, 10, 10),

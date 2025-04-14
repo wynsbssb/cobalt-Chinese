@@ -341,6 +341,59 @@ local InfoFrame = wax.shared.Interface.New("Frame", {
 
 local InfoTop, InfoTitle, InfoIcon = CreateModalTop("Loading...", Images["RemoteEvent"], InfoFrame)
 
+local InfoButtons = wax.shared.Interface.New("Frame", {
+	BackgroundTransparency = 1,
+	Position = UDim2.new(0, 6, 1, -7),
+	AnchorPoint = Vector2.new(0, 1),
+	Size = UDim2.new(1, -12, 0, 32),
+	Parent = InfoFrame,
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		Padding = UDim.new(0, 6),
+	}
+})
+
+local function CreateInfoButton(Icon: string, Title: string, Callback: (...any) -> ...any)
+	local Button = wax.shared.Interface.New("ImageButton", {
+		BackgroundTransparency = 1,
+		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+		Size = UDim2.fromScale(0, 1),
+		Parent = InfoButtons,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 6),
+		},
+
+		["TextLabel"] = {
+			Text = Title,
+			TextSize = 15,
+			Size = UDim2.fromScale(0, 1),
+			Position = UDim2.fromOffset(28, 0),
+			AutomaticSize = Enum.AutomaticSize.X,
+		}
+	})
+
+	wax.shared.Interface.NewIcon(Icon, {
+		Size = UDim2.fromScale(1, 1),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+
+		Parent = Button,
+	})
+
+	wax.shared.Connect(Button.MouseButton1Click:Connect(Callback))
+	return Button
+end
+
+local CopyButton = CreateInfoButton("copy", "Copy", function()
+	wax.shared.Sonner.error("This button (Copy) is not implemented yet.")
+end)
+
+local NetworkButton = CreateInfoButton("network", "Event", function()
+	wax.shared.Sonner.error("This button (Event) is not implemented yet.")
+end)
+
 -- Search
 local SearchFrame = wax.shared.Interface.New("Frame", {
 	BackgroundColor3 = Color3.fromRGB(10, 10, 10),

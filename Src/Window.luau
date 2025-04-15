@@ -461,6 +461,7 @@ local SearchBox = wax.shared.Interface.New("TextBox", {
 	BackgroundTransparency = 1,
 	Size = UDim2.new(1, -30, 1, 0),
 	PlaceholderText = "Search for remotes...",
+	TextXAlignment = Enum.TextXAlignment.Left,
 	PlaceholderColor3 = Color3.fromRGB(127, 127, 127),
 	Text = "",
 	TextSize = 17,
@@ -1268,7 +1269,7 @@ function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
 		Size = UDim2.new(1, -18, 1, 0),
 		TextColor3 = Color3.fromHex(wax.shared.Highlighter.GetArgumentColor(Value)),
 		Text = wax.shared.DisplayArgument(Value),
-		RichText = false,
+		RichText = true,
 		TextSize = 15,
 		TextXAlignment = Enum.TextXAlignment.Left,
 

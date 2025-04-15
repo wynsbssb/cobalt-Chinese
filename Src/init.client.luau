@@ -19,6 +19,7 @@ wax.shared.Icons = require("Utils/Icons")
 wax.shared.Sonner = require("Utils/Sonner")
 wax.shared.Highlighter = require("Utils/Highlighter")
 wax.shared.Pagination = require("Utils/Pagination")
+wax.shared.CodeGen = require("Utils/CodeGen")
 
 -- Variables
 wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer
@@ -86,6 +87,8 @@ wax.shared.DisplayArgument = function(Argument)
 		return string.format('"%s"', Argument)
 	elseif typeof(Argument) == "table" then
 		return "{...}"
+	elseif typeof(Argument) == "Instance" then
+		return wax.shared.CodeGen.GetFullPath(Argument)
 	end
 
 	return tostring(Argument)

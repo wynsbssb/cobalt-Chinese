@@ -49,6 +49,21 @@ wax.shared.restorefunction = function(Function: (...any) -> ...any, Silent: bool
 	wax.shared.Hooks[Function] = nil
 end
 wax.shared.getrawmetatable = getrawmetatable or debug.getmetatable
+wax.shared.newcclosure = wax.shared.ExecutorName == "AWP" and function(f)
+	local env = getfenv(f)
+	local x = setmetatable({
+		__F = f,
+	}, {
+		__index = env,
+		__newindex = env,
+	})
+
+	local nf = function(...)
+		return __F(...)
+	end
+	setfenv(nf, x) -- set func env (env of nf gets deoptimized)
+	return newcclosure(nf)
+end or newcclosure
 
 wax.shared.IsClickInput = function(Input: InputObject): boolean
 	return Input.UserInputState == Enum.UserInputState.Begin

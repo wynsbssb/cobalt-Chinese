@@ -13,7 +13,7 @@ end
 wax.shared.NamecallHook = hookmetamethod(
 	game,
 	"__namecall",
-	newcclosure(function(self, ...)
+	wax.shared.newcclosure(function(self, ...)
 		local Method = getnamecallmethod()
 
 		if
@@ -59,7 +59,7 @@ for _, Function in pairs(FunctionsToHook) do
 
 	wax.shared.Hooks[Function] = hookfunction(
 		Function,
-		newcclosure(function(self, ...)
+		wax.shared.newcclosure(function(self, ...)
 			if self ~= wax.shared.Communicator then
 				local Log = wax.shared.Logs.Outgoing[self]
 				if not Log then

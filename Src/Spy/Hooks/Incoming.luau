@@ -18,7 +18,7 @@ end
 local function ListenToFunction(Instance, Function, Method)
 	wax.shared.Hooks[Function] = hookfunction(
 		Function,
-		newcclosure(function(...)
+		wax.shared.newcclosure(function(...)
 			local Log = wax.shared.Logs.Incoming[Instance]
 			if not Log then
 				Log = wax.shared.NewLog(Instance, Method, "Incoming")
@@ -84,7 +84,7 @@ end
 wax.shared.NewIndexHook = hookmetamethod(
 	game,
 	"__newindex",
-	newcclosure(function(self, key, value)
+	wax.shared.newcclosure(function(self, key, value)
 		if not ClassesToHook[self.ClassName] then
 			return wax.shared.NewIndexHook(self, key, value)
 		end
@@ -125,7 +125,7 @@ wax.shared.Hooks[SignalMetatable.__index] = hookfunction(SignalMetatable.__index
 		local Method = ClassesToHook[Instance.ClassName]
 		wax.shared.Hooks[Connect] = hookfunction(
 			Connect,
-			newcclosure(function(self, callback)
+			wax.shared.newcclosure(function(self, callback)
 				ListenToFunction(Instance, callback, Method)
 				return wax.shared.Hooks[Connect](self, callback)
 			end)

@@ -141,6 +141,7 @@ local SonnerUI = wax.shared.Interface.New("ScrollingFrame", {
 wax.shared.Sonner.init(SonnerUI)
 
 -- Modal
+local OpenedModal
 local ModalBackground = wax.shared.Interface.New("TextButton", {
 	BackgroundColor3 = Color3.fromRGB(0, 0, 0),
 	BackgroundTransparency = 0.5,
@@ -152,6 +153,18 @@ local ModalBackground = wax.shared.Interface.New("TextButton", {
 	MainUICorner,
 	Parent = MainFrame,
 })
+ModalBackground.MouseButton1Click:Connect(function()
+	if OpenedModal then
+		OpenedModal.Visible = false
+		OpenedModal = nil
+	end
+	ModalBackground.Visible = false
+end)
+local function OpenModal(Parent)
+	OpenedModal = Parent
+	OpenedModal.Visible = true
+	ModalBackground.Visible = true
+end
 
 local function ConnectCloseButton(Button, Image, Parent)
 	Button.MouseEnter:Connect(function()
@@ -248,11 +261,12 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 end
 
 -- Settings
-local SettingsFrame = wax.shared.Interface.New("Frame", {
-	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
-	Size = UDim2.new(0.65, 0, 0, 285),
-	Position = UDim2.fromScale(0.5, 0.5),
+local SettingsFrame = wax.shared.Interface.New("TextButton", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
+	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+	Position = UDim2.fromScale(0.5, 0.5),
+	Size = UDim2.new(0.65, 0, 0, 285),
+	Text = "",
 	Visible = false,
 	Parent = ModalBackground,
 
@@ -367,11 +381,12 @@ for Order, Data in pairs(Credits) do
 end
 
 -- Info
-local InfoFrame = wax.shared.Interface.New("Frame", {
-	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
-	Size = UDim2.new(0.65, 0, 0, 285),
-	Position = UDim2.fromScale(0.5, 0.5),
+local InfoFrame = wax.shared.Interface.New("TextButton", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
+	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+	Position = UDim2.fromScale(0.5, 0.5),
+	Size = UDim2.new(0.65, 0, 0, 285),
+	Text = "",
 	Visible = false,
 	Parent = ModalBackground,
 
@@ -456,11 +471,12 @@ local NetworkButton = CreateInfoButton("network", "Event", function()
 end)
 
 -- Search
-local SearchFrame = wax.shared.Interface.New("Frame", {
-	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
-	Size = UDim2.new(0.5, 0, 0.8, 0),
-	Position = UDim2.fromScale(0.5, 0.5),
+local SearchFrame = wax.shared.Interface.New("TextButton", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
+	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+	Position = UDim2.fromScale(0.5, 0.5),
+	Size = UDim2.new(0.5, 0, 0.8, 0),
+	Text = "",
 	Visible = false,
 	Parent = ModalBackground,
 
@@ -491,7 +507,7 @@ local SearchTop = wax.shared.Interface.New("Frame", {
 local SearchBox = wax.shared.Interface.New("TextBox", {
 	BackgroundTransparency = 1,
 	Size = UDim2.new(1, -30, 1, 0),
-	PlaceholderText = "Search for remotes...",
+	PlaceholderText = "Search for logs...",
 	TextXAlignment = Enum.TextXAlignment.Left,
 	PlaceholderColor3 = Color3.fromRGB(127, 127, 127),
 	Text = "",
@@ -553,7 +569,7 @@ local ExcludeSearchClass = {}
 local SearchFilterButtons = {}
 
 local FilterAllButton = wax.shared.Interface.New("TextButton", {
-	BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
 	Size = UDim2.fromScale(0, 1),
 	AutomaticSize = Enum.AutomaticSize.X,
 	TextSize = 15,
@@ -574,15 +590,15 @@ local FilterAllButton = wax.shared.Interface.New("TextButton", {
 
 FilterAllButton.MouseButton1Click:Connect(function()
 	ExcludeSearchClass = {}
-	FilterAllButton.BackgroundTransparency = 0
+	FilterAllButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	for _, Button in pairs(SearchFilterButtons) do
-		Button.BackgroundTransparency = 0
+		Button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	end
 end)
 
 for Order, ClassName in pairs(ClassOrder) do
 	local ClassNameFilterButton = wax.shared.Interface.New("TextButton", {
-		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
 		Size = UDim2.fromScale(0, 1),
 		AutomaticSize = Enum.AutomaticSize.X,
 		TextSize = 15,
@@ -630,17 +646,18 @@ for Order, ClassName in pairs(ClassOrder) do
 		local FoundIndex = table.find(ExcludeSearchClass, ClassName)
 		if FoundIndex then
 			table.remove(ExcludeSearchClass, FoundIndex)
-			ClassNameFilterButton.BackgroundTransparency = 0
+			ClassNameFilterButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+
 			if #ExcludeSearchClass == 0 then
-				FilterAllButton.BackgroundTransparency = 0
+				FilterAllButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 			end
 
 			return
 		end
 
 		table.insert(ExcludeSearchClass, ClassName)
-		ClassNameFilterButton.BackgroundTransparency = 1
-		FilterAllButton.BackgroundTransparency = 1
+		ClassNameFilterButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+		FilterAllButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	end)
 
 	table.insert(SearchFilterButtons, ClassNameFilterButton)
@@ -654,12 +671,14 @@ wax.shared.Interface.New("Frame", {
 })
 
 local SearchResults = wax.shared.Interface.New("ScrollingFrame", {
-	BackgroundTransparency = 1,
-	Position = UDim2.fromOffset(0, 73),
-	Size = UDim2.new(1, 0, 1, -73),
-	Parent = SearchFrame,
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	BackgroundTransparency = 1,
 	CanvasSize = UDim2.new(0, 0, 0, 0),
+	Position = UDim2.fromOffset(0, 73),
+	ScrollBarThickness = 3,
+	Size = UDim2.new(1, 0, 1, -73),
+
+	Parent = SearchFrame,
 
 	["UIListLayout"] = {
 		FillDirection = Enum.FillDirection.Vertical,
@@ -668,45 +687,55 @@ local SearchResults = wax.shared.Interface.New("ScrollingFrame", {
 	},
 
 	["UIPadding"] = {
+		PaddingBottom = UDim.new(0, 6),
 		PaddingLeft = UDim.new(0, 6),
 		PaddingRight = UDim.new(0, 6),
 		PaddingTop = UDim.new(0, 6),
-		PaddingBottom = UDim.new(0, 6),
 	},
 })
 
-local function CreateSearchResult(Instance: Instance, Active: boolean)
+local function CreateSearchResult(Instance: Instance, Type: string, Active: boolean)
 	local SearchResult = wax.shared.Interface.New("TextButton", {
-		Text = "",
-		BackgroundTransparency = Active and 0 or 1,
 		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+		BackgroundTransparency = Active and 0 or 1,
 		Size = UDim2.new(1, 0, 0, 36),
-		Parent = SearchResults,
+		Text = "",
 
 		["UICorner"] = {
 			CornerRadius = UDim.new(0, 6),
 		},
 
 		["UIPadding"] = {
+			PaddingBottom = UDim.new(0, 6),
 			PaddingLeft = UDim.new(0, 6),
 			PaddingRight = UDim.new(0, 6),
 			PaddingTop = UDim.new(0, 6),
-			PaddingBottom = UDim.new(0, 6),
 		},
 
 		["ImageLabel"] = {
 			BackgroundTransparency = 1,
+			Image = Images[Instance.ClassName],
 			Size = UDim2.fromScale(1, 1),
 			SizeConstraint = Enum.SizeConstraint.RelativeYY,
-			Image = Images[Instance.ClassName],
 		},
 
 		["TextLabel"] = {
+			Position = UDim2.fromOffset(30, 0),
+			Size = UDim2.new(1, -30, 1, 0),
 			Text = Instance.Name,
 			TextSize = 17,
-			Size = UDim2.new(1, -30, 1, 0),
-			Position = UDim2.fromOffset(30, 0),
+			TextXAlignment = Enum.TextXAlignment.Left,
 		},
+	})
+
+	wax.shared.Interface.New("TextLabel", {
+		Size = UDim2.fromScale(1, 1),
+		Text = Type,
+		TextSize = 15,
+		TextTransparency = 0.5,
+		TextXAlignment = Enum.TextXAlignment.Right,
+
+		Parent = SearchResult,
 	})
 
 	return SearchResult
@@ -826,10 +855,11 @@ end
 CreateTopButton("x", 4, wax.shared.Unload)
 local HideButton = CreateTopButton("minus", 3)
 CreateTopSeperator(2)
-local SettingsButton = CreateTopButton("settings", 1)
+local SettingsButton = CreateTopButton("settings", 1, function()
+	OpenModal(SettingsFrame)
+end)
 local SearchButton = CreateTopButton("search", 0, function()
-	ModalBackground.Visible = true
-	SearchFrame.Visible = true
+	OpenModal(SearchFrame)
 	SearchBox:CaptureFocus()
 end)
 
@@ -1419,9 +1449,47 @@ function CreateCallFrame(CallInfo: {
 	return CallFrame
 end
 
+function CleanSearchResults()
+	for _, Result in pairs(SearchResults:GetChildren()) do
+		if Result.ClassName == "TextButton" then
+			Result.Parent = nil
+		end
+	end
+end
+
 -- UI Handling
 CreateRemoteTab("Outgoing", true, wax.shared.Logs.Outgoing)
 CreateRemoteTab("Incoming", false, wax.shared.Logs.Incoming)
+
+function HandleSearch(Text, Type)
+	for Instance, Log in pairs(wax.shared.Logs[Type]) do
+		if table.find(ExcludeSearchClass, Instance.ClassName) then
+			continue
+		end
+
+		if not Log.SearchResult then
+			local SearchResult = CreateSearchResult(Instance, Type, false)
+			Log.SearchResult = SearchResult
+		end
+
+		if not Instance.Name:lower():match(Text) then
+			Log.SearchResult.Parent = nil
+			return
+		end
+
+		Log.SearchResult.Parent = SearchResults
+	end
+end
+SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+	local Text = string.lower(SearchBox.Text)
+	if Text == "" then
+		CleanSearchResults()
+		return
+	end
+
+	HandleSearch(Text, "Outgoing")
+	HandleSearch(Text, "Incoming")
+end)
 
 wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: InputObject)
 	local Delta = Input.Position - Info.StartPosition

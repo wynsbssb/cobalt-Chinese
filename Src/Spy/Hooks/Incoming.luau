@@ -108,8 +108,11 @@ wax.shared.NewIndexHook = hookmetamethod(
 
 wax.shared.Connect(game.DescendantAdded:Connect(HandleInstance))
 
-for _, Instance in pairs(getinstances()) do
-	HandleInstance(Instance)
+-- getinstances() was unreliable and failed to find some instances... ts pmo bro..
+for _, Cateogry in pairs({ getnilinstances(), game:GetDescendants() }) do
+	for _, Instance in pairs(Cateogry) do
+		HandleInstance(Instance)
+	end
 end
 
 local SignalMetatable = wax.shared.getrawmetatable(Instance.new("Part").Touched)

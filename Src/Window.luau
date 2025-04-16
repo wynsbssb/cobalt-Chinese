@@ -42,7 +42,7 @@ local function CreateContextMenu(Options: {
 		["Text"]: string,
 		["Callback"]: () -> (),
 		["CloseOnClick"]: boolean?,
-	}
+	},
 })
 	local ContextMenu = wax.shared.Interface.New("Frame", {
 		BackgroundColor3 = Color3.fromRGB(10, 10, 10),
@@ -92,7 +92,7 @@ local function CreateContextMenu(Options: {
 				Position = UDim2.fromOffset(26, 0),
 				Size = UDim2.new(0, 73, 1, 0),
 				Text = Data.Text,
-			}
+			},
 		})
 
 		wax.shared.Interface.NewIcon(Data.Icon, {
@@ -102,7 +102,7 @@ local function CreateContextMenu(Options: {
 			Parent = TextButton,
 		})
 
-		wax.shared.Connect(TextButton.MouseButton1Click:Connect(function()
+		TextButton.MouseButton1Click:Connect(function()
 			if Data.Callback then
 				Data.Callback()
 			end
@@ -110,7 +110,7 @@ local function CreateContextMenu(Options: {
 			if Data.CloseOnClick ~= false then
 				ContextMenu:Destroy()
 			end
-		end))
+		end)
 	end
 
 	return ContextMenu
@@ -133,16 +133,38 @@ local SonnerUI = wax.shared.Interface.New("ScrollingFrame", {
 wax.shared.Sonner.init(SonnerUI)
 
 -- Modal
-local ModalBackground = wax.shared.Interface.New("Frame", {
+local ModalBackground = wax.shared.Interface.New("TextButton", {
 	BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-	BackgroundTransparency = 1,
+	BackgroundTransparency = 0.5,
 	Size = UDim2.fromScale(1, 1),
+	Text = "",
 	Visible = false,
 	ZIndex = 2,
 
 	MainUICorner,
 	Parent = MainFrame,
 })
+
+local function ConnectCloseButton(Button, Image, Parent)
+	Button.MouseEnter:Connect(function()
+		wax.shared.TweenService
+			:Create(Image, DefaultTweenInfo, {
+				ImageTransparency = 0.25,
+			})
+			:Play()
+	end)
+	Button.MouseLeave:Connect(function()
+		wax.shared.TweenService
+			:Create(Image, DefaultTweenInfo, {
+				ImageTransparency = 0.5,
+			})
+			:Play()
+	end)
+	Button.MouseButton1Click:Connect(function()
+		Parent.Visible = false
+		ModalBackground.Visible = false
+	end)
+end
 
 local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 	local ModalTop = wax.shared.Interface.New("Frame", {
@@ -195,8 +217,7 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 		Position = UDim2.fromScale(1, 0),
 		Parent = ModalTop,
 	})
-
-	wax.shared.Interface.NewIcon("x", {
+	local CloseImage = wax.shared.Interface.NewIcon("x", {
 		ImageTransparency = 0.5,
 		Size = UDim2.fromOffset(22, 22),
 		AnchorPoint = Vector2.new(0.5, 0.5),
@@ -205,6 +226,8 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 
 		Parent = CloseButton,
 	})
+
+	ConnectCloseButton(CloseButton, CloseImage, Parent)
 
 	wax.shared.Interface.New("Frame", {
 		Parent = Parent,
@@ -260,7 +283,7 @@ local SettingsScrollingFrame = wax.shared.Interface.New("ScrollingFrame", {
 		PaddingRight = UDim.new(0, 8),
 		PaddingTop = UDim.new(0, 8),
 		PaddingBottom = UDim.new(0, 8),
-	}
+	},
 })
 
 local function CreateSettingsSection(SectionName: string)
@@ -298,16 +321,16 @@ local CreditsSection = CreateSettingsSection("Credits")
 local Credits = {
 	{
 		Credit = "shadcn",
-		Description = "UI Design Insipration (<font color=\"#3798ff\">https://ui.shadcn.com/</font>)"
+		Description = 'UI Design Insipration (<font color="#3798ff">https://ui.shadcn.com/</font>)',
 	},
 	{
 		Credit = "lucide",
-		Description = "Consistent and clean icons (<font color=\"#3798ff\">https://lucide.dev/</font>)"
+		Description = 'Consistent and clean icons (<font color="#3798ff">https://lucide.dev/</font>)',
 	},
 	{
 		Credit = "Emil Kowalski",
-		Description = "Creator of Sonner component (<font color=\"#3798ff\">https://sonner.emilkowal.ski/</font>)"
-	}
+		Description = 'Creator of Sonner component (<font color="#3798ff">https://sonner.emilkowal.ski/</font>)',
+	},
 }
 
 local CreditsWrapper = wax.shared.Interface.New("Frame", {
@@ -320,7 +343,7 @@ local CreditsWrapper = wax.shared.Interface.New("Frame", {
 		FillDirection = Enum.FillDirection.Vertical,
 		HorizontalAlignment = Enum.HorizontalAlignment.Left,
 		Padding = UDim.new(0, 10),
-	}
+	},
 })
 
 for Order, Data in pairs(Credits) do
@@ -331,7 +354,7 @@ for Order, Data in pairs(Credits) do
 		AutomaticSize = Enum.AutomaticSize.Y,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		LayoutOrder = Order,
-		Parent = CreditsWrapper
+		Parent = CreditsWrapper,
 	})
 end
 
@@ -368,7 +391,7 @@ local InfoButtons = wax.shared.Interface.New("Frame", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		Padding = UDim.new(0, 6),
-	}
+	},
 })
 
 local function CreateInfoButton(Icon: string, Title: string, Callback: (...any) -> ...any)
@@ -402,7 +425,7 @@ local function CreateInfoButton(Icon: string, Title: string, Callback: (...any) 
 			Size = UDim2.fromScale(0, 1),
 			Position = UDim2.fromOffset(28, 0),
 			AutomaticSize = Enum.AutomaticSize.X,
-		}
+		},
 	})
 
 	wax.shared.Interface.NewIcon(Icon, {
@@ -412,7 +435,7 @@ local function CreateInfoButton(Icon: string, Title: string, Callback: (...any) 
 		Parent = Button,
 	})
 
-	wax.shared.Connect(Button.MouseButton1Click:Connect(Callback))
+	Button.MouseButton1Click:Connect(Callback)
 	return Button
 end
 
@@ -434,7 +457,7 @@ local SearchFrame = wax.shared.Interface.New("Frame", {
 	Parent = ModalBackground,
 
 	["UICorner"] = {
-		CornerRadius = UDim.new(0, 8),
+		CornerRadius = UDim.new(0, 6),
 	},
 
 	["UIStroke"] = {
@@ -468,23 +491,24 @@ local SearchBox = wax.shared.Interface.New("TextBox", {
 	Parent = SearchTop,
 })
 
-local SearchClose = wax.shared.Interface.New("ImageButton", {
+local SearchCloseButton = wax.shared.Interface.New("ImageButton", {
 	Size = UDim2.fromScale(1, 1),
 	Position = UDim2.fromScale(1, 0),
 	AnchorPoint = Vector2.new(1, 0),
 	SizeConstraint = Enum.SizeConstraint.RelativeYY,
 	Parent = SearchTop,
 })
-
-wax.shared.Interface.NewIcon("x", {
+local SearchCloseImage = wax.shared.Interface.NewIcon("x", {
 	ImageTransparency = 0.5,
 	Size = UDim2.fromOffset(22, 22),
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, 0.5),
 	SizeConstraint = Enum.SizeConstraint.RelativeYY,
 
-	Parent = SearchClose,
+	Parent = SearchCloseButton,
 })
+
+ConnectCloseButton(SearchCloseButton, SearchCloseImage, SearchFrame)
 
 wax.shared.Interface.New("Frame", {
 	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
@@ -517,16 +541,15 @@ local SearchFilterList = wax.shared.Interface.New("ScrollingFrame", {
 })
 
 -- Search Filter
-local CurrentSearchFilters = {}
-local SearchFilterOrder = 0
+local ExcludeSearchClass = {}
+local SearchFilterButtons = {}
 
 local FilterAllButton = wax.shared.Interface.New("TextButton", {
-	BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+	BackgroundColor3 = Color3.fromRGB(20, 20, 20),
 	Size = UDim2.fromScale(0, 1),
 	AutomaticSize = Enum.AutomaticSize.X,
 	TextSize = 15,
 	Text = "All",
-	LayoutOrder = SearchFilterOrder,
 	Parent = SearchFilterList,
 
 	["UICorner"] = {
@@ -534,34 +557,31 @@ local FilterAllButton = wax.shared.Interface.New("TextButton", {
 	},
 
 	["UIPadding"] = {
-		PaddingLeft = UDim.new(0, 12),
-		PaddingRight = UDim.new(0, 12),
+		PaddingLeft = UDim.new(0, 10),
+		PaddingRight = UDim.new(0, 10),
 		PaddingTop = UDim.new(0, 0),
 		PaddingBottom = UDim.new(0, 0),
 	},
 })
 
-wax.shared.Connect(FilterAllButton.MouseButton1Click:Connect(function()
-	for _, Object in pairs(SearchFilterList:GetChildren()) do
-		if Object.ClassName == "TextButton" then
-			Object.BackgroundTransparency = 1
-		end
-	end
-
-	CurrentSearchFilters = {}
+FilterAllButton.MouseButton1Click:Connect(function()
+	ExcludeSearchClass = {}
 	FilterAllButton.BackgroundTransparency = 0
-end))
+	for _, Button in pairs(SearchFilterButtons) do
+		Button.BackgroundTransparency = 0
+	end
+end)
 
 for ClassName, Image in pairs(Images) do
-	SearchFilterOrder += 1
+	print("Creating", ClassName)
 
 	local ClassNameFilterButton = wax.shared.Interface.New("TextButton", {
-		BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
 		Size = UDim2.fromScale(0, 1),
 		AutomaticSize = Enum.AutomaticSize.X,
 		TextSize = 15,
 		Text = "",
-		LayoutOrder = SearchFilterOrder,
+		LayoutOrder = #SearchFilterButtons + 1,
 		Parent = SearchFilterList,
 
 		["UICorner"] = {
@@ -569,8 +589,8 @@ for ClassName, Image in pairs(Images) do
 		},
 
 		["UIPadding"] = {
-			PaddingLeft = UDim.new(0, 12),
-			PaddingRight = UDim.new(0, 12),
+			PaddingLeft = UDim.new(0, 10),
+			PaddingRight = UDim.new(0, 10),
 			PaddingTop = UDim.new(0, 0),
 			PaddingBottom = UDim.new(0, 0),
 		},
@@ -584,7 +604,7 @@ for ClassName, Image in pairs(Images) do
 
 		["ImageLabel"] = {
 			Image = Image,
-			Size = UDim2.new(1, -7, 1, -7),
+			Size = UDim2.new(1, -8, 1, -8),
 			SizeConstraint = Enum.SizeConstraint.RelativeYY,
 			BackgroundTransparency = 1,
 			AnchorPoint = Vector2.new(0, 0.5),
@@ -592,6 +612,7 @@ for ClassName, Image in pairs(Images) do
 		},
 
 		["TextLabel"] = {
+			LayoutOrder = 1,
 			Text = ClassName,
 			TextSize = 15,
 			Size = UDim2.fromScale(0, 1),
@@ -599,18 +620,24 @@ for ClassName, Image in pairs(Images) do
 		},
 	})
 
-	wax.shared.Connect(ClassNameFilterButton.MouseButton1Click:Connect(function()
-		local FoundIndex = table.find(CurrentSearchFilters, ClassName)
+	ClassNameFilterButton.MouseButton1Click:Connect(function()
+		local FoundIndex = table.find(ExcludeSearchClass, ClassName)
 		if FoundIndex then
-			table.remove(CurrentSearchFilters, FoundIndex)
-			ClassNameFilterButton.Color3 = Color3.fromRGB(15, 15, 15)
+			table.remove(ExcludeSearchClass, FoundIndex)
+			ClassNameFilterButton.BackgroundTransparency = 0
+			if #ExcludeSearchClass == 0 then
+				FilterAllButton.BackgroundTransparency = 0
+			end
 
 			return
 		end
 
-		table.insert(CurrentSearchFilters, ClassName)
-		ClassNameFilterButton.Color3 = Color3.fromRGB(25, 25, 25)
-	end))
+		table.insert(ExcludeSearchClass, ClassName)
+		ClassNameFilterButton.BackgroundTransparency = 1
+		FilterAllButton.BackgroundTransparency = 1
+	end)
+
+	table.insert(SearchFilterButtons, ClassNameFilterButton)
 end
 
 wax.shared.Interface.New("Frame", {
@@ -794,7 +821,11 @@ CreateTopButton("x", 4, wax.shared.Unload)
 local HideButton = CreateTopButton("minus", 3)
 CreateTopSeperator(2)
 local SettingsButton = CreateTopButton("settings", 1)
-local SearchButton = CreateTopButton("search", 0)
+local SearchButton = CreateTopButton("search", 0, function()
+	ModalBackground.Visible = true
+	SearchFrame.Visible = true
+	SearchBox:CaptureFocus()
+end)
 
 wax.shared.Drag.Setup(MainFrame, TopBar)
 
@@ -1091,13 +1122,13 @@ function CreateRemoteTab(TabName: string, Active: boolean, Logs)
 		CurrentTab = Tab
 	end
 
-	wax.shared.Connect(Button.MouseButton1Click:Connect(function()
+	Button.MouseButton1Click:Connect(function()
 		if CurrentTab == Tab then
 			return
 		end
 
 		ShowTab(Tab)
-	end))
+	end)
 
 	return Button
 end
@@ -1120,7 +1151,7 @@ function CreatePageElement(PageOrType, Order, Active, Log)
 			},
 		})
 
-		wax.shared.Connect(Ellipsis.FocusLost:Connect(function(EnterPressed)
+		Ellipsis.FocusLost:Connect(function(EnterPressed)
 			if not EnterPressed then
 				return
 			end
@@ -1140,7 +1171,7 @@ function CreatePageElement(PageOrType, Order, Active, Log)
 			if not Success then
 				wax.shared.Sonner.error("Invalid page number provided!")
 			end
-		end))
+		end)
 
 		return
 	end
@@ -1159,11 +1190,11 @@ function CreatePageElement(PageOrType, Order, Active, Log)
 		},
 	})
 
-	wax.shared.Connect(Button.MouseButton1Click:Connect(function()
+	Button.MouseButton1Click:Connect(function()
 		PaginationHelper:SetPage(PageOrType)
 		CurrentPage[Log] = PageOrType
 		ShowLog(CurrentLog)
-	end))
+	end)
 end
 
 function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)

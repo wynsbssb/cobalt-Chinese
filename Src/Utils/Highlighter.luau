@@ -144,20 +144,18 @@ local function GetHighlightColor(tokens, index)
 	return nil
 end
 
+local ArgumentColors = {
+	["boolean"] = Highlighter.Colors.Boolean,
+	["number"] = Highlighter.Colors.Number,
+	["Vector2"] = Highlighter.Colors.Number,
+	["Vector3"] = Highlighter.Colors.Number,
+	["CFrame"] = Highlighter.Colors.Number,
+	["string"] = Highlighter.Colors.String,
+	["EnumItem"] = Highlighter.Colors.BuiltIn,
+	["nil"] = Highlighter.Colors.Nil,
+}
 function Highlighter.GetArgumentColor(Argument)
-	if typeof(Argument) == "boolean" then
-		return Highlighter.Colors.Boolean
-	elseif typeof(Argument) == "number" then
-		return Highlighter.Colors.Number
-	elseif typeof(Argument) == "string" then
-		return Highlighter.Colors.String
-	elseif typeof(Argument) == "EnumItem" then
-		return Highlighter.Colors.BuiltIn
-	elseif typeof(Argument) == nil then
-		return Highlighter.Colors.Nil
-	end
-
-	return Highlighter.Colors.Text
+	return ArgumentColors[typeof(Argument)] or Highlighter.Colors.Text
 end
 
 function Highlighter.Run(source)

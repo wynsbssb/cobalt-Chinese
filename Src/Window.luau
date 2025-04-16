@@ -4,6 +4,14 @@ local PaginationHelper = wax.shared.Pagination.new({
 })
 
 local DefaultTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Exponential)
+
+local ClassOrder = {
+	"RemoteEvent",
+	"UnreliableRemoteEvent",
+	"RemoteFunction",
+	"BindableEvent",
+	"BindableFunction",
+}
 local Images = {
 	RemoteEvent = "rbxassetid://110803789420086",
 	UnreliableRemoteEvent = "rbxassetid://126244162339059",
@@ -572,16 +580,14 @@ FilterAllButton.MouseButton1Click:Connect(function()
 	end
 end)
 
-for ClassName, Image in pairs(Images) do
-	print("Creating", ClassName)
-
+for Order, ClassName in pairs(ClassOrder) do
 	local ClassNameFilterButton = wax.shared.Interface.New("TextButton", {
 		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
 		Size = UDim2.fromScale(0, 1),
 		AutomaticSize = Enum.AutomaticSize.X,
 		TextSize = 15,
 		Text = "",
-		LayoutOrder = #SearchFilterButtons + 1,
+		LayoutOrder = Order,
 		Parent = SearchFilterList,
 
 		["UICorner"] = {
@@ -603,7 +609,7 @@ for ClassName, Image in pairs(Images) do
 		},
 
 		["ImageLabel"] = {
-			Image = Image,
+			Image = Images[ClassName],
 			Size = UDim2.new(1, -8, 1, -8),
 			SizeConstraint = Enum.SizeConstraint.RelativeYY,
 			BackgroundTransparency = 1,

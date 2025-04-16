@@ -1,18 +1,5 @@
 # Cobalt
-a shadcn/ui styled remotespy made for developement purposes.
-
-## Features
-
-- Beatiful UI & Animations
-- Smart Code Generation
-- Syntax Highlighting (to preview the code to replay the remote)
-- Remote Filtering (see which remotes get sent by the executor and by the game)
-- Cached Paths (prevents losing context of the remote's parent)
-- Anti Detection (attempts to mitigate detection vectors)
-- Optimizations such as pagination
-- Better Remote Firing Detector
-
-## Usage
+A Roblox event interceptor/sniffer with opinionated UI
 
 ```lua
 loadstring(game:HttpGet("https://github.com/notpoiu/cobalt/releases/latest/download/Cobalt.luau"))()

@@ -58,6 +58,14 @@ local function InternalCreateNotificationObject(zindex, image, text)
 		ImageLabel.Visible = false
 	end
 
+	wax.shared.Animations.SetFadeExpectation("In", ImageLabel, {
+		ImageTransparency = 0,
+	})
+
+	wax.shared.Animations.SetFadeExpectation("Out", ImageLabel, {
+		ImageTransparency = 1,
+	})
+
 	local Frame = wax.shared.Interface.New("Frame", {
 		BorderSizePixel = 0,
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -70,7 +78,7 @@ local function InternalCreateNotificationObject(zindex, image, text)
 		Parent = NotificationTemplate,
 	})
 
-	Frame:SetAttribute("IgnoreFade", true)
+	wax.shared.Animations.AddFadeExclusion(Frame)
 
 	wax.shared.Interface.New("TextLabel", {
 		BorderSizePixel = 0,
@@ -89,73 +97,6 @@ local function InternalCreateNotificationObject(zindex, image, text)
 	})
 
 	return NotificationTemplate
-end
-
-local function GetTransparencyProperty(object)
-	if object:GetAttribute("IgnoreFade") then
-		return nil
-	end
-
-	if object:IsA("TextButton") or object:IsA("TextLabel") then
-		return "TextTransparency"
-	elseif object:IsA("Frame") then
-		return "BackgroundTransparency"
-	elseif object:IsA("ImageLabel") or object:IsA("ImageButton") then
-		return "ImageTransparency"
-	elseif object:IsA("UIStroke") then
-		return "Transparency"
-	end
-
-	return nil
-end
-
-local function InternalFadeOut(object, time)
-	local tweenInfo = time and TweenInfo.new(time, Enum.EasingStyle.Exponential) or Sonner.TweenInfo
-	local property = GetTransparencyProperty(object)
-	if property then
-		wax.shared.TweenService
-			:Create(object, tweenInfo, {
-				[property] = 1,
-			})
-			:Play()
-	end
-
-	for _, child in object:GetDescendants() do
-		local prop = GetTransparencyProperty(child)
-		if not prop then
-			continue
-		end
-
-		wax.shared.TweenService
-			:Create(child, tweenInfo, {
-				[prop] = 1,
-			})
-			:Play()
-	end
-end
-
-local function InternalFadeIn(object)
-	local property = GetTransparencyProperty(object)
-	if property then
-		wax.shared.TweenService
-			:Create(object, Sonner.TweenInfo, {
-				[property] = 0,
-			})
-			:Play()
-	end
-
-	for _, child in object:GetDescendants() do
-		local prop = GetTransparencyProperty(child)
-		if not prop then
-			continue
-		end
-
-		wax.shared.TweenService
-			:Create(child, Sonner.TweenInfo, {
-				[prop] = 0,
-			})
-			:Play()
-	end
 end
 
 local function toast(image, text, internalTime, removeCallback)
@@ -197,7 +138,7 @@ local function toast(image, text, internalTime, removeCallback)
 			:Play()
 
 		if ((#Sonner.Queue - index) + 1) >= 4 then
-			InternalFadeOut(object)
+			wax.shared.Animations.FadeOut(object)
 			task.delay(0.5, function()
 				object:Destroy()
 			end)
@@ -214,7 +155,7 @@ local function toast(image, text, internalTime, removeCallback)
 			Position = UDim2.new(0.5, 0, 1, -20),
 		})
 		:Play()
-	InternalFadeIn(Notif)
+	wax.shared.Animations.FadeIn(Notif)
 
 	if removeCallback then
 		task.spawn(removeCallback, Notif, time)
@@ -225,7 +166,7 @@ local function toast(image, text, internalTime, removeCallback)
 			end
 			table.remove(Sonner.Queue, table.find(Sonner.Queue, Notif))
 
-			InternalFadeOut(Notif, 0.35)
+			wax.shared.Animations.FadeOut(Notif, 0.35)
 			wax.shared.TweenService
 				:Create(Notif, Sonner.TweenInfo, {
 					Position = UDim2.new(0.5, 0, 1, 50),
@@ -275,7 +216,7 @@ function Sonner.promise(func, options)
 
 		success, resultOrError = pcall(func) -- yes mstudio45, your famous pcall is better (- deivid)
 
-		InternalFadeOut(notif.ImageLabel, 0.15)
+		wax.shared.Animations.FadeOut(notif.ImageLabel, 0.15)
 		wax.shared.TweenService
 			:Create(notif.ImageLabel, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
 				Size = UDim2.new(0, 0, 0, 0),
@@ -306,7 +247,7 @@ function Sonner.promise(func, options)
 			)
 		end
 
-		InternalFadeIn(notif.ImageLabel)
+		wax.shared.Animations.FadeIn(notif.ImageLabel)
 		wax.shared.TweenService
 			:Create(notif.ImageLabel, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
 				Size = UDim2.new(0, 20, 0, 20),
@@ -319,7 +260,7 @@ function Sonner.promise(func, options)
 			end
 			table.remove(Sonner.Queue, table.find(Sonner.Queue, notif))
 
-			InternalFadeOut(notif, 0.35)
+			wax.shared.Animations.FadeOut(notif, 0.35)
 			wax.shared.TweenService
 				:Create(notif, Sonner.TweenInfo, {
 					Position = UDim2.new(0.5, 0, 1, 50),

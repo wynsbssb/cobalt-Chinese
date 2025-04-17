@@ -153,18 +153,36 @@ local ModalBackground = wax.shared.Interface.New("TextButton", {
 	MainUICorner,
 	Parent = MainFrame,
 })
-ModalBackground.MouseButton1Click:Connect(function()
-	if OpenedModal then
-		OpenedModal.Visible = false
-		OpenedModal = nil
-	end
-	ModalBackground.Visible = false
-end)
+
 local function OpenModal(Parent)
 	OpenedModal = Parent
+
 	OpenedModal.Visible = true
+	wax.shared.Animations.FadeIn(OpenedModal, 0.2)
+
 	ModalBackground.Visible = true
+	wax.shared.Animations.FadeIn(ModalBackground, 0.2)
 end
+
+local function CloseModal()
+	if OpenedModal then
+		local CachedModal = OpenedModal
+
+		wax.shared.Animations.FadeOut(CachedModal, 0.2)
+		task.delay(0.2, function()
+			CachedModal.Visible = false
+		end)
+
+		OpenedModal = nil
+	end
+
+	wax.shared.Animations.FadeOut(ModalBackground, 0.2)
+	task.delay(0.2, function()
+		ModalBackground.Visible = false
+	end)
+end
+
+ModalBackground.MouseButton1Click:Connect(CloseModal)
 
 local function ConnectCloseButton(Button, Image, Parent)
 	Button.MouseEnter:Connect(function()
@@ -181,10 +199,7 @@ local function ConnectCloseButton(Button, Image, Parent)
 			})
 			:Play()
 	end)
-	Button.MouseButton1Click:Connect(function()
-		Parent.Visible = false
-		ModalBackground.Visible = false
-	end)
+	Button.MouseButton1Click:Connect(CloseModal)
 end
 
 local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
@@ -200,6 +215,8 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 			PaddingBottom = UDim.new(0, 6),
 		},
 	})
+
+	wax.shared.Animations.AddFadeExclusion(ModalTop)
 
 	local ModalTitle = wax.shared.Interface.New("TextLabel", {
 		Text = Title,
@@ -220,6 +237,10 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 
 			Parent = ModalTop,
 		})
+
+		wax.shared.Animations.SetFadeExpectation("In", ModalIcon, {
+			ImageTransparency = 0,
+		})
 	else
 		ModalIcon = wax.shared.Interface.NewIcon(Icon, {
 			ImageTransparency = 0.5,
@@ -229,7 +250,15 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 
 			Parent = ModalTop,
 		})
+
+		wax.shared.Animations.SetFadeExpectation("In", ModalIcon, {
+			ImageTransparency = 0.5,
+		})
 	end
+
+	wax.shared.Animations.SetFadeExpectation("Out", ModalIcon, {
+		ImageTransparency = 1,
+	})
 
 	local CloseButton = wax.shared.Interface.New("ImageButton", {
 		Size = UDim2.fromScale(1, 1),
@@ -246,6 +275,16 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 		SizeConstraint = Enum.SizeConstraint.RelativeYY,
 
 		Parent = CloseButton,
+	})
+
+	wax.shared.Animations.AddFadeExclusion(CloseButton)
+
+	wax.shared.Animations.SetFadeExpectation("In", CloseImage, {
+		ImageTransparency = 0.5,
+	})
+
+	wax.shared.Animations.SetFadeExpectation("Out", CloseImage, {
+		ImageTransparency = 1,
 	})
 
 	ConnectCloseButton(CloseButton, CloseImage, Parent)
@@ -309,7 +348,7 @@ local SettingsScrollingFrame = wax.shared.Interface.New("ScrollingFrame", {
 })
 
 local function CreateSettingsSection(SectionName: string)
-	return wax.shared.Interface.New("Frame", {
+	local Section = wax.shared.Interface.New("Frame", {
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
 		Size = UDim2.fromScale(1, 0),
@@ -330,6 +369,10 @@ local function CreateSettingsSection(SectionName: string)
 			LayoutOrder = -1,
 		},
 	})
+
+	wax.shared.Animations.AddFadeExclusion(Section)
+
+	return Section
 end
 
 local FilterSection = CreateSettingsSection("Filter")
@@ -367,6 +410,7 @@ local CreditsWrapper = wax.shared.Interface.New("Frame", {
 		Padding = UDim.new(0, 10),
 	},
 })
+wax.shared.Animations.AddFadeExclusion(CreditsWrapper)
 
 for Order, Data in pairs(Credits) do
 	wax.shared.Interface.New("TextLabel", {
@@ -532,6 +576,26 @@ local SearchCloseImage = wax.shared.Interface.NewIcon("x", {
 	Parent = SearchCloseButton,
 })
 
+wax.shared.Animations.SetFadeExpectation("In", SearchFrame, {
+	BackgroundTransparency = 0,
+})
+
+wax.shared.Animations.SetFadeExpectation("Out", SearchFrame, {
+	BackgroundTransparency = 1,
+})
+
+wax.shared.Animations.SetFadeExpectation("In", SearchCloseImage, {
+	BackgroundTransparency = 1,
+	ImageTransparency = 0.5,
+})
+
+wax.shared.Animations.SetFadeExpectation("Out", SearchCloseImage, {
+	BackgroundTransparency = 1,
+	ImageTransparency = 1,
+})
+
+wax.shared.Animations.AddFadeExclusions({ SearchCloseButton, SearchTop })
+
 ConnectCloseButton(SearchCloseButton, SearchCloseImage, SearchFrame)
 
 wax.shared.Interface.New("Frame", {
@@ -588,6 +652,16 @@ local FilterAllButton = wax.shared.Interface.New("TextButton", {
 	},
 })
 
+wax.shared.Animations.SetFadeExpectation("In", FilterAllButton, {
+	BackgroundTransparency = 0,
+	TextTransparency = 0,
+})
+
+wax.shared.Animations.SetFadeExpectation("Out", FilterAllButton, {
+	BackgroundTransparency = 1,
+	TextTransparency = 1,
+})
+
 FilterAllButton.MouseButton1Click:Connect(function()
 	ExcludeSearchClass = {}
 	FilterAllButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -624,15 +698,6 @@ for Order, ClassName in pairs(ClassOrder) do
 			Padding = UDim.new(0, 6),
 		},
 
-		["ImageLabel"] = {
-			Image = Images[ClassName],
-			Size = UDim2.new(1, -8, 1, -8),
-			SizeConstraint = Enum.SizeConstraint.RelativeYY,
-			BackgroundTransparency = 1,
-			AnchorPoint = Vector2.new(0, 0.5),
-			Position = UDim2.fromOffset(0.5, 0),
-		},
-
 		["TextLabel"] = {
 			LayoutOrder = 1,
 			Text = ClassName,
@@ -640,6 +705,34 @@ for Order, ClassName in pairs(ClassOrder) do
 			Size = UDim2.fromScale(0, 1),
 			AutomaticSize = Enum.AutomaticSize.X,
 		},
+	})
+
+	local ImageLabel = wax.shared.Interface.New("ImageLabel", {
+		Image = Images[ClassName],
+		Size = UDim2.new(1, -8, 1, -8),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		BackgroundTransparency = 1,
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.fromOffset(0.5, 0),
+		Parent = ClassNameFilterButton,
+	})
+
+	wax.shared.Animations.SetFadeExpectation("In", ClassNameFilterButton, {
+		BackgroundTransparency = 0,
+	})
+
+	wax.shared.Animations.SetFadeExpectation("Out", ClassNameFilterButton, {
+		BackgroundTransparency = 1,
+	})
+
+	wax.shared.Animations.SetFadeExpectation("In", ImageLabel, {
+		BackgroundTransparency = 1,
+		ImageTransparency = 0,
+	})
+
+	wax.shared.Animations.SetFadeExpectation("Out", ImageLabel, {
+		BackgroundTransparency = 1,
+		ImageTransparency = 1,
 	})
 
 	ClassNameFilterButton.MouseButton1Click:Connect(function()
@@ -712,13 +805,6 @@ local function CreateSearchResult(Instance: Instance, Type: string, Active: bool
 			PaddingTop = UDim.new(0, 6),
 		},
 
-		["ImageLabel"] = {
-			BackgroundTransparency = 1,
-			Image = Images[Instance.ClassName],
-			Size = UDim2.fromScale(1, 1),
-			SizeConstraint = Enum.SizeConstraint.RelativeYY,
-		},
-
 		["TextLabel"] = {
 			Position = UDim2.fromOffset(30, 0),
 			Size = UDim2.new(1, -30, 1, 0),
@@ -726,6 +812,22 @@ local function CreateSearchResult(Instance: Instance, Type: string, Active: bool
 			TextSize = 17,
 			TextXAlignment = Enum.TextXAlignment.Left,
 		},
+	})
+
+	local Image = wax.shared.Interface.New("ImageLabel", {
+		BackgroundTransparency = 1,
+		Image = Images[Instance.ClassName],
+		Size = UDim2.fromScale(1, 1),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		Parent = SearchResult,
+	})
+
+	wax.shared.Animations.SetFadeExpectation("In", Image, {
+		ImageTransparency = 0,
+	})
+
+	wax.shared.Animations.SetFadeExpectation("Out", Image, {
+		ImageTransparency = 1,
 	})
 
 	wax.shared.Interface.New("TextLabel", {

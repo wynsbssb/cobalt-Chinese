@@ -830,7 +830,7 @@ local function CreateSearchResult(Instance: Instance, Type: string, Active: bool
 		ImageTransparency = 1,
 	})
 
-	wax.shared.Interface.New("TextLabel", {
+	local TypeLabel = wax.shared.Interface.New("TextLabel", {
 		Size = UDim2.fromScale(1, 1),
 		Text = Type,
 		TextSize = 15,
@@ -838,6 +838,14 @@ local function CreateSearchResult(Instance: Instance, Type: string, Active: bool
 		TextXAlignment = Enum.TextXAlignment.Right,
 
 		Parent = SearchResult,
+	})
+
+	wax.shared.Animations.SetFadeExpectation("In", TypeLabel, {
+		TextTransparency = 0.5,
+	})
+
+	wax.shared.Animations.SetFadeExpectation("Out", TypeLabel, {
+		TextTransparency = 1,
 	})
 
 	return SearchResult

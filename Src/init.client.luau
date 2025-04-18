@@ -108,7 +108,7 @@ wax.shared.DisplayArgument = function(Argument)
 	elseif typeof(Argument) == "table" then
 		return "{...}"
 	elseif typeof(Argument) == "Instance" then
-		return Argument.Name
+		return Argument:GetFullName()
 	end
 
 	return tostring(Argument)

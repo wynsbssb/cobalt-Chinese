@@ -109,8 +109,8 @@ wax.shared.NewIndexHook = hookmetamethod(
 wax.shared.Connect(game.DescendantAdded:Connect(HandleInstance))
 
 -- getinstances() was unreliable and failed to find some instances... ts pmo bro..
-for _, Cateogry in pairs({ getnilinstances(), game:GetDescendants() }) do
-	for _, Instance in pairs(Cateogry) do
+for _, Category in pairs({ getnilinstances(), game:GetDescendants() }) do
+	for _, Instance in pairs(Category) do
 		HandleInstance(Instance)
 	end
 end

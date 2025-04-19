@@ -108,7 +108,7 @@ wax.shared.DisplayArgument = function(Argument)
 	elseif typeof(Argument) == "table" then
 		return "{...}"
 	elseif typeof(Argument) == "Instance" then
-		return Argument:GetFullName()
+		return wax.shared.CodeGen.GetFullPath(Argument)
 	end
 
 	return tostring(Argument)

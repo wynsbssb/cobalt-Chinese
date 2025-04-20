@@ -122,6 +122,7 @@ wax.shared.GetTableLength = function(Table)
 	return Length
 end
 
+wax.shared.Unloaded = false
 wax.shared.Unload = function()
 	for _, Connection in pairs(wax.shared.Connections) do
 		wax.shared.Disconnect(Connection)
@@ -136,6 +137,8 @@ wax.shared.Unload = function()
 
 	wax.shared.Communicator:Destroy()
 	wax.shared.ScreenGui:Destroy()
+
+	wax.shared.Unloaded = true
 end
 
 -- Load Script

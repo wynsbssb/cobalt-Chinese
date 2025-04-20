@@ -78,6 +78,10 @@ local function HandleInstance(Instance: any)
 		end
 
 		Instance[Method] = function(...)
+			if wax.shared.Unloaded then
+				return Callback(...)
+			end
+
 			local Log = wax.shared.Logs.Incoming[Instance]
 			if not Log then
 				Log = wax.shared.NewLog(Instance, Method, "Incoming")
@@ -124,6 +128,10 @@ wax.shared.NewIndexHook = hookmetamethod(
 
 			if key == Method and typeof(value) == "function" then
 				return wax.shared.NewIndexHook(self, key, function(...)
+					if wax.shared.Unloaded then
+						return value(...)
+					end
+
 					local Log = wax.shared.Logs.Incoming[self]
 					if not Log then
 						Log = wax.shared.NewLog(self, Method, "Incoming")

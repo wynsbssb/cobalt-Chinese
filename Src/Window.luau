@@ -515,6 +515,10 @@ local NetworkButton = CreateInfoButton("network", "Event", function()
 end)
 
 -- Search
+local ResultInfo = {}
+local CurrentResults = {}
+local SelectedResult = -1
+
 local SearchFrame = wax.shared.Interface.New("TextButton", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
@@ -668,6 +672,7 @@ FilterAllButton.MouseButton1Click:Connect(function()
 	for _, Button in pairs(SearchFilterButtons) do
 		Button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	end
+	UpdateSearch()
 end)
 
 for Order, ClassName in pairs(ClassOrder) do
@@ -745,12 +750,14 @@ for Order, ClassName in pairs(ClassOrder) do
 				FilterAllButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 			end
 
+			UpdateSearch()
 			return
 		end
 
 		table.insert(ExcludeSearchClass, ClassName)
 		ClassNameFilterButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 		FilterAllButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+		UpdateSearch()
 	end)
 
 	table.insert(SearchFilterButtons, ClassNameFilterButton)
@@ -777,6 +784,7 @@ local SearchResults = wax.shared.Interface.New("ScrollingFrame", {
 		FillDirection = Enum.FillDirection.Vertical,
 		HorizontalAlignment = Enum.HorizontalAlignment.Left,
 		Padding = UDim.new(0, 6),
+		SortOrder = Enum.SortOrder.Name,
 	},
 
 	["UIPadding"] = {
@@ -787,10 +795,11 @@ local SearchResults = wax.shared.Interface.New("ScrollingFrame", {
 	},
 })
 
-local function CreateSearchResult(Instance: Instance, Type: string, Active: boolean)
+local function CreateSearchResult(Instance: Instance, Type: string)
 	local SearchResult = wax.shared.Interface.New("TextButton", {
 		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-		BackgroundTransparency = Active and 0 or 1,
+		BackgroundTransparency = 1,
+		Name = Instance.Name,
 		Size = UDim2.new(1, 0, 0, 36),
 		Text = "",
 
@@ -813,6 +822,20 @@ local function CreateSearchResult(Instance: Instance, Type: string, Active: bool
 			TextXAlignment = Enum.TextXAlignment.Left,
 		},
 	})
+	do
+		SearchResult.MouseEnter:Connect(function()
+			local Index = table.find(CurrentResults, SearchResult)
+			if Index then
+				SelectResult(Index)
+			end
+		end)
+		SearchResult.MouseButton1Click:Connect(function()
+			local Index = table.find(CurrentResults, SearchResult)
+			if Index then
+				EnterResult(Index)
+			end
+		end)
+	end
 
 	local Image = wax.shared.Interface.New("ImageLabel", {
 		BackgroundTransparency = 1,
@@ -969,8 +992,7 @@ local SettingsButton = CreateTopButton("settings", 1, function()
 	OpenModal(SettingsFrame)
 end)
 local SearchButton = CreateTopButton("search", 0, function()
-	OpenModal(SearchFrame)
-	SearchBox:CaptureFocus()
+	OpenSearch()
 end)
 
 wax.shared.Drag.Setup(MainFrame, TopBar)
@@ -1140,6 +1162,8 @@ local LogsPagination = wax.shared.Interface.New("Frame", {
 
 -- Functions
 local CurrentTab
+local Tabs = {}
+
 local CurrentLog
 local CurrentPage = {}
 
@@ -1263,6 +1287,7 @@ function CreateRemoteTab(TabName: string, Active: boolean, Logs)
 		Logs = Logs,
 		Instance = Button,
 	}
+	Tabs[TabName] = Tab
 
 	if Active then
 		CurrentTab = Tab
@@ -1571,35 +1596,90 @@ end
 CreateRemoteTab("Outgoing", true, wax.shared.Logs.Outgoing)
 CreateRemoteTab("Incoming", false, wax.shared.Logs.Incoming)
 
+-- Search Functions
+function OpenSearch()
+	OpenModal(SearchFrame)
+	UpdateSearch()
+	SearchBox:CaptureFocus()
+end
 function HandleSearch(Text, Type)
 	for Instance, Log in pairs(wax.shared.Logs[Type]) do
-		if table.find(ExcludeSearchClass, Instance.ClassName) then
+		if not Log.SearchResult then
+			local SearchResult = CreateSearchResult(Instance, Type)
+			Log.SearchResult = SearchResult
+			ResultInfo[SearchResult] = {
+				Type = Type,
+				Callback = function()
+					ShowLog(Log)
+				end,
+			}
+		end
+
+		local LoweredName = string.lower(Instance.Name)
+		if not LoweredName:match(Text) or table.find(ExcludeSearchClass, Instance.ClassName) then
+			Log.SearchResult.Parent = nil
 			continue
 		end
 
-		if not Log.SearchResult then
-			local SearchResult = CreateSearchResult(Instance, Type, false)
-			Log.SearchResult = SearchResult
-		end
-
-		if not Instance.Name:lower():match(Text) then
-			Log.SearchResult.Parent = nil
-			return
-		end
-
+		Log.SearchResult.BackgroundTransparency = 1
 		Log.SearchResult.Parent = SearchResults
+		table.insert(CurrentResults, Log.SearchResult)
 	end
 end
-SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-	local Text = string.lower(SearchBox.Text)
-	if Text == "" then
-		CleanSearchResults()
+
+function SelectResult(NewResult)
+	if SelectedResult > 0 and CurrentResults[SelectedResult] then
+		CurrentResults[SelectedResult].BackgroundTransparency = 1
+	end
+	if NewResult == -1 or #CurrentResults == 0 then
+		SelectedResult = -1
 		return
 	end
 
+	SelectedResult = math.clamp(NewResult, 1, #CurrentResults)
+	CurrentResults[SelectedResult].BackgroundTransparency = 0
+
+	local ScrollSize = SearchResults.AbsoluteSize.Y
+
+	local SelectedMin = CurrentResults[SelectedResult].AbsolutePosition.Y - SearchResults.AbsolutePosition.Y
+	local SelectedMax = SelectedMin + CurrentResults[SelectedResult].AbsoluteSize.Y
+
+	if SelectedMin < 0 then
+		SearchResults.CanvasPosition += Vector2.new(0, SelectedMin - 6)
+	elseif SelectedMax > ScrollSize then
+		SearchResults.CanvasPosition += Vector2.new(0, SelectedMax - ScrollSize + 6)
+	end
+end
+function EnterResult(ResultIndex)
+	local Info = ResultInfo[CurrentResults[SelectedResult]]
+	ShowTab(Tabs[Info.Type])
+	Info.Callback()
+
+	CloseModal()
+end
+function HandleResults()
+	if #CurrentResults == 0 then
+		return
+	end
+
+	table.sort(CurrentResults, function(a, b)
+		return a.AbsolutePosition.Y < b.AbsolutePosition.Y
+	end)
+
+	SelectResult(1)
+end
+function UpdateSearch()
+	table.clear(CurrentResults)
+	SelectResult(-1)
+
+	local Text = string.lower(SearchBox.Text)
 	HandleSearch(Text, "Outgoing")
 	HandleSearch(Text, "Incoming")
-end)
+
+	HandleResults()
+end
+
+SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateSearch)
 
 wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: InputObject)
 	local Delta = Input.Position - Info.StartPosition
@@ -1648,5 +1728,19 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 			Origin = CallInfo[3],
 			Order = CallIndex,
 		})
+	end
+end))
+
+wax.shared.Connect(wax.shared.UserInputService.InputBegan:Connect(function(Input: InputObject)
+	if Input.KeyCode == Enum.KeyCode.K and wax.shared.UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+		OpenSearch()
+	elseif OpenedModal == SearchFrame then
+		if Input.KeyCode == Enum.KeyCode.Return then
+			EnterResult(SelectedResult)
+		elseif Input.KeyCode == Enum.KeyCode.Up then
+			SelectResult(SelectedResult - 1)
+		elseif Input.KeyCode == Enum.KeyCode.Down then
+			SelectResult(SelectedResult + 1)
+		end
 	end
 end))

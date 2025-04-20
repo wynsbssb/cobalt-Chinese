@@ -106,6 +106,12 @@ wax.shared.DisplayArgument = function(Argument)
 			wax.shared.DisplayNumber(Argument.Y),
 			wax.shared.DisplayNumber(Argument.Z)
 		)
+	elseif typeof(Argument) == "CFrame" then
+		local Components = { Argument:GetComponents() }
+		for Index, Value in pairs(Components) do
+			Components[Index] = wax.shared.DisplayNumber(Value)
+		end
+		return table.concat(Components, ", ")
 	elseif typeof(Argument) == "table" then
 		return "{...}"
 	elseif typeof(Argument) == "Instance" then

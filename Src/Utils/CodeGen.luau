@@ -14,7 +14,7 @@ function CodeGen.FormatLuaString(str)
 	return string.gsub(str, '["\\\0-\31\127-\255]', CodeGen.CleanTable)
 end
 
-function CodeGen.GetFullPath(Object, IgnoreComent)
+function CodeGen.GetFullPath(Object, ExcludeComment)
 	local CurrentObject = Object
 	local Path = ""
 
@@ -45,7 +45,7 @@ function CodeGen.GetFullPath(Object, IgnoreComent)
 					IndexName = ':GetService("' .. CurrentObject.ClassName .. '")'
 				end
 			elseif Parent == nil then
-				Path = Path .. IgnoreComent and "" or " --[[nil parent]]"
+				Path = Path .. (ExcludeComment and "" or " --[[Nil Parent]]")
 			end
 		end
 

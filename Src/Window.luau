@@ -1627,7 +1627,7 @@ function HandleSearch(Text, Type)
 	end
 end
 
-function SelectResult(NewResult)
+function SelectResult(NewResult, UpdateCanvasPosition)
 	if SelectedResult > 0 and CurrentResults[SelectedResult] then
 		CurrentResults[SelectedResult].BackgroundTransparency = 1
 	end
@@ -1639,15 +1639,17 @@ function SelectResult(NewResult)
 	SelectedResult = math.clamp(NewResult, 1, #CurrentResults)
 	CurrentResults[SelectedResult].BackgroundTransparency = 0
 
-	local ScrollSize = SearchResults.AbsoluteSize.Y
+	if UpdateCanvasPosition then
+		local ScrollSize = SearchResults.AbsoluteSize.Y
 
-	local SelectedMin = CurrentResults[SelectedResult].AbsolutePosition.Y - SearchResults.AbsolutePosition.Y
-	local SelectedMax = SelectedMin + CurrentResults[SelectedResult].AbsoluteSize.Y
+		local SelectedMin = CurrentResults[SelectedResult].AbsolutePosition.Y - SearchResults.AbsolutePosition.Y
+		local SelectedMax = SelectedMin + CurrentResults[SelectedResult].AbsoluteSize.Y
 
-	if SelectedMin < 0 then
-		SearchResults.CanvasPosition += Vector2.new(0, SelectedMin - 6)
-	elseif SelectedMax > ScrollSize then
-		SearchResults.CanvasPosition += Vector2.new(0, SelectedMax - ScrollSize + 6)
+		if SelectedMin < 0 then
+			SearchResults.CanvasPosition += Vector2.new(0, SelectedMin - 6)
+		elseif SelectedMax > ScrollSize then
+			SearchResults.CanvasPosition += Vector2.new(0, SelectedMax - ScrollSize + 6)
+		end
 	end
 end
 function EnterResult(ResultIndex)
@@ -1666,7 +1668,7 @@ function HandleResults()
 		return a.AbsolutePosition.Y < b.AbsolutePosition.Y
 	end)
 
-	SelectResult(1)
+	SelectResult(1, true)
 end
 function UpdateSearch()
 	table.clear(CurrentResults)
@@ -1738,9 +1740,9 @@ wax.shared.Connect(wax.shared.UserInputService.InputBegan:Connect(function(Input
 		if Input.KeyCode == Enum.KeyCode.Return then
 			EnterResult(SelectedResult)
 		elseif Input.KeyCode == Enum.KeyCode.Up then
-			SelectResult(SelectedResult - 1)
+			SelectResult(SelectedResult - 1, true)
 		elseif Input.KeyCode == Enum.KeyCode.Down then
-			SelectResult(SelectedResult + 1)
+			SelectResult(SelectedResult + 1, true)
 		end
 	end
 end))

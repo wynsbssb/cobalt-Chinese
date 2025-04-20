@@ -1452,31 +1452,38 @@ function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
 		TextSize = 15,
 		TextTransparency = 0.5,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
 
 		Parent = Holder,
 	})
 
-	wax.shared.Interface.New("TextLabel", {
+	local TypeLabel = wax.shared.Interface.New("TextLabel", {
 		Size = UDim2.fromScale(1, 1),
 		Text = typeof(Value),
 		TextSize = 15,
 		TextTransparency = 0.5,
 		TextXAlignment = Enum.TextXAlignment.Right,
+		TextYAlignment = Enum.TextYAlignment.Top,
 
 		Parent = Holder,
 	})
+	local TypeX = wax.shared.GetTextBounds(TypeLabel.Text, TypeLabel.FontFace, TypeLabel.TextSize)
 
-	wax.shared.Interface.New("TextLabel", {
+	local TextLabel = wax.shared.Interface.New("TextLabel", {
 		Position = UDim2.fromOffset(18, 0),
-		Size = UDim2.new(1, -18, 1, 0),
+		Size = UDim2.new(1, -(TypeX + 22), 1, 0),
 		TextColor3 = Color3.fromHex(wax.shared.Highlighter.GetArgumentColor(Value)),
 		Text = wax.shared.DisplayArgument(Value),
 		RichText = true,
 		TextSize = 15,
+		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
 
 		Parent = Holder,
 	})
+	local _, TextY =
+		wax.shared.GetTextBounds(TextLabel.Text, TextLabel.FontFace, TextLabel.TextSize, TextLabel.AbsoluteSize.X)
+	Holder.Size = UDim2.new(1, 0, 0, TextY + 12)
 
 	return Holder
 end
@@ -1654,8 +1661,8 @@ function SelectResult(NewResult, UpdateCanvasPosition)
 end
 function EnterResult(ResultIndex)
 	local Info = ResultInfo[CurrentResults[SelectedResult]]
-	ShowTab(Tabs[Info.Type])
-	Info.Callback()
+	pcall(ShowTab, Tabs[Info.Type])
+	pcall(Info.Callback)
 
 	CloseModal()
 end

@@ -1,11 +1,12 @@
 -- Environment
 for _, Service in pairs({
+	"ContentProvider",
 	"CoreGui",
 	"TweenService",
 	"Players",
-	"ContentProvider",
 	"RunService",
 	"UserInputService",
+	"TextService",
 }) do
 	wax.shared[Service] = cloneref(game:GetService(Service))
 end
@@ -120,6 +121,17 @@ wax.shared.GetTableLength = function(Table)
 		Length += 1
 	end
 	return Length
+end
+wax.shared.GetTextBounds = function(Text: string, Font: Font, Size: number, Width: number?): (number, number)
+	local Params = Instance.new("GetTextBoundsParams")
+	Params.Text = Text
+	Params.RichText = true
+	Params.Font = Font
+	Params.Size = Size
+	Params.Width = Width or workspace.CurrentCamera.ViewportSize.X - 32
+
+	local Bounds = wax.shared.TextService:GetTextBoundsAsync(Params)
+	return Bounds.X, Bounds.Y
 end
 
 wax.shared.Unloaded = false

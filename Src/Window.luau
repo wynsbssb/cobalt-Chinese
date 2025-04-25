@@ -158,28 +158,16 @@ local function OpenModal(Parent)
 	OpenedModal = Parent
 
 	OpenedModal.Visible = true
-	wax.shared.Animations.FadeIn(OpenedModal, 0.2)
-
 	ModalBackground.Visible = true
-	wax.shared.Animations.FadeIn(ModalBackground, 0.2)
 end
 
 local function CloseModal()
 	if OpenedModal then
-		local CachedModal = OpenedModal
-
-		wax.shared.Animations.FadeOut(CachedModal, 0.2)
-		task.delay(0.2, function()
-			CachedModal.Visible = false
-		end)
-
+		OpenedModal.Visible = false
 		OpenedModal = nil
 	end
 
-	wax.shared.Animations.FadeOut(ModalBackground, 0.2)
-	task.delay(0.2, function()
-		ModalBackground.Visible = false
-	end)
+	ModalBackground.Visible = false
 end
 
 ModalBackground.MouseButton1Click:Connect(CloseModal)
@@ -222,7 +210,6 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 		Text = Title,
 		TextSize = 17,
 		Size = UDim2.new(1, 0, 1, 0),
-		TextTransparency = 0.5,
 		Parent = ModalTop,
 	})
 
@@ -296,7 +283,7 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 		Position = UDim2.fromOffset(0, 36),
 	})
 
-	return ModalTop, ModalTitle, ModalIcon
+	return ModalTitle, ModalIcon
 end
 
 -- Settings
@@ -320,7 +307,7 @@ local SettingsFrame = wax.shared.Interface.New("TextButton", {
 	},
 })
 
-local SettingsTop = CreateModalTop("Settings", "settings", SettingsFrame)
+CreateModalTop("Settings", "settings", SettingsFrame)
 
 local SettingsScrollingFrame = wax.shared.Interface.New("ScrollingFrame", {
 	AnchorPoint = Vector2.new(0, 1),
@@ -445,12 +432,12 @@ local InfoFrame = wax.shared.Interface.New("TextButton", {
 	},
 })
 
-local InfoTop, InfoTitle, InfoIcon = CreateModalTop("Loading...", Images["RemoteEvent"], InfoFrame)
+local InfoTitle, InfoIcon = CreateModalTop("...", Images["RemoteEvent"], InfoFrame)
 
 local InfoButtons = wax.shared.Interface.New("Frame", {
+	AnchorPoint = Vector2.new(0, 1),
 	BackgroundTransparency = 1,
 	Position = UDim2.new(0, 6, 1, -7),
-	AnchorPoint = Vector2.new(0, 1),
 	Size = UDim2.new(1, -12, 0, 32),
 	Parent = InfoFrame,
 
@@ -1203,7 +1190,7 @@ end
 
 function ShowLog(Log)
 	for _, Object in pairs(LogsList:GetChildren()) do
-		if Object.ClassName == "Frame" then
+		if Object.ClassName == "TextButton" then
 			Object:Destroy()
 		end
 	end
@@ -1247,6 +1234,7 @@ function ShowCalls(Log, Page)
 		end
 
 		CreateCallFrame({
+			Instance = Log.Instance,
 			Arguments = Call.Arguments,
 			Time = Call.Time,
 			Origin = Call.Origin,
@@ -1489,17 +1477,18 @@ function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
 end
 
 function CreateCallFrame(CallInfo: {
-	Time: string,
+	Instance: Instance,
 	Arguments: { [any]: any },
-	Order: number,
+	Time: string,
 	Origin: BaseScript | nil,
+	Order: number,
 })
-	local CallFrame = wax.shared.Interface.New("Frame", {
+	local CallFrame = wax.shared.Interface.New("TextButton", {
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-		Size = UDim2.fromScale(1, 0),
-		Parent = LogsList,
 		LayoutOrder = CallInfo.Order,
+		Size = UDim2.fromScale(1, 0),
+		Text = "",
 
 		["UIListLayout"] = {
 			Padding = UDim.new(0, 6),
@@ -1513,9 +1502,11 @@ function CreateCallFrame(CallInfo: {
 		},
 
 		MainUICorner,
+
+		Parent = LogsList,
 	})
 
-	local _LogHighlightedStroke = wax.shared.Interface.New("UIStroke", {
+	local HighlightStroke = wax.shared.Interface.New("UIStroke", {
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 		Color = Color3.fromRGB(75, 75, 75),
 		Thickness = 2,
@@ -1523,6 +1514,25 @@ function CreateCallFrame(CallInfo: {
 
 		Parent = CallFrame,
 	})
+	do
+		CallFrame.MouseEnter:Connect(function()
+			wax.shared.TweenService
+				:Create(HighlightStroke, DefaultTweenInfo, {
+					Transparency = 0,
+				})
+				:Play()
+		end)
+		CallFrame.MouseLeave:Connect(function()
+			wax.shared.TweenService
+				:Create(HighlightStroke, DefaultTweenInfo, {
+					Transparency = 1,
+				})
+				:Play()
+		end)
+		CallFrame.MouseButton1Click:Connect(function()
+			OpenInfo(CallInfo.Instance)
+		end)
+	end
 
 	local ArgumentsFrame = wax.shared.Interface.New("Frame", {
 		AutomaticSize = Enum.AutomaticSize.Y,
@@ -1690,6 +1700,13 @@ end
 
 SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateSearch)
 
+-- Call Functions
+function OpenInfo(Instance)
+	InfoTitle.Text = Instance.Name
+	InfoIcon.Image = Images[Instance.ClassName]
+	OpenModal(InfoFrame)
+end
+
 wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: InputObject)
 	local Delta = Input.Position - Info.StartPosition
 	local FramePosition: UDim2 = Info.FramePosition
@@ -1727,11 +1744,12 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 
 		local Start, End = PaginationHelper:GetIndexRanges(Page)
 		if CallIndex < Start or CallIndex > End then
-			ShowPagination(Log)
+			--ShowPagination(Log)
 			return
 		end
 
 		CreateCallFrame({
+			Instance = Instance,
 			Arguments = CallInfo[1],
 			Time = CallInfo[2],
 			Origin = CallInfo[3],

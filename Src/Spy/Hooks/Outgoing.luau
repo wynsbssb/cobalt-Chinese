@@ -96,6 +96,23 @@ for _, Function in pairs(FunctionsToHook) do
 					}
 					Log:Call(Info)
 					wax.shared.Communicator:Fire(Log.Instance, "Outgoing", Info, #Log.Calls)
+
+					-- For RemoteFunction return value (ex: local result = RemoteFunction:InvokeServer())
+					if self.ClassName == "RemoteFunction" and Method == "InvokeServer" then
+						local Result = { wax.shared.NamecallHook(self, ...) }
+						local RFResultInfo = {
+							Result,
+							os.date("%X"),
+							getcallingscript(),
+							getcallingfunction(),
+							getcallingline(),
+						}
+
+						Log:Call(RFResultInfo)
+						wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
+
+						return table.unpack(Result)
+					end
 				end
 			end
 

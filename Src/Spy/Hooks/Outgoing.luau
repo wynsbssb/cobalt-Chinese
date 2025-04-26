@@ -38,7 +38,7 @@ wax.shared.NamecallHook = hookmetamethod(
 				}
 				Log:Call(Info)
 				wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, "Outgoing", Info, #Log.Calls)
-				
+
 				-- For RemoteFunction return value (ex: local result = RemoteFunction:InvokeServer())
 				if self.ClassName == "RemoteFunction" then
 					local Result = { wax.shared.NamecallHook(self, ...) }
@@ -51,12 +51,17 @@ wax.shared.NamecallHook = hookmetamethod(
 					}
 
 					Log:Call(RFResultInfo)
-					wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
+					wax.shared.Communicator.Fire(
+						wax.shared.Communicator,
+						Log.Instance,
+						"Incoming",
+						RFResultInfo,
+						#Log.Calls
+					)
 
 					return table.unpack(Result)
 				end
 			end
-
 		end
 
 		return wax.shared.NamecallHook(self, ...)
@@ -109,7 +114,13 @@ for _, Function in pairs(FunctionsToHook) do
 						}
 
 						Log:Call(RFResultInfo)
-						wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
+						wax.shared.Communicator.Fire(
+							wax.shared.Communicator,
+							Log.Instance,
+							"Incoming",
+							RFResultInfo,
+							#Log.Calls
+						)
 
 						return table.unpack(Result)
 					end

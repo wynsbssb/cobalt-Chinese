@@ -44,84 +44,146 @@ local MainFrame = wax.shared.Interface.New("Frame", {
 })
 
 -- Context Menus
-local function CreateContextMenu(Options: {
-	[number]: {
-		["Icon"]: string,
-		["Text"]: string,
-		["Callback"]: () -> (),
-		["CloseOnClick"]: boolean?,
+local CurrentContext
+local ContextMenu = wax.shared.Interface.New("Frame", {
+	AutomaticSize = Enum.AutomaticSize.XY,
+	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+	Size = UDim2.fromScale(0, 0),
+	ZIndex = 10000,
+
+	["UICorner"] = {
+		CornerRadius = UDim.new(0, 6),
 	},
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Vertical,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		Padding = UDim.new(0, 0),
+	},
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 4),
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 4),
+	},
+
+	["UIStroke"] = {
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		Color = Color3.fromRGB(25, 25, 25),
+		Thickness = 1,
+	},
+
+	Parent = ScreenGui,
 })
-	local ContextMenu = wax.shared.Interface.New("Frame", {
-		BackgroundColor3 = Color3.fromRGB(10, 10, 10),
-		Size = UDim2.fromScale(0, 0),
-		AutomaticSize = Enum.AutomaticSize.XY,
-		ZIndex = 10000,
 
-		["UICorner"] = {
-			CornerRadius = UDim.new(0, 8),
-		},
-
-		["UIListLayout"] = {
-			FillDirection = Enum.FillDirection.Vertical,
-			HorizontalAlignment = Enum.HorizontalAlignment.Left,
-			Padding = UDim.new(0, 0),
-		},
-
-		["UIPadding"] = {
-			PaddingLeft = UDim.new(0, 6),
-			PaddingRight = UDim.new(0, 6),
-			PaddingTop = UDim.new(0, 6),
-			PaddingBottom = UDim.new(0, 6),
-		},
-
-		["UIStroke"] = {
-			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-			Color = Color3.fromRGB(25, 25, 25),
-			Thickness = 1,
-		},
-	})
+local function CreateContextMenu(Parent: GuiObject, Options: {})
+	local ContextData = {
+		Parent = Parent,
+		Options = {},
+	}
 
 	for Order, Data in pairs(Options) do
 		local TextButton = wax.shared.Interface.New("TextButton", {
-			Text = "",
+			BackgroundColor3 = Color3.fromRGB(25, 25, 25),
 			BackgroundTransparency = 1,
 			Size = UDim2.new(1, 0, 0, 30),
-			Parent = ContextMenu,
+			Text = "",
+
+			["UICorner"] = {
+				CornerRadius = UDim.new(0, 6),
+			},
 
 			["UIPadding"] = {
+				PaddingBottom = UDim.new(0, 6),
 				PaddingLeft = UDim.new(0, 6),
 				PaddingRight = UDim.new(0, 6),
 				PaddingTop = UDim.new(0, 6),
-				PaddingBottom = UDim.new(0, 6),
-			},
-
-			["TextLabel"] = {
-				Position = UDim2.fromOffset(26, 0),
-				Size = UDim2.new(0, 73, 1, 0),
-				Text = Data.Text,
 			},
 		})
 
 		wax.shared.Interface.NewIcon(Data.Icon, {
-			SizeConstraint = Enum.SizeConstraint.RelativeYY,
 			Size = UDim2.fromScale(1, 1),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
 
 			Parent = TextButton,
 		})
 
+		wax.shared.Interface.New("TextLabel", {
+			AutomaticSize = Enum.AutomaticSize.X,
+			Position = UDim2.fromOffset(26, 0),
+			Size = UDim2.fromScale(0, 1),
+			Text = Data.Text,
+			TextSize = 16,
+			TextXAlignment = Enum.TextXAlignment.Left,
+
+			Parent = TextButton,
+		})
+
+		TextButton.MouseEnter:Connect(function()
+			wax.shared.TweenService
+				:Create(TextButton, DefaultTweenInfo, {
+					BackgroundTransparency = 0,
+				})
+				:Play()
+		end)
+		TextButton.MouseLeave:Connect(function()
+			wax.shared.TweenService
+				:Create(TextButton, DefaultTweenInfo, {
+					BackgroundTransparency = 1,
+				})
+				:Play()
+		end)
 		TextButton.MouseButton1Click:Connect(function()
 			if Data.Callback then
 				Data.Callback()
 			end
 
 			if Data.CloseOnClick ~= false then
-				ContextMenu:Destroy()
+				ContextData:Close()
 			end
 		end)
+
+		table.insert(ContextData.Options, TextButton)
 	end
 
-	return ContextMenu
+	function ContextData:Open()
+		if CurrentContext == ContextData then
+			return
+		end
+
+		if CurrentContext then
+			CurrentContext:Close()
+		end
+
+		CurrentContext = ContextData
+		for _, Object in pairs(ContextData.Options) do
+			Object.Parent = ContextMenu
+		end
+
+		ContextMenu.Position =
+			UDim2.fromOffset(Parent.AbsolutePosition.X, Parent.AbsolutePosition.Y + Parent.AbsoluteSize.Y)
+		ContextMenu.Visible = true
+	end
+
+	function ContextData:Toggle()
+		if CurrentContext == ContextData then
+			ContextData:Close()
+			return
+		end
+
+		ContextData:Open()
+	end
+
+	function ContextData:Close()
+		ContextMenu.Visible = false
+		for _, Object in pairs(ContextData.Options) do
+			Object.Parent = nil
+		end
+		CurrentContext = nil
+	end
+
+	return ContextData
 end
 
 -- Sonner toast
@@ -412,6 +474,8 @@ for Order, Data in pairs(Credits) do
 end
 
 -- Info
+local CurrentInfo
+
 local InfoFrame = wax.shared.Interface.New("TextButton", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
@@ -448,13 +512,12 @@ local InfoButtons = wax.shared.Interface.New("Frame", {
 	},
 })
 
-local function CreateInfoButton(Icon: string, Title: string, Callback: (...any) -> ...any)
+local function CreateInfoButton(Icon: string, Title: string, Options: {})
 	local Button = wax.shared.Interface.New("ImageButton", {
-		BackgroundTransparency = 1,
-		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
-		Size = UDim2.fromScale(0, 1),
-		Parent = InfoButtons,
 		AutomaticSize = Enum.AutomaticSize.X,
+		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(0, 1),
 
 		["UICorner"] = {
 			CornerRadius = UDim.new(0, 6),
@@ -480,6 +543,8 @@ local function CreateInfoButton(Icon: string, Title: string, Callback: (...any) 
 			Position = UDim2.fromOffset(28, 0),
 			AutomaticSize = Enum.AutomaticSize.X,
 		},
+
+		Parent = InfoButtons,
 	})
 
 	wax.shared.Interface.NewIcon(Icon, {
@@ -489,17 +554,67 @@ local function CreateInfoButton(Icon: string, Title: string, Callback: (...any) 
 		Parent = Button,
 	})
 
-	Button.MouseButton1Click:Connect(Callback)
+	local Menu = CreateContextMenu(Button, Options)
+
+	Button.MouseEnter:Connect(function()
+		wax.shared.TweenService
+			:Create(Button, DefaultTweenInfo, {
+				BackgroundTransparency = 0,
+			})
+			:Play()
+	end)
+	Button.MouseLeave:Connect(function()
+		wax.shared.TweenService
+			:Create(Button, DefaultTweenInfo, {
+				BackgroundTransparency = 1,
+			})
+			:Play()
+	end)
+	Button.MouseButton1Click:Connect(Menu.Toggle)
 	return Button
 end
 
-local CopyButton = CreateInfoButton("copy", "Copy", function()
-	wax.shared.Sonner.error("This button (Copy) is not implemented yet.")
-end)
+local CopyButton = CreateInfoButton("copy", "Copy", {
+	{
+		Text = "Code",
+		Icon = "code",
+		Callback = function() end,
+	},
+	{
+		Text = "Script Path",
+		Icon = "file-search",
+		Callback = function()
+			if not CurrentInfo then
+				return
+			end
 
-local NetworkButton = CreateInfoButton("network", "Event", function()
-	wax.shared.Sonner.error("This button (Event) is not implemented yet.")
-end)
+			pcall(setclipboard, CurrentInfo["Origin"])
+		end,
+	},
+	{
+		Text = "Function Info",
+		Icon = "parentheses",
+		Callback = function() end,
+	},
+})
+
+local NetworkButton = CreateInfoButton("network", "Event", {
+	{
+		Text = "Code",
+		Icon = "code",
+		Callback = function() end,
+	},
+	{
+		Text = "Script Path",
+		Icon = "file-search",
+		Callback = function() end,
+	},
+	{
+		Text = "Function Info",
+		Icon = "parentheses",
+		Callback = function() end,
+	},
+})
 
 -- Search
 local ResultInfo = {}
@@ -1530,7 +1645,7 @@ function CreateCallFrame(CallInfo: {
 				:Play()
 		end)
 		CallFrame.MouseButton1Click:Connect(function()
-			OpenInfo(CallInfo.Instance)
+			OpenInfo(CallInfo)
 		end)
 	end
 
@@ -1701,9 +1816,11 @@ end
 SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateSearch)
 
 -- Call Functions
-function OpenInfo(Instance)
-	InfoTitle.Text = Instance.Name
-	InfoIcon.Image = Images[Instance.ClassName]
+function OpenInfo(CallInfo)
+	InfoTitle.Text = CallInfo.Instance.Name
+	InfoIcon.Image = Images[CallInfo.Instance.ClassName]
+
+	CurrentInfo = CallInfo
 	OpenModal(InfoFrame)
 end
 
@@ -1759,7 +1876,17 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 end))
 
 wax.shared.Connect(wax.shared.UserInputService.InputBegan:Connect(function(Input: InputObject)
-	if Input.KeyCode == Enum.KeyCode.K and wax.shared.UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+	if wax.shared.IsClickInput(Input) then
+		if
+			CurrentContext
+			and not (
+				wax.shared.IsMouseOverFrame(ContextMenu, Input.Position)
+				or wax.shared.IsMouseOverFrame(CurrentContext.Parent, Input.Position)
+			)
+		then
+			CurrentContext:Close()
+		end
+	elseif Input.KeyCode == Enum.KeyCode.K and wax.shared.UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
 		OpenSearch()
 	elseif OpenedModal == SearchFrame then
 		if Input.KeyCode == Enum.KeyCode.Return then

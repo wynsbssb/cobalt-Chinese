@@ -87,6 +87,7 @@ local function CreateContextMenu(Parent: GuiObject, Options: {})
 		local TextButton = wax.shared.Interface.New("TextButton", {
 			BackgroundColor3 = Color3.fromRGB(25, 25, 25),
 			BackgroundTransparency = 1,
+			LayoutOrder = Order,
 			Size = UDim2.new(1, 0, 0, 30),
 			Text = "",
 
@@ -135,6 +136,8 @@ local function CreateContextMenu(Parent: GuiObject, Options: {})
 				:Play()
 		end)
 		TextButton.MouseButton1Click:Connect(function()
+			TextButton.BackgroundTransparency = 1
+
 			if Data.Callback then
 				Data.Callback()
 			end
@@ -144,7 +147,7 @@ local function CreateContextMenu(Parent: GuiObject, Options: {})
 			end
 		end)
 
-		table.insert(ContextData.Options, TextButton)
+		ContextData.Options[TextButton] = Data
 	end
 
 	function ContextData:Open()
@@ -157,7 +160,10 @@ local function CreateContextMenu(Parent: GuiObject, Options: {})
 		end
 
 		CurrentContext = ContextData
-		for _, Object in pairs(ContextData.Options) do
+		for Object, Data in pairs(ContextData.Options) do
+			if Data.Condition and not Data.Condition() then
+				continue
+			end
 			Object.Parent = ContextMenu
 		end
 
@@ -177,7 +183,7 @@ local function CreateContextMenu(Parent: GuiObject, Options: {})
 
 	function ContextData:Close()
 		ContextMenu.Visible = false
-		for _, Object in pairs(ContextData.Options) do
+		for Object, _ in pairs(ContextData.Options) do
 			Object.Parent = nil
 		end
 		CurrentContext = nil
@@ -513,11 +519,12 @@ local InfoButtons = wax.shared.Interface.New("Frame", {
 })
 
 local function CreateInfoButton(Icon: string, Title: string, Options: {})
-	local Button = wax.shared.Interface.New("ImageButton", {
+	local Button = wax.shared.Interface.New("TextButton", {
 		AutomaticSize = Enum.AutomaticSize.X,
 		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
 		BackgroundTransparency = 1,
 		Size = UDim2.fromScale(0, 1),
+		Text = "",
 
 		["UICorner"] = {
 			CornerRadius = UDim.new(0, 6),
@@ -574,21 +581,40 @@ local function CreateInfoButton(Icon: string, Title: string, Options: {})
 	return Button
 end
 
-local CopyButton = CreateInfoButton("copy", "Copy", {
+CreateInfoButton("copy", "Copy", {
 	{
 		Text = "Code",
 		Icon = "code",
-		Callback = function() end,
-	},
-	{
-		Text = "Script Path",
-		Icon = "file-search",
 		Callback = function()
 			if not CurrentInfo then
 				return
 			end
 
-			pcall(setclipboard, CurrentInfo["Origin"])
+			warn("thats what they all say")
+		end,
+	},
+	{
+		Text = "Remote Path",
+		Icon = "package-search",
+		Callback = function()
+			if not CurrentInfo then
+				return
+			end
+			pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Instance))
+		end,
+	},
+	{
+		Text = "Script Path",
+		Icon = "file-search",
+		Condition = function()
+			return CurrentInfo and typeof(CurrentInfo.Origin) == "Instance"
+		end,
+		Callback = function()
+			if not CurrentInfo then
+				return
+			end
+
+			pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Origin))
 		end,
 	},
 	{

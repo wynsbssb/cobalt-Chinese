@@ -2,6 +2,14 @@ local CodeGen = {
 	CleanTable = { ['"'] = '\\"', ["\\"] = "\\\\" },
 }
 
+local GetNilCode = [[local function GetNil(Name, DebugId)
+	for _, Object in pairs(getnilinstances()) do
+		if Object.Name == Name and Object:GetDebugId() == DebugId then
+			return Object
+		end
+	end
+end]]
+
 --// Pasted from Dex (maximum detection)
 for i = 0, 31 do
 	CodeGen.CleanTable[string.char(i)] = "\\" .. string.format("%03d", i)
@@ -14,7 +22,7 @@ function CodeGen.FormatLuaString(str)
 	return string.gsub(str, '["\\\0-\31\127-\255]', CodeGen.CleanTable)
 end
 
-function CodeGen.GetFullPath(Object, ExcludeComment)
+function CodeGen.GetFullPath(Object, ExcludeCode)
 	local CurrentObject = Object
 	local Path = ""
 
@@ -45,10 +53,15 @@ function CodeGen.GetFullPath(Object, ExcludeComment)
 					IndexName = ':GetService("' .. CurrentObject.ClassName .. '")'
 				end
 			elseif Parent == nil then
-				Path = Path .. (ExcludeComment and "" or " --[[Nil Parent]]")
+				if ExcludeCode then
+					Path = Path .. " --[[Nil Parent]]"
+				else	
+					Path = GetNilCode .. `\n\nGetNil("{CurrentObject.Name}", "{CurrentObject:GetDebugId()}")`
+					break
+				end
 			end
 		end
-
+		
 		Path = IndexName .. Path
 		if wax.shared.LocalPlayer.Character and CurrentObject == wax.shared.LocalPlayer.Character then
 			break

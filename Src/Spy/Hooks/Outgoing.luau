@@ -104,7 +104,7 @@ for _, Function in pairs(FunctionsToHook) do
 
 					-- For RemoteFunction return value (ex: local result = RemoteFunction:InvokeServer())
 					if self.ClassName == "RemoteFunction" and Method == "InvokeServer" then
-						local Result = { wax.shared.NamecallHook(self, ...) }
+						local Result = { wax.shared.Hooks[Function](self, ...) }
 						local RFResultInfo = {
 							Result,
 							os.date("%X"),

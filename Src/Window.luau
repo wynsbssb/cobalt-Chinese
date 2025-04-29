@@ -272,8 +272,6 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 		},
 	})
 
-	wax.shared.Animations.AddFadeExclusion(ModalTop)
-
 	local ModalTitle = wax.shared.Interface.New("TextLabel", {
 		Text = Title,
 		TextSize = 17,
@@ -292,10 +290,6 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 
 			Parent = ModalTop,
 		})
-
-		wax.shared.Animations.SetFadeExpectation("In", ModalIcon, {
-			ImageTransparency = 0,
-		})
 	else
 		ModalIcon = wax.shared.Interface.NewIcon(Icon, {
 			ImageTransparency = 0.5,
@@ -305,15 +299,7 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 
 			Parent = ModalTop,
 		})
-
-		wax.shared.Animations.SetFadeExpectation("In", ModalIcon, {
-			ImageTransparency = 0.5,
-		})
 	end
-
-	wax.shared.Animations.SetFadeExpectation("Out", ModalIcon, {
-		ImageTransparency = 1,
-	})
 
 	local CloseButton = wax.shared.Interface.New("ImageButton", {
 		Size = UDim2.fromScale(1, 1),
@@ -330,16 +316,6 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 		SizeConstraint = Enum.SizeConstraint.RelativeYY,
 
 		Parent = CloseButton,
-	})
-
-	wax.shared.Animations.AddFadeExclusion(CloseButton)
-
-	wax.shared.Animations.SetFadeExpectation("In", CloseImage, {
-		ImageTransparency = 0.5,
-	})
-
-	wax.shared.Animations.SetFadeExpectation("Out", CloseImage, {
-		ImageTransparency = 1,
 	})
 
 	ConnectCloseButton(CloseButton, CloseImage, Parent)
@@ -425,8 +401,6 @@ local function CreateSettingsSection(SectionName: string)
 		},
 	})
 
-	wax.shared.Animations.AddFadeExclusion(Section)
-
 	return Section
 end
 
@@ -465,7 +439,6 @@ local CreditsWrapper = wax.shared.Interface.New("Frame", {
 		Padding = UDim.new(0, 10),
 	},
 })
-wax.shared.Animations.AddFadeExclusion(CreditsWrapper)
 
 for Order, Data in pairs(Credits) do
 	wax.shared.Interface.New("TextLabel", {
@@ -504,6 +477,164 @@ local InfoFrame = wax.shared.Interface.New("TextButton", {
 
 local InfoTitle, InfoIcon = CreateModalTop("...", Images["RemoteEvent"], InfoFrame)
 
+local InfoTabs = wax.shared.Interface.New("Frame", {
+	BackgroundTransparency = 1,
+	Position = UDim2.new(0, 6, 0, 44),
+	Size = UDim2.new(1, -12, 0, 36),
+	Parent = InfoFrame,
+
+	["UIListLayout"] = {
+		Padding = UDim.new(0, 6),
+		FillDirection = Enum.FillDirection.Horizontal,
+		VerticalAlignment = Enum.VerticalAlignment.Top,
+	},
+})
+
+local CurrentInfoTab = nil
+local function CreateInfoTab(Icon: string, Title: string, TabContents: Frame?)
+	if not CurrentInfoTab then
+		CurrentInfoTab = Title
+	end
+
+	local IsTabSelected = CurrentInfoTab == Title
+
+	if TabContents then
+		TabContents.Name = Title
+		TabContents.Parent = InfoFrame
+		TabContents.Visible = IsTabSelected
+	end
+
+	local ButtonColor = IsTabSelected and Color3.fromRGB(25, 25, 25) or Color3.fromRGB(0, 0, 0)
+	local TabButton = wax.shared.Interface.New("TextButton", {
+		BackgroundColor3 = ButtonColor,
+		Size = UDim2.fromScale(0, 1),
+		AutomaticSize = Enum.AutomaticSize.X,
+		Text = "",
+		Parent = InfoTabs,
+		Name = Title,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 8),
+		},
+
+		["UIStroke"] = {
+			Color = Color3.fromRGB(25, 25, 25),
+			Thickness = 1,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
+
+		["Frame"] = {
+			AnchorPoint = Vector2.new(0, 1),
+			Position = UDim2.fromScale(0, 1),
+			Size = UDim2.fromScale(1, 0.5),
+			BackgroundColor3 = ButtonColor,
+		},
+	})
+
+	local TextWrapper = wax.shared.Interface.New("Frame", {
+		BackgroundTransparency = 1,
+		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromOffset(0, 24),
+		Parent = TabButton,
+
+		["UIListLayout"] = {
+			FillDirection = Enum.FillDirection.Horizontal,
+			HorizontalAlignment = Enum.HorizontalAlignment.Left,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 5),
+		},
+
+		["UIPadding"] = {
+			PaddingRight = UDim.new(0, 8),
+			PaddingLeft = UDim.new(0, 8),
+		},
+
+		["TextLabel"] = {
+			Text = Title,
+			TextSize = 15,
+			Size = UDim2.fromScale(0, 1),
+			AutomaticSize = Enum.AutomaticSize.X,
+			LayoutOrder = 2,
+			ZIndex = 2,
+		},
+	})
+
+	wax.shared.Interface.NewIcon(Icon, {
+		Position = UDim2.fromOffset(8, 5),
+		Size = UDim2.fromOffset(16, 16),
+		LayoutOrder = 1,
+		ZIndex = 2,
+
+		Parent = TextWrapper,
+	})
+
+	wax.shared.Connect(TabButton.MouseButton1Click:Connect(function()
+		local OldTabButton = InfoTabs:FindFirstChild(CurrentInfoTab)
+		if OldTabButton then
+			OldTabButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+			OldTabButton.Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		end
+
+		local OldTabContent = InfoFrame:FindFirstChild(CurrentInfoTab)
+		if OldTabContent then
+			OldTabContent.Visible = false
+		end
+
+		CurrentInfoTab = Title
+
+		TabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		TabButton.Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+
+		if TabContents then
+			TabContents.Visible = true
+		end
+	end))
+end
+
+local function CreateTabContent()
+	local Container = wax.shared.Interface.New("Frame", {
+		Position = UDim2.fromOffset(6, 71),
+		Size = UDim2.new(1, -12, 0, 167),
+		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 6),
+		},
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 8),
+			PaddingRight = UDim.new(0, 8),
+			PaddingTop = UDim.new(0, 8),
+			PaddingBottom = UDim.new(0, 8),
+		},
+
+		["UIStroke"] = {
+			Color = Color3.fromRGB(25, 25, 25),
+			Thickness = 1,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
+	})
+
+	return Container,
+		wax.shared.Interface.New("ScrollingFrame", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			AutomaticCanvasSize = Enum.AutomaticSize.Y,
+			CanvasSize = UDim2.fromScale(0, 0),
+			ScrollBarThickness = 0,
+			Parent = Container,
+		})
+end
+
+local ArgumentInfoUI, ArgumentScrollingFrame = CreateTabContent()
+CreateInfoTab("ellipsis", "Arguments", ArgumentInfoUI)
+
+local CodeInfoUI, CodeScrollingFrame = CreateTabContent()
+CreateInfoTab("code", "Code", CodeInfoUI)
+
+local FunctionInfoUI, FunctionScrollingFrame = CreateTabContent()
+CreateInfoTab("parentheses", "Function Info", FunctionInfoUI)
+
 local InfoButtons = wax.shared.Interface.New("Frame", {
 	AnchorPoint = Vector2.new(0, 1),
 	BackgroundTransparency = 1,
@@ -518,7 +649,7 @@ local InfoButtons = wax.shared.Interface.New("Frame", {
 	},
 })
 
-local function CreateInfoButton(Icon: string, Title: string, Options: {})
+local function CreateInfoDropdownButton(Icon: string, Title: string, Options: {})
 	local Button = wax.shared.Interface.New("TextButton", {
 		AutomaticSize = Enum.AutomaticSize.X,
 		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
@@ -581,7 +712,7 @@ local function CreateInfoButton(Icon: string, Title: string, Options: {})
 	return Button
 end
 
-CreateInfoButton("copy", "Copy", {
+CreateInfoDropdownButton("copy", "Copy", {
 	{
 		Text = "Code",
 		Icon = "code",
@@ -624,7 +755,7 @@ CreateInfoButton("copy", "Copy", {
 	},
 })
 
-local NetworkButton = CreateInfoButton("network", "Event", {
+local NetworkButton = CreateInfoDropdownButton("network", "Event", {
 	{
 		Text = "Code",
 		Icon = "code",
@@ -708,26 +839,6 @@ local SearchCloseImage = wax.shared.Interface.NewIcon("x", {
 	Parent = SearchCloseButton,
 })
 
-wax.shared.Animations.SetFadeExpectation("In", SearchFrame, {
-	BackgroundTransparency = 0,
-})
-
-wax.shared.Animations.SetFadeExpectation("Out", SearchFrame, {
-	BackgroundTransparency = 1,
-})
-
-wax.shared.Animations.SetFadeExpectation("In", SearchCloseImage, {
-	BackgroundTransparency = 1,
-	ImageTransparency = 0.5,
-})
-
-wax.shared.Animations.SetFadeExpectation("Out", SearchCloseImage, {
-	BackgroundTransparency = 1,
-	ImageTransparency = 1,
-})
-
-wax.shared.Animations.AddFadeExclusions({ SearchCloseButton, SearchTop })
-
 ConnectCloseButton(SearchCloseButton, SearchCloseImage, SearchFrame)
 
 wax.shared.Interface.New("Frame", {
@@ -784,16 +895,6 @@ local FilterAllButton = wax.shared.Interface.New("TextButton", {
 	},
 })
 
-wax.shared.Animations.SetFadeExpectation("In", FilterAllButton, {
-	BackgroundTransparency = 0,
-	TextTransparency = 0,
-})
-
-wax.shared.Animations.SetFadeExpectation("Out", FilterAllButton, {
-	BackgroundTransparency = 1,
-	TextTransparency = 1,
-})
-
 FilterAllButton.MouseButton1Click:Connect(function()
 	ExcludeSearchClass = {}
 	FilterAllButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -848,24 +949,6 @@ for Order, ClassName in pairs(ClassOrder) do
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.fromOffset(0.5, 0),
 		Parent = ClassNameFilterButton,
-	})
-
-	wax.shared.Animations.SetFadeExpectation("In", ClassNameFilterButton, {
-		BackgroundTransparency = 0,
-	})
-
-	wax.shared.Animations.SetFadeExpectation("Out", ClassNameFilterButton, {
-		BackgroundTransparency = 1,
-	})
-
-	wax.shared.Animations.SetFadeExpectation("In", ImageLabel, {
-		BackgroundTransparency = 1,
-		ImageTransparency = 0,
-	})
-
-	wax.shared.Animations.SetFadeExpectation("Out", ImageLabel, {
-		BackgroundTransparency = 1,
-		ImageTransparency = 1,
 	})
 
 	ClassNameFilterButton.MouseButton1Click:Connect(function()
@@ -973,14 +1056,6 @@ local function CreateSearchResult(Instance: Instance, Type: string)
 		Parent = SearchResult,
 	})
 
-	wax.shared.Animations.SetFadeExpectation("In", Image, {
-		ImageTransparency = 0,
-	})
-
-	wax.shared.Animations.SetFadeExpectation("Out", Image, {
-		ImageTransparency = 1,
-	})
-
 	local TypeLabel = wax.shared.Interface.New("TextLabel", {
 		Size = UDim2.fromScale(1, 1),
 		Text = Type,
@@ -989,14 +1064,6 @@ local function CreateSearchResult(Instance: Instance, Type: string)
 		TextXAlignment = Enum.TextXAlignment.Right,
 
 		Parent = SearchResult,
-	})
-
-	wax.shared.Animations.SetFadeExpectation("In", TypeLabel, {
-		TextTransparency = 0.5,
-	})
-
-	wax.shared.Animations.SetFadeExpectation("Out", TypeLabel, {
-		TextTransparency = 1,
 	})
 
 	return SearchResult
@@ -1847,6 +1914,33 @@ function OpenInfo(CallInfo)
 	InfoIcon.Image = Images[CallInfo.Instance.ClassName]
 
 	CurrentInfo = CallInfo
+
+	if CurrentInfoTab ~= "Arguments" then
+		local OldTabButton = InfoTabs:FindFirstChild(CurrentInfoTab)
+		if OldTabButton then
+			OldTabButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+			OldTabButton.Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		end
+
+		local OldTabContent = InfoFrame:FindFirstChild(CurrentInfoTab)
+		if OldTabContent then
+			OldTabContent.Visible = false
+		end
+
+		CurrentInfoTab = "Arguments"
+
+		local NewTabButton = InfoTabs:FindFirstChild(CurrentInfoTab)
+		if NewTabButton then
+			NewTabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+			NewTabButton.Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		end
+
+		local NewTabContent = InfoFrame:FindFirstChild(CurrentInfoTab)
+		if NewTabContent then
+			OldTabContent.Visible = true
+		end
+	end
+
 	OpenModal(InfoFrame)
 end
 

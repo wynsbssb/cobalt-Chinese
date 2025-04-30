@@ -3,8 +3,11 @@ local PaginationHelper = wax.shared.Pagination.new({
 	TotalItems = 0,
 })
 
+wax.shared.Settings = {}
+
 local DefaultTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Exponential)
 
+type SupportedRemoteTypes = RemoteEvent | RemoteFunction | BindableEvent | BindableFunction | UnreliableRemoteEvent
 local ClassOrder = {
 	"RemoteEvent",
 	"UnreliableRemoteEvent",
@@ -404,11 +407,388 @@ local function CreateSettingsSection(SectionName: string)
 	return Section
 end
 
+local function CreateSettingsButton(Text: string, Callback: () -> (), Section: Frame)
+	local Button = wax.shared.Interface.New("TextButton", {
+		BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+		Size = UDim2.new(1, 0, 0, 24),
+		TextSize = 15,
+		Text = "",
+		Parent = Section,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 4),
+		},
+
+		["UIStroke"] = {
+			Color = Color3.fromRGB(25, 25, 25),
+			Thickness = 1,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
+
+		["TextLabel"] = {
+			Text = Text,
+			TextSize = 16,
+			TextTransparency = 0.5,
+			Size = UDim2.fromScale(1, 1),
+			Position = UDim2.fromOffset(0, -1),
+		},
+	})
+
+	Button.MouseButton1Click:Connect(function()
+		if Callback then
+			Callback()
+		end
+	end)
+
+	return Button
+end
+
+local function CreateSettingsCheckbox(
+	Idx: string,
+	Options: {
+		Text: string,
+		Callback: (boolean) -> () | nil,
+		Default: boolean?,
+		Section: Frame,
+	}
+)
+	local Checkbox = {
+		Value = Options.Default or false,
+	}
+
+	local CheckboxUI = wax.shared.Interface.New("TextButton", {
+		Text = Options.Text,
+		TextSize = 16,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 20),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Options.Section,
+	})
+
+	local CheckContainer = wax.shared.Interface.New("Frame", {
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.fromScale(1, 0),
+		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+		Size = UDim2.fromScale(1, 1),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		Parent = CheckboxUI,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 4),
+		},
+
+		["UIStroke"] = {
+			Color = Color3.fromRGB(25, 25, 25),
+			Thickness = 1,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 2),
+			PaddingRight = UDim.new(0, 2),
+			PaddingTop = UDim.new(0, 2),
+			PaddingBottom = UDim.new(0, 2),
+		},
+	})
+
+	local CheckImage = wax.shared.Interface.NewIcon("check", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		ImageTransparency = Checkbox.Value and 0 or 1,
+		Parent = CheckContainer,
+	})
+
+	CheckboxUI.MouseButton1Click:Connect(function()
+		Checkbox.Value = not Checkbox.Value
+
+		wax.shared.TweenService
+			:Create(CheckImage, DefaultTweenInfo, {
+				ImageTransparency = Checkbox.Value and 0 or 1,
+			})
+			:Play()
+
+		if Options.Callback then
+			Options.Callback(Checkbox.Value)
+		end
+	end)
+
+	wax.shared.Settings[Idx] = Checkbox
+	return Checkbox
+end
+
+local function CreateSettingsDropdown(
+	Idx: string,
+	Options: {
+		Multi: boolean?,
+		AllowNull: boolean?,
+		Values: { any },
+		Default: any | { any },
+		Callback: (any) -> () | nil,
+		Text: string,
+		Section: Frame,
+	}
+)
+	local AllowNull = Options.AllowNull or false
+	assert(AllowNull or Options.Default ~= nil, "Default value must be provided when AllowNull is false")
+
+	local Dropdown = {
+		Value = Options.Default or nil,
+	}
+
+	local DropdownUI = wax.shared.Interface.New("TextButton", {
+		Text = "Select",
+		TextSize = 16,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 20),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Options.Section,
+	})
+
+	local DropdownIcon = wax.shared.Interface.NewIcon("chevron-down", {
+		Size = UDim2.fromScale(1, 1),
+		ImageTransparency = 0.5,
+		Position = UDim2.fromScale(1, 0),
+		AnchorPoint = Vector2.new(1, 0),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+
+		Parent = DropdownUI,
+	})
+
+	local ContextMenu = CreateContextMenu(DropdownIcon, {
+		{
+			Text = "Code",
+			Icon = "code",
+			Callback = function()
+				print("Test")
+			end,
+		},
+	})
+
+	DropdownUI.MouseButton1Click:Connect(ContextMenu.Toggle)
+
+	wax.shared.Settings[Idx] = Dropdown
+	return Dropdown
+end
+
+local function CreateSettingsRemoteList(
+	Idx: string,
+	Options: {
+		Text: string,
+		Callback: (any) -> () | nil,
+		Section: Frame,
+		NullMessage: string,
+	}
+)
+	local RemoteList = {
+		Value = {},
+	}
+
+	local RemoteListContainer = wax.shared.Interface.New("Frame", {
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 0),
+		Parent = Options.Section,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 8),
+		},
+
+		["UIListLayout"] = {
+			FillDirection = Enum.FillDirection.Vertical,
+			HorizontalAlignment = Enum.HorizontalAlignment.Left,
+			Padding = UDim.new(0, 6),
+		},
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 5),
+			PaddingRight = UDim.new(0, 5),
+			PaddingTop = UDim.new(0, 5),
+			PaddingBottom = UDim.new(0, 5),
+		},
+
+		["UIStroke"] = {
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			Color = Color3.fromRGB(25, 25, 25),
+			Thickness = 1,
+		},
+	})
+
+	local NoRemotesText = wax.shared.Interface.New("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 100),
+		TextTransparency = 0.5,
+		Text = Options.NullMessage,
+		TextSize = 14,
+		Visible = true,
+		Parent = RemoteListContainer,
+	})
+
+	function RemoteList:Display()
+		for _, Object in pairs(RemoteListContainer:GetChildren()) do
+			if not Object:IsA("Frame") then
+				continue
+			end
+			Object:Destroy()
+		end
+
+		NoRemotesText.Visible = (#self.Value == 0)
+
+		for _, remote in self.Value do
+			local ListElement = wax.shared.Interface.New("Frame", {
+				BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+				Size = UDim2.new(1, 0, 0, 32),
+				Parent = RemoteListContainer,
+
+				["UICorner"] = {
+					CornerRadius = UDim.new(0, 4),
+				},
+
+				["UIStroke"] = {
+					Color = Color3.fromRGB(25, 25, 25),
+					Thickness = 1,
+					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				},
+
+				["Frame"] = {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+
+					["UIListLayout"] = {
+						FillDirection = Enum.FillDirection.Horizontal,
+						HorizontalAlignment = Enum.HorizontalAlignment.Left,
+						VerticalAlignment = Enum.VerticalAlignment.Center,
+						Padding = UDim.new(0, 4),
+					},
+
+					["UIPadding"] = {
+						PaddingLeft = UDim.new(0, 5),
+					},
+
+					["ImageLabel"] = {
+						Size = UDim2.new(1, -8, 1, -8),
+						SizeConstraint = Enum.SizeConstraint.RelativeYY,
+						Image = Images[remote.ClassName],
+						AnchorPoint = Vector2.new(0, 0.5),
+						BackgroundTransparency = 1,
+						ImageTransparency = 0.5,
+					},
+
+					["TextLabel"] = {
+						Text = remote.Name,
+						Size = UDim2.fromScale(1, 1),
+						AutomaticSize = Enum.AutomaticSize.X,
+						TextSize = 16,
+						TextXAlignment = Enum.TextXAlignment.Left,
+						BackgroundTransparency = 1,
+					},
+				},
+			})
+
+			local RemoveButton = wax.shared.Interface.New("ImageButton", {
+				BackgroundTransparency = 1,
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, -8, 0.5, 0),
+				Size = UDim2.new(1, -12, 1, -12),
+				SizeConstraint = Enum.SizeConstraint.RelativeYY,
+				ImageTransparency = 0.5,
+				Parent = ListElement,
+			})
+
+			wax.shared.Icons.SetIcon(RemoveButton, "trash")
+
+			RemoveButton.MouseEnter:Connect(function()
+				wax.shared.TweenService
+					:Create(RemoveButton, DefaultTweenInfo, {
+						ImageTransparency = 0,
+					})
+					:Play()
+			end)
+
+			RemoveButton.MouseLeave:Connect(function()
+				wax.shared.TweenService
+					:Create(RemoveButton, DefaultTweenInfo, {
+						ImageTransparency = 0.5,
+					})
+					:Play()
+			end)
+
+			RemoveButton.MouseButton1Click:Connect(function()
+				self:RemoveFromList(remote)
+			end)
+		end
+	end
+
+	function RemoteList:AddToList(remote: SupportedRemoteTypes)
+		table.insert(self.Value, remote)
+
+		self:Display()
+	end
+
+	function RemoteList:RemoveFromList(remote: SupportedRemoteTypes)
+		local index = table.find(self.Value, remote)
+		if not index then
+			return
+		end
+
+		table.remove(self.Value, index)
+
+		self:Display()
+	end
+
+	function RemoteList:SetList(remotes: { SupportedRemoteTypes })
+		self.Value = remotes
+
+		self:Display()
+	end
+
+	RemoteList:Display()
+
+	wax.shared.Settings[Idx] = RemoteList
+	return RemoteList
+end
+
 local FilterSection = CreateSettingsSection("Filter")
+
+CreateSettingsDropdown("IgnoreRemotes", {
+	Text = "Ignore Remotes",
+	Values = ClassOrder,
+	AllowNull = true,
+	Section = FilterSection,
+})
+
+CreateSettingsCheckbox("IgnoreSpammyRemotes", {
+	Text = "Ignore Spammy Remotes",
+	Section = FilterSection,
+})
+CreateSettingsButton("Reset Filtering to Default", function()
+	-- TODO: implement
+	wax.shared.Sonner.success("Successfully reset remote filtering to default")
+end, FilterSection)
 
 local IgnoredSection = CreateSettingsSection("Ignored")
 
+CreateSettingsRemoteList("IgnoredRemotes", {
+	Text = "Ignored Remotes",
+	NullMessage = "No remotes have been ignored yet.",
+	Section = IgnoredSection,
+})
+local RemoveIgnored = CreateSettingsButton("Remove All", function()
+	-- TODO: implement
+	wax.shared.Sonner.success("Removed all ignored remotes")
+end, IgnoredSection)
+RemoveIgnored.Visible = false
+
 local BlockedSection = CreateSettingsSection("Blocked")
+
+CreateSettingsRemoteList("BlockedRemotes", {
+	Text = "Blocked Remotes",
+	NullMessage = "No remotes have been blocked yet.",
+	Section = BlockedSection,
+})
+local RemoveBlocked = CreateSettingsButton("Remove All", function()
+	-- TODO: implement
+	wax.shared.Sonner.success("Removed all blocked remotes")
+end, BlockedSection)
+RemoveBlocked.Visible = false
 
 local CreditsSection = CreateSettingsSection("Credits")
 

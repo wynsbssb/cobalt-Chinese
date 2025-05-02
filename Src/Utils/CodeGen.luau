@@ -7,11 +7,9 @@ type CallInfo = {
 	Arguments: { any },
 	Time: string,
 	Type: "Incoming" | "Outgoing",
-	Origin: {
-		Script: BaseScript?,
-		Function: (...any) -> any,
-		Line: number?,
-	},
+	Origin: BaseScript?,
+	Function: (...any) -> any,
+	Line: number?,
 	Instance: SupportedRemoteTypes,
 	Order: number,
 }

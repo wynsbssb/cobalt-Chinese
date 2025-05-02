@@ -2346,7 +2346,7 @@ function OpenInfo(CallInfo)
 
 	CurrentInfo = CallInfo
 
-	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo))
+	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo, CurrentTab.Name))
 
 	FunctionInfoText.Text = string.format(
 		[[<b>Function Address:</b> %s

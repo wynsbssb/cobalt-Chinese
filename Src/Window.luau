@@ -999,9 +999,11 @@ local function CreateTabContent()
 		wax.shared.Interface.New("ScrollingFrame", {
 			Size = UDim2.fromScale(1, 1),
 			BackgroundTransparency = 1,
-			AutomaticCanvasSize = Enum.AutomaticSize.Y,
+			AutomaticCanvasSize = Enum.AutomaticSize.XY,
 			CanvasSize = UDim2.fromScale(0, 0),
 			ScrollBarThickness = 0,
+			HorizontalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
+			ScrollingDirection = Enum.ScrollingDirection.XY,
 			Parent = Container,
 		})
 end
@@ -1009,11 +1011,54 @@ end
 local ArgumentInfoUI, ArgumentScrollingFrame = CreateTabContent()
 CreateInfoTab("ellipsis", "Arguments", ArgumentInfoUI)
 
+local ArgumentsInfoFrame = wax.shared.Interface.New("Frame", {
+	AutomaticSize = Enum.AutomaticSize.Y,
+	BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+	Size = UDim2.fromScale(1, 0),
+
+	["UIListLayout"] = {
+		Padding = UDim.new(0, 6),
+	},
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 6),
+		PaddingRight = UDim.new(0, 6),
+		PaddingTop = UDim.new(0, 6),
+		PaddingBottom = UDim.new(0, 6),
+	},
+
+	MainUICorner,
+
+	Parent = ArgumentScrollingFrame,
+})
+
 local CodeInfoUI, CodeScrollingFrame = CreateTabContent()
 CreateInfoTab("code", "Code", CodeInfoUI)
 
+local CodeText = wax.shared.Interface.New("TextLabel", {
+	AutomaticSize = Enum.AutomaticSize.XY,
+	TextSize = 16,
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+	FontFace = Font.fromId(16658246179),
+	TextXAlignment = Enum.TextXAlignment.Left,
+	BackgroundTransparency = 1,
+	Text = wax.shared.Highlighter.Run("-- Loading..."),
+	Parent = CodeScrollingFrame,
+})
+
 local FunctionInfoUI, FunctionScrollingFrame = CreateTabContent()
 CreateInfoTab("parentheses", "Function Info", FunctionInfoUI)
+
+local FunctionInfoText = wax.shared.Interface.New("TextLabel", {
+	AutomaticSize = Enum.AutomaticSize.XY,
+	TextSize = 16,
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+	FontFace = Font.fromId(16658246179),
+	TextXAlignment = Enum.TextXAlignment.Left,
+	BackgroundTransparency = 1,
+	Text = "",
+	Parent = FunctionScrollingFrame,
+})
 
 local InfoButtons = wax.shared.Interface.New("Frame", {
 	AnchorPoint = Vector2.new(0, 1),
@@ -1826,6 +1871,8 @@ function ShowCalls(Log, Page)
 			Arguments = Call.Arguments,
 			Time = Call.Time,
 			Origin = Call.Origin,
+			Function = Call.Function,
+			Line = Call.Line,
 			Order = Index,
 		})
 	end
@@ -2070,6 +2117,8 @@ function CreateCallFrame(CallInfo: {
 	Time: string,
 	Origin: BaseScript | nil,
 	Order: number,
+	Function: (...any) -> any,
+	Line: number,
 })
 	local CallFrame = wax.shared.Interface.New("TextButton", {
 		AutomaticSize = Enum.AutomaticSize.Y,
@@ -2290,10 +2339,47 @@ SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateSearch)
 
 -- Call Functions
 function OpenInfo(CallInfo)
+	local FunctionName = debug.info(CallInfo.Function, "n")
+
 	InfoTitle.Text = CallInfo.Instance.Name
 	InfoIcon.Image = Images[CallInfo.Instance.ClassName]
 
 	CurrentInfo = CallInfo
+
+	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo))
+
+	FunctionInfoText.Text = string.format(
+		[[<b>Function Address:</b> %s
+<b>Name:</b> %s
+<b>Source:</b> %s
+<b>Calling Line:</b> %s
+
+%s]],
+		tostring(CallInfo.Function):match("0x%x+") or tostring(CallInfo.Function),
+		FunctionName ~= "" and FunctionName or "Anonymous",
+		CallInfo.Origin and wax.shared.CodeGen.GetFullPath(CallInfo.Origin, true) or wax.shared.ExecutorName,
+		tostring(CallInfo.Line),
+
+		iscclosure(CallInfo.Function) and "<b>Closure Type</b>: C closure"
+			or string.format(
+				"<b>Closure Type</b>: Luau closure\n<b>Constants:</b> %s\n<b>Upvalues:</b> %s\n<b>Protos:</b> %s",
+				tostring(#debug.getconstants(CallInfo.Function)),
+				tostring(#debug.getupvalues(CallInfo.Function)),
+				tostring(#debug.getprotos(CallInfo.Function))
+			)
+	)
+	do
+		for _, Object in pairs(ArgumentsInfoFrame:GetChildren()) do
+			if Object.ClassName ~= "Frame" then
+				continue
+			end
+			Object:Destroy()
+		end
+
+		for Index, Value in pairs(CallInfo.Arguments) do
+			CreateArgHolder(Index, Value, ArgumentsInfoFrame)
+		end
+	end
 
 	if CurrentInfoTab ~= "Arguments" then
 		local OldTabButton = InfoTabs:FindFirstChild(CurrentInfoTab)
@@ -2370,6 +2456,8 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 			Arguments = CallInfo[1],
 			Time = CallInfo[2],
 			Origin = CallInfo[3],
+			Function = CallInfo[4],
+			Line = CallInfo[5],
 			Order = CallIndex,
 		})
 	end

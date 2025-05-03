@@ -14,6 +14,7 @@ end
 -- UI
 require("Utils/Connect")
 
+wax.shared.LuaEncode = require("Utils/Serializer/LuaEncode")
 wax.shared.Drag = require("Utils/Drag")
 wax.shared.Interface = require("Utils/Interface")
 wax.shared.Icons = require("Utils/Icons")

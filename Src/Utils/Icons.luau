@@ -1,11 +1,5 @@
 local Icons = {}
 
-local Success, IconsModule = pcall(function()
-	return loadstring(
-		game:HttpGet("https://raw.githubusercontent.com/deividcomsono/lucide-roblox-direct/refs/heads/main/source.lua")
-	)()
-end)
-
 type Icon = {
 	Url: string,
 	Id: number,
@@ -14,7 +8,13 @@ type Icon = {
 	ImageRectSize: Vector2,
 }
 
-function Icons.GetIcon(iconName: string): Icon | nil
+local Success, IconsModule = pcall(function()
+	return (loadstring(
+		game:HttpGet("https://raw.githubusercontent.com/deividcomsono/lucide-roblox-direct/refs/heads/main/source.lua")
+	) :: () -> { Icons: { string }, GetAsset: (Name: string) -> Icon? })()
+end)
+
+function Icons.GetIcon(iconName: string): Icon?
 	if not Success then
 		return
 	end

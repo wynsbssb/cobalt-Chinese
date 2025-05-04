@@ -3,8 +3,11 @@ local PaginationHelper = wax.shared.Pagination.new({
 	TotalItems = 0,
 })
 
+wax.shared.Settings = {}
+
 local DefaultTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Exponential)
 
+type SupportedRemoteTypes = RemoteEvent | RemoteFunction | BindableEvent | BindableFunction | UnreliableRemoteEvent
 local ClassOrder = {
 	"RemoteEvent",
 	"UnreliableRemoteEvent",
@@ -44,84 +47,152 @@ local MainFrame = wax.shared.Interface.New("Frame", {
 })
 
 -- Context Menus
-local function CreateContextMenu(Options: {
-	[number]: {
-		["Icon"]: string,
-		["Text"]: string,
-		["Callback"]: () -> (),
-		["CloseOnClick"]: boolean?,
+local CurrentContext
+local ContextMenu = wax.shared.Interface.New("Frame", {
+	AutomaticSize = Enum.AutomaticSize.XY,
+	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+	Size = UDim2.fromScale(0, 0),
+	ZIndex = 10000,
+
+	["UICorner"] = {
+		CornerRadius = UDim.new(0, 6),
 	},
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Vertical,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		Padding = UDim.new(0, 0),
+	},
+
+	["UIPadding"] = {
+		PaddingLeft = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 4),
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 4),
+	},
+
+	["UIStroke"] = {
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		Color = Color3.fromRGB(25, 25, 25),
+		Thickness = 1,
+	},
+
+	Parent = ScreenGui,
 })
-	local ContextMenu = wax.shared.Interface.New("Frame", {
-		BackgroundColor3 = Color3.fromRGB(10, 10, 10),
-		Size = UDim2.fromScale(0, 0),
-		AutomaticSize = Enum.AutomaticSize.XY,
-		ZIndex = 10000,
 
-		["UICorner"] = {
-			CornerRadius = UDim.new(0, 8),
-		},
-
-		["UIListLayout"] = {
-			FillDirection = Enum.FillDirection.Vertical,
-			HorizontalAlignment = Enum.HorizontalAlignment.Left,
-			Padding = UDim.new(0, 0),
-		},
-
-		["UIPadding"] = {
-			PaddingLeft = UDim.new(0, 6),
-			PaddingRight = UDim.new(0, 6),
-			PaddingTop = UDim.new(0, 6),
-			PaddingBottom = UDim.new(0, 6),
-		},
-
-		["UIStroke"] = {
-			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-			Color = Color3.fromRGB(25, 25, 25),
-			Thickness = 1,
-		},
-	})
+local function CreateContextMenu(Parent: GuiObject, Options: {})
+	local ContextData = {
+		Parent = Parent,
+		Options = {},
+	}
 
 	for Order, Data in pairs(Options) do
 		local TextButton = wax.shared.Interface.New("TextButton", {
-			Text = "",
+			BackgroundColor3 = Color3.fromRGB(25, 25, 25),
 			BackgroundTransparency = 1,
+			LayoutOrder = Order,
 			Size = UDim2.new(1, 0, 0, 30),
-			Parent = ContextMenu,
+			Text = "",
+
+			["UICorner"] = {
+				CornerRadius = UDim.new(0, 6),
+			},
 
 			["UIPadding"] = {
+				PaddingBottom = UDim.new(0, 6),
 				PaddingLeft = UDim.new(0, 6),
 				PaddingRight = UDim.new(0, 6),
 				PaddingTop = UDim.new(0, 6),
-				PaddingBottom = UDim.new(0, 6),
-			},
-
-			["TextLabel"] = {
-				Position = UDim2.fromOffset(26, 0),
-				Size = UDim2.new(0, 73, 1, 0),
-				Text = Data.Text,
 			},
 		})
 
 		wax.shared.Interface.NewIcon(Data.Icon, {
-			SizeConstraint = Enum.SizeConstraint.RelativeYY,
 			Size = UDim2.fromScale(1, 1),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
 
 			Parent = TextButton,
 		})
 
+		wax.shared.Interface.New("TextLabel", {
+			AutomaticSize = Enum.AutomaticSize.X,
+			Position = UDim2.fromOffset(26, 0),
+			Size = UDim2.fromScale(0, 1),
+			Text = Data.Text,
+			TextSize = 16,
+			TextXAlignment = Enum.TextXAlignment.Left,
+
+			Parent = TextButton,
+		})
+
+		TextButton.MouseEnter:Connect(function()
+			wax.shared.TweenService
+				:Create(TextButton, DefaultTweenInfo, {
+					BackgroundTransparency = 0,
+				})
+				:Play()
+		end)
+		TextButton.MouseLeave:Connect(function()
+			wax.shared.TweenService
+				:Create(TextButton, DefaultTweenInfo, {
+					BackgroundTransparency = 1,
+				})
+				:Play()
+		end)
 		TextButton.MouseButton1Click:Connect(function()
+			TextButton.BackgroundTransparency = 1
+
 			if Data.Callback then
 				Data.Callback()
 			end
 
 			if Data.CloseOnClick ~= false then
-				ContextMenu:Destroy()
+				ContextData:Close()
 			end
 		end)
+
+		ContextData.Options[TextButton] = Data
 	end
 
-	return ContextMenu
+	function ContextData:Open()
+		if CurrentContext == ContextData then
+			return
+		end
+
+		if CurrentContext then
+			CurrentContext:Close()
+		end
+
+		CurrentContext = ContextData
+		for Object, Data in pairs(ContextData.Options) do
+			if Data.Condition and not Data.Condition() then
+				continue
+			end
+			Object.Parent = ContextMenu
+		end
+
+		ContextMenu.Position =
+			UDim2.fromOffset(Parent.AbsolutePosition.X, Parent.AbsolutePosition.Y + Parent.AbsoluteSize.Y)
+		ContextMenu.Visible = true
+	end
+
+	function ContextData:Toggle()
+		if CurrentContext == ContextData then
+			ContextData:Close()
+			return
+		end
+
+		ContextData:Open()
+	end
+
+	function ContextData:Close()
+		ContextMenu.Visible = false
+		for Object, _ in pairs(ContextData.Options) do
+			Object.Parent = nil
+		end
+		CurrentContext = nil
+	end
+
+	return ContextData
 end
 
 -- Sonner toast
@@ -153,18 +224,24 @@ local ModalBackground = wax.shared.Interface.New("TextButton", {
 	MainUICorner,
 	Parent = MainFrame,
 })
-ModalBackground.MouseButton1Click:Connect(function()
+
+local function OpenModal(Parent)
+	OpenedModal = Parent
+
+	OpenedModal.Visible = true
+	ModalBackground.Visible = true
+end
+
+local function CloseModal()
 	if OpenedModal then
 		OpenedModal.Visible = false
 		OpenedModal = nil
 	end
+
 	ModalBackground.Visible = false
-end)
-local function OpenModal(Parent)
-	OpenedModal = Parent
-	OpenedModal.Visible = true
-	ModalBackground.Visible = true
 end
+
+ModalBackground.MouseButton1Click:Connect(CloseModal)
 
 local function ConnectCloseButton(Button, Image, Parent)
 	Button.MouseEnter:Connect(function()
@@ -181,10 +258,7 @@ local function ConnectCloseButton(Button, Image, Parent)
 			})
 			:Play()
 	end)
-	Button.MouseButton1Click:Connect(function()
-		Parent.Visible = false
-		ModalBackground.Visible = false
-	end)
+	Button.MouseButton1Click:Connect(CloseModal)
 end
 
 local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
@@ -205,7 +279,6 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 		Text = Title,
 		TextSize = 17,
 		Size = UDim2.new(1, 0, 1, 0),
-		TextTransparency = 0.5,
 		Parent = ModalTop,
 	})
 
@@ -257,7 +330,7 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 		Position = UDim2.fromOffset(0, 36),
 	})
 
-	return ModalTop, ModalTitle, ModalIcon
+	return ModalTitle, ModalIcon
 end
 
 -- Settings
@@ -281,7 +354,7 @@ local SettingsFrame = wax.shared.Interface.New("TextButton", {
 	},
 })
 
-local SettingsTop = CreateModalTop("Settings", "settings", SettingsFrame)
+CreateModalTop("Settings", "settings", SettingsFrame)
 
 local SettingsScrollingFrame = wax.shared.Interface.New("ScrollingFrame", {
 	AnchorPoint = Vector2.new(0, 1),
@@ -309,7 +382,7 @@ local SettingsScrollingFrame = wax.shared.Interface.New("ScrollingFrame", {
 })
 
 local function CreateSettingsSection(SectionName: string)
-	return wax.shared.Interface.New("Frame", {
+	local Section = wax.shared.Interface.New("Frame", {
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
 		Size = UDim2.fromScale(1, 0),
@@ -330,13 +403,392 @@ local function CreateSettingsSection(SectionName: string)
 			LayoutOrder = -1,
 		},
 	})
+
+	return Section
+end
+
+local function CreateSettingsButton(Text: string, Callback: () -> (), Section: Frame)
+	local Button = wax.shared.Interface.New("TextButton", {
+		BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+		Size = UDim2.new(1, 0, 0, 24),
+		TextSize = 15,
+		Text = "",
+		Parent = Section,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 4),
+		},
+
+		["UIStroke"] = {
+			Color = Color3.fromRGB(25, 25, 25),
+			Thickness = 1,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
+
+		["TextLabel"] = {
+			Text = Text,
+			TextSize = 16,
+			TextTransparency = 0.5,
+			Size = UDim2.fromScale(1, 1),
+			Position = UDim2.fromOffset(0, -1),
+		},
+	})
+
+	Button.MouseButton1Click:Connect(function()
+		if Callback then
+			Callback()
+		end
+	end)
+
+	return Button
+end
+
+local function CreateSettingsCheckbox(
+	Idx: string,
+	Options: {
+		Text: string,
+		Callback: (boolean) -> () | nil,
+		Default: boolean?,
+		Section: Frame,
+	}
+)
+	local Checkbox = {
+		Value = Options.Default or false,
+	}
+
+	local CheckboxUI = wax.shared.Interface.New("TextButton", {
+		Text = Options.Text,
+		TextSize = 16,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 20),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Options.Section,
+	})
+
+	local CheckContainer = wax.shared.Interface.New("Frame", {
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.fromScale(1, 0),
+		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+		Size = UDim2.fromScale(1, 1),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		Parent = CheckboxUI,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 4),
+		},
+
+		["UIStroke"] = {
+			Color = Color3.fromRGB(25, 25, 25),
+			Thickness = 1,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 2),
+			PaddingRight = UDim.new(0, 2),
+			PaddingTop = UDim.new(0, 2),
+			PaddingBottom = UDim.new(0, 2),
+		},
+	})
+
+	local CheckImage = wax.shared.Interface.NewIcon("check", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		ImageTransparency = Checkbox.Value and 0 or 1,
+		Parent = CheckContainer,
+	})
+
+	CheckboxUI.MouseButton1Click:Connect(function()
+		Checkbox.Value = not Checkbox.Value
+
+		wax.shared.TweenService
+			:Create(CheckImage, DefaultTweenInfo, {
+				ImageTransparency = Checkbox.Value and 0 or 1,
+			})
+			:Play()
+
+		if Options.Callback then
+			Options.Callback(Checkbox.Value)
+		end
+	end)
+
+	wax.shared.Settings[Idx] = Checkbox
+	return Checkbox
+end
+
+local function CreateSettingsDropdown(
+	Idx: string,
+	Options: {
+		Multi: boolean?,
+		AllowNull: boolean?,
+		Values: { any },
+		Default: any | { any },
+		Callback: (any) -> () | nil,
+		Text: string,
+		Section: Frame,
+	}
+)
+	local AllowNull = Options.AllowNull or false
+	assert(AllowNull or Options.Default ~= nil, "Default value must be provided when AllowNull is false")
+
+	local Dropdown = {
+		Value = Options.Default or nil,
+	}
+
+	local DropdownUI = wax.shared.Interface.New("TextButton", {
+		Text = "Select",
+		TextSize = 16,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 20),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Options.Section,
+	})
+
+	local DropdownIcon = wax.shared.Interface.NewIcon("chevron-down", {
+		Size = UDim2.fromScale(1, 1),
+		ImageTransparency = 0.5,
+		Position = UDim2.fromScale(1, 0),
+		AnchorPoint = Vector2.new(1, 0),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+
+		Parent = DropdownUI,
+	})
+
+	local ContextMenu = CreateContextMenu(DropdownIcon, {
+		{
+			Text = "Code",
+			Icon = "code",
+			Callback = function()
+				print("Test")
+			end,
+		},
+	})
+
+	DropdownUI.MouseButton1Click:Connect(ContextMenu.Toggle)
+
+	wax.shared.Settings[Idx] = Dropdown
+	return Dropdown
+end
+
+local function CreateSettingsRemoteList(
+	Idx: string,
+	Options: {
+		Text: string,
+		Callback: (any) -> () | nil,
+		Section: Frame,
+		NullMessage: string,
+	}
+)
+	local RemoteList = {
+		Value = {},
+	}
+
+	local RemoteListContainer = wax.shared.Interface.New("Frame", {
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 0),
+		Parent = Options.Section,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 8),
+		},
+
+		["UIListLayout"] = {
+			FillDirection = Enum.FillDirection.Vertical,
+			HorizontalAlignment = Enum.HorizontalAlignment.Left,
+			Padding = UDim.new(0, 6),
+		},
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 5),
+			PaddingRight = UDim.new(0, 5),
+			PaddingTop = UDim.new(0, 5),
+			PaddingBottom = UDim.new(0, 5),
+		},
+
+		["UIStroke"] = {
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			Color = Color3.fromRGB(25, 25, 25),
+			Thickness = 1,
+		},
+	})
+
+	local NoRemotesText = wax.shared.Interface.New("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 100),
+		TextTransparency = 0.5,
+		Text = Options.NullMessage,
+		TextSize = 14,
+		Visible = true,
+		Parent = RemoteListContainer,
+	})
+
+	function RemoteList:Display()
+		for _, Object in pairs(RemoteListContainer:GetChildren()) do
+			if not Object:IsA("Frame") then
+				continue
+			end
+			Object:Destroy()
+		end
+
+		NoRemotesText.Visible = (#self.Value == 0)
+
+		for _, remote in self.Value do
+			local ListElement = wax.shared.Interface.New("Frame", {
+				BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+				Size = UDim2.new(1, 0, 0, 32),
+				Parent = RemoteListContainer,
+
+				["UICorner"] = {
+					CornerRadius = UDim.new(0, 4),
+				},
+
+				["UIStroke"] = {
+					Color = Color3.fromRGB(25, 25, 25),
+					Thickness = 1,
+					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				},
+
+				["Frame"] = {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+
+					["UIListLayout"] = {
+						FillDirection = Enum.FillDirection.Horizontal,
+						HorizontalAlignment = Enum.HorizontalAlignment.Left,
+						VerticalAlignment = Enum.VerticalAlignment.Center,
+						Padding = UDim.new(0, 4),
+					},
+
+					["UIPadding"] = {
+						PaddingLeft = UDim.new(0, 5),
+					},
+
+					["ImageLabel"] = {
+						Size = UDim2.new(1, -8, 1, -8),
+						SizeConstraint = Enum.SizeConstraint.RelativeYY,
+						Image = Images[remote.ClassName],
+						AnchorPoint = Vector2.new(0, 0.5),
+						BackgroundTransparency = 1,
+						ImageTransparency = 0.5,
+					},
+
+					["TextLabel"] = {
+						Text = remote.Name,
+						Size = UDim2.fromScale(1, 1),
+						AutomaticSize = Enum.AutomaticSize.X,
+						TextSize = 16,
+						TextXAlignment = Enum.TextXAlignment.Left,
+						BackgroundTransparency = 1,
+					},
+				},
+			})
+
+			local RemoveButton = wax.shared.Interface.New("ImageButton", {
+				BackgroundTransparency = 1,
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, -8, 0.5, 0),
+				Size = UDim2.new(1, -12, 1, -12),
+				SizeConstraint = Enum.SizeConstraint.RelativeYY,
+				ImageTransparency = 0.5,
+				Parent = ListElement,
+			})
+
+			wax.shared.Icons.SetIcon(RemoveButton, "trash")
+
+			RemoveButton.MouseEnter:Connect(function()
+				wax.shared.TweenService
+					:Create(RemoveButton, DefaultTweenInfo, {
+						ImageTransparency = 0,
+					})
+					:Play()
+			end)
+
+			RemoveButton.MouseLeave:Connect(function()
+				wax.shared.TweenService
+					:Create(RemoveButton, DefaultTweenInfo, {
+						ImageTransparency = 0.5,
+					})
+					:Play()
+			end)
+
+			RemoveButton.MouseButton1Click:Connect(function()
+				self:RemoveFromList(remote)
+			end)
+		end
+	end
+
+	function RemoteList:AddToList(remote: SupportedRemoteTypes)
+		table.insert(self.Value, remote)
+
+		self:Display()
+	end
+
+	function RemoteList:RemoveFromList(remote: SupportedRemoteTypes)
+		local index = table.find(self.Value, remote)
+		if not index then
+			return
+		end
+
+		table.remove(self.Value, index)
+
+		self:Display()
+	end
+
+	function RemoteList:SetList(remotes: { SupportedRemoteTypes })
+		self.Value = remotes
+
+		self:Display()
+	end
+
+	RemoteList:Display()
+
+	wax.shared.Settings[Idx] = RemoteList
+	return RemoteList
 end
 
 local FilterSection = CreateSettingsSection("Filter")
 
+CreateSettingsDropdown("IgnoreRemotes", {
+	Text = "Ignore Remotes",
+	Values = ClassOrder,
+	AllowNull = true,
+	Section = FilterSection,
+})
+
+CreateSettingsCheckbox("IgnoreSpammyRemotes", {
+	Text = "Ignore Spammy Remotes",
+	Section = FilterSection,
+})
+CreateSettingsButton("Reset Filtering to Default", function()
+	-- TODO: implement
+	wax.shared.Sonner.success("Successfully reset remote filtering to default")
+end, FilterSection)
+
 local IgnoredSection = CreateSettingsSection("Ignored")
 
+CreateSettingsRemoteList("IgnoredRemotes", {
+	Text = "Ignored Remotes",
+	NullMessage = "No remotes have been ignored yet.",
+	Section = IgnoredSection,
+})
+local RemoveIgnored = CreateSettingsButton("Remove All", function()
+	-- TODO: implement
+	wax.shared.Sonner.success("Removed all ignored remotes")
+end, IgnoredSection)
+RemoveIgnored.Visible = false
+
 local BlockedSection = CreateSettingsSection("Blocked")
+
+CreateSettingsRemoteList("BlockedRemotes", {
+	Text = "Blocked Remotes",
+	NullMessage = "No remotes have been blocked yet.",
+	Section = BlockedSection,
+})
+local RemoveBlocked = CreateSettingsButton("Remove All", function()
+	-- TODO: implement
+	wax.shared.Sonner.success("Removed all blocked remotes")
+end, BlockedSection)
+RemoveBlocked.Visible = false
 
 local CreditsSection = CreateSettingsSection("Credits")
 
@@ -381,6 +833,8 @@ for Order, Data in pairs(Credits) do
 end
 
 -- Info
+local CurrentInfo, CurrentTab
+
 local InfoFrame = wax.shared.Interface.New("TextButton", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
@@ -401,12 +855,209 @@ local InfoFrame = wax.shared.Interface.New("TextButton", {
 	},
 })
 
-local InfoTop, InfoTitle, InfoIcon = CreateModalTop("Loading...", Images["RemoteEvent"], InfoFrame)
+local InfoTitle, InfoIcon = CreateModalTop("...", Images["RemoteEvent"], InfoFrame)
+
+local InfoTabs = wax.shared.Interface.New("Frame", {
+	BackgroundTransparency = 1,
+	Position = UDim2.new(0, 6, 0, 44),
+	Size = UDim2.new(1, -12, 0, 36),
+	Parent = InfoFrame,
+
+	["UIListLayout"] = {
+		Padding = UDim.new(0, 6),
+		FillDirection = Enum.FillDirection.Horizontal,
+		VerticalAlignment = Enum.VerticalAlignment.Top,
+	},
+})
+
+local CurrentInfoTab = nil
+local function CreateInfoTab(Icon: string, Title: string, TabContents: Frame?)
+	if not CurrentInfoTab then
+		CurrentInfoTab = Title
+	end
+
+	local IsTabSelected = CurrentInfoTab == Title
+
+	if TabContents then
+		TabContents.Name = Title
+		TabContents.Parent = InfoFrame
+		TabContents.Visible = IsTabSelected
+	end
+
+	local ButtonColor = IsTabSelected and Color3.fromRGB(25, 25, 25) or Color3.fromRGB(0, 0, 0)
+	local TabButton = wax.shared.Interface.New("TextButton", {
+		BackgroundColor3 = ButtonColor,
+		Size = UDim2.fromScale(0, 1),
+		AutomaticSize = Enum.AutomaticSize.X,
+		Text = "",
+		Parent = InfoTabs,
+		Name = Title,
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 8),
+		},
+
+		["UIStroke"] = {
+			Color = Color3.fromRGB(25, 25, 25),
+			Thickness = 1,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
+
+		["Frame"] = {
+			AnchorPoint = Vector2.new(0, 1),
+			Position = UDim2.fromScale(0, 1),
+			Size = UDim2.fromScale(1, 0.5),
+			BackgroundColor3 = ButtonColor,
+		},
+	})
+
+	local TextWrapper = wax.shared.Interface.New("Frame", {
+		BackgroundTransparency = 1,
+		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromOffset(0, 24),
+		Parent = TabButton,
+
+		["UIListLayout"] = {
+			FillDirection = Enum.FillDirection.Horizontal,
+			HorizontalAlignment = Enum.HorizontalAlignment.Left,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 5),
+		},
+
+		["UIPadding"] = {
+			PaddingRight = UDim.new(0, 8),
+			PaddingLeft = UDim.new(0, 8),
+		},
+
+		["TextLabel"] = {
+			Text = Title,
+			TextSize = 15,
+			Size = UDim2.fromScale(0, 1),
+			AutomaticSize = Enum.AutomaticSize.X,
+			LayoutOrder = 2,
+			ZIndex = 2,
+		},
+	})
+
+	wax.shared.Interface.NewIcon(Icon, {
+		Position = UDim2.fromOffset(8, 5),
+		Size = UDim2.fromOffset(16, 16),
+		LayoutOrder = 1,
+		ZIndex = 2,
+
+		Parent = TextWrapper,
+	})
+
+	wax.shared.Connect(TabButton.MouseButton1Click:Connect(function()
+		local OldTabButton = InfoTabs:FindFirstChild(CurrentInfoTab)
+		if OldTabButton then
+			OldTabButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+			OldTabButton.Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		end
+
+		local OldTabContent = InfoFrame:FindFirstChild(CurrentInfoTab)
+		if OldTabContent then
+			OldTabContent.Visible = false
+		end
+
+		CurrentInfoTab = Title
+
+		TabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		TabButton.Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+
+		if TabContents then
+			TabContents.Visible = true
+		end
+	end))
+end
+
+local function CreateTabContent()
+	local Container = wax.shared.Interface.New("Frame", {
+		Position = UDim2.fromOffset(6, 71),
+		Size = UDim2.new(1, -12, 0, 167),
+		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+
+		["UICorner"] = {
+			CornerRadius = UDim.new(0, 6),
+		},
+
+		["UIPadding"] = {
+			PaddingLeft = UDim.new(0, 8),
+			PaddingRight = UDim.new(0, 8),
+			PaddingTop = UDim.new(0, 8),
+			PaddingBottom = UDim.new(0, 8),
+		},
+
+		["UIStroke"] = {
+			Color = Color3.fromRGB(25, 25, 25),
+			Thickness = 1,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
+	})
+
+	return Container,
+		wax.shared.Interface.New("ScrollingFrame", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			AutomaticCanvasSize = Enum.AutomaticSize.XY,
+			CanvasSize = UDim2.fromScale(0, 0),
+			ScrollBarThickness = 0,
+			HorizontalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
+			ScrollingDirection = Enum.ScrollingDirection.XY,
+			Parent = Container,
+		})
+end
+
+local ArgumentInfoUI, ArgumentScrollingFrame = CreateTabContent()
+CreateInfoTab("ellipsis", "Arguments", ArgumentInfoUI)
+ArgumentScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local ArgumentsInfoFrame = wax.shared.Interface.New("Frame", {
+	AutomaticSize = Enum.AutomaticSize.Y,
+	Size = UDim2.fromScale(1, 0),
+
+	["UIListLayout"] = {
+		Padding = UDim.new(0, 6),
+	},
+
+	MainUICorner,
+
+	Parent = ArgumentScrollingFrame,
+})
+
+local CodeInfoUI, CodeScrollingFrame = CreateTabContent()
+CreateInfoTab("code", "Code", CodeInfoUI)
+CodeScrollingFrame.ScrollBarThickness = 1
+
+local CodeText = wax.shared.Interface.New("TextLabel", {
+	AutomaticSize = Enum.AutomaticSize.XY,
+	TextSize = 16,
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+	FontFace = Font.fromId(16658246179),
+	TextXAlignment = Enum.TextXAlignment.Left,
+	BackgroundTransparency = 1,
+	Text = wax.shared.Highlighter.Run("-- Loading..."),
+	Parent = CodeScrollingFrame,
+})
+
+local FunctionInfoUI, FunctionScrollingFrame = CreateTabContent()
+CreateInfoTab("parentheses", "Function Info", FunctionInfoUI)
+
+local FunctionInfoText = wax.shared.Interface.New("TextLabel", {
+	AutomaticSize = Enum.AutomaticSize.XY,
+	TextSize = 16,
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+	FontFace = Font.fromId(16658246179),
+	TextXAlignment = Enum.TextXAlignment.Left,
+	BackgroundTransparency = 1,
+	Text = "",
+	Parent = FunctionScrollingFrame,
+})
 
 local InfoButtons = wax.shared.Interface.New("Frame", {
+	AnchorPoint = Vector2.new(0, 1),
 	BackgroundTransparency = 1,
 	Position = UDim2.new(0, 6, 1, -7),
-	AnchorPoint = Vector2.new(0, 1),
 	Size = UDim2.new(1, -12, 0, 32),
 	Parent = InfoFrame,
 
@@ -417,13 +1068,13 @@ local InfoButtons = wax.shared.Interface.New("Frame", {
 	},
 })
 
-local function CreateInfoButton(Icon: string, Title: string, Callback: (...any) -> ...any)
-	local Button = wax.shared.Interface.New("ImageButton", {
-		BackgroundTransparency = 1,
-		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
-		Size = UDim2.fromScale(0, 1),
-		Parent = InfoButtons,
+local function CreateInfoDropdownButton(Icon: string, Title: string, Options: {})
+	local Button = wax.shared.Interface.New("TextButton", {
 		AutomaticSize = Enum.AutomaticSize.X,
+		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(0, 1),
+		Text = "",
 
 		["UICorner"] = {
 			CornerRadius = UDim.new(0, 6),
@@ -449,6 +1100,8 @@ local function CreateInfoButton(Icon: string, Title: string, Callback: (...any) 
 			Position = UDim2.fromOffset(28, 0),
 			AutomaticSize = Enum.AutomaticSize.X,
 		},
+
+		Parent = InfoButtons,
 	})
 
 	wax.shared.Interface.NewIcon(Icon, {
@@ -458,19 +1111,141 @@ local function CreateInfoButton(Icon: string, Title: string, Callback: (...any) 
 		Parent = Button,
 	})
 
-	Button.MouseButton1Click:Connect(Callback)
+	local Menu = CreateContextMenu(Button, Options)
+
+	Button.MouseEnter:Connect(function()
+		wax.shared.TweenService
+			:Create(Button, DefaultTweenInfo, {
+				BackgroundTransparency = 0,
+			})
+			:Play()
+	end)
+	Button.MouseLeave:Connect(function()
+		wax.shared.TweenService
+			:Create(Button, DefaultTweenInfo, {
+				BackgroundTransparency = 1,
+			})
+			:Play()
+	end)
+	Button.MouseButton1Click:Connect(Menu.Toggle)
 	return Button
 end
 
-local CopyButton = CreateInfoButton("copy", "Copy", function()
-	wax.shared.Sonner.error("This button (Copy) is not implemented yet.")
-end)
+CreateInfoDropdownButton("copy", "Copy", {
+	{
+		Text = "Code",
+		Icon = "code",
+		Callback = function()
+			if not CurrentInfo then
+				return
+			end
 
-local NetworkButton = CreateInfoButton("network", "Event", function()
-	wax.shared.Sonner.error("This button (Event) is not implemented yet.")
-end)
+			local Code = wax.shared.CodeGen:BuildCallCode(CurrentInfo, CurrentTab.Name)
+			local Success, Error = pcall(setclipboard, Code)
+
+			if Success then
+				wax.shared.Sonner.success("Copied code to clipboard")
+			else
+				wax.shared.Sonner.error("Failed to copy code to clipboard")
+				warn("Failed to copy code to clipboard", Error)
+			end
+		end,
+	},
+	{
+		Text = "Remote Path",
+		Icon = "package-search",
+		Callback = function()
+			if not CurrentInfo then
+				return
+			end
+			local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Instance))
+			if Success then
+				wax.shared.Sonner.success("Copied remote path to clipboard")
+			else
+				wax.shared.Sonner.error("Failed to copy remote path to clipboard")
+				warn("Failed to copy remote path to clipboard", Error)
+			end
+		end,
+	},
+	{
+		Text = "Script Path",
+		Icon = "file-search",
+		Condition = function()
+			return CurrentInfo and typeof(CurrentInfo.Origin) == "Instance"
+		end,
+		Callback = function()
+			if not CurrentInfo then
+				return
+			end
+
+			local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Origin))
+			if Success then
+				wax.shared.Sonner.success("Copied script path to clipboard")
+			else
+				wax.shared.Sonner.error("Failed to copy script path to clipboard")
+				warn("Failed to copy script path to clipboard", Error)
+			end
+		end,
+	},
+	{
+		Text = "Function Info",
+		Icon = "parentheses",
+		Callback = function()
+			if not CurrentInfo then
+				return
+			end
+
+			local Info = {
+				Function = {
+					Name = debug.info(CurrentInfo.Function, "n"),
+					Type = iscclosure(CurrentInfo.Function) and "C Closure" or "Luau function",
+					Address = tostring(CurrentInfo.Function),
+					Arguments = CurrentInfo.Arguments,
+				},
+				Script = CurrentInfo.Origin,
+				Line = CurrentInfo.Line,
+			}
+
+			if islclosure(CurrentInfo.Function) then
+				Info.Function["Upvalues"] = debug.getupvalues(CurrentInfo.Function)
+				Info.Function["Constants"] = debug.getconstants(CurrentInfo.Function)
+				Info.Function["Protos"] = debug.getprotos(CurrentInfo.Function)
+			end
+
+			local Success, Error = pcall(setclipboard, `local Info = {wax.shared.LuaEncode(Info, { Prettify = true })}`)
+			if Success then
+				wax.shared.Sonner.success("Copied function info to clipboard")
+			else
+				wax.shared.Sonner.error("Failed to copy function info to clipboard")
+				warn("Failed to copy function info to clipboard", Error)
+			end
+		end,
+	},
+})
+
+local NetworkButton = CreateInfoDropdownButton("network", "Event", {
+	{
+		Text = "Code",
+		Icon = "code",
+		Callback = function() end,
+	},
+	{
+		Text = "Script Path",
+		Icon = "file-search",
+		Callback = function() end,
+	},
+	{
+		Text = "Function Info",
+		Icon = "parentheses",
+		Callback = function() end,
+	},
+})
 
 -- Search
+local ResultInfo = {}
+local CurrentResults = {}
+local SelectedResult = -1
+
 local SearchFrame = wax.shared.Interface.New("TextButton", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
@@ -594,6 +1369,7 @@ FilterAllButton.MouseButton1Click:Connect(function()
 	for _, Button in pairs(SearchFilterButtons) do
 		Button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	end
+	UpdateSearch()
 end)
 
 for Order, ClassName in pairs(ClassOrder) do
@@ -624,15 +1400,6 @@ for Order, ClassName in pairs(ClassOrder) do
 			Padding = UDim.new(0, 6),
 		},
 
-		["ImageLabel"] = {
-			Image = Images[ClassName],
-			Size = UDim2.new(1, -8, 1, -8),
-			SizeConstraint = Enum.SizeConstraint.RelativeYY,
-			BackgroundTransparency = 1,
-			AnchorPoint = Vector2.new(0, 0.5),
-			Position = UDim2.fromOffset(0.5, 0),
-		},
-
 		["TextLabel"] = {
 			LayoutOrder = 1,
 			Text = ClassName,
@@ -640,6 +1407,16 @@ for Order, ClassName in pairs(ClassOrder) do
 			Size = UDim2.fromScale(0, 1),
 			AutomaticSize = Enum.AutomaticSize.X,
 		},
+	})
+
+	local ImageLabel = wax.shared.Interface.New("ImageLabel", {
+		Image = Images[ClassName],
+		Size = UDim2.new(1, -8, 1, -8),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		BackgroundTransparency = 1,
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.fromOffset(0.5, 0),
+		Parent = ClassNameFilterButton,
 	})
 
 	ClassNameFilterButton.MouseButton1Click:Connect(function()
@@ -652,12 +1429,14 @@ for Order, ClassName in pairs(ClassOrder) do
 				FilterAllButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 			end
 
+			UpdateSearch()
 			return
 		end
 
 		table.insert(ExcludeSearchClass, ClassName)
 		ClassNameFilterButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 		FilterAllButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+		UpdateSearch()
 	end)
 
 	table.insert(SearchFilterButtons, ClassNameFilterButton)
@@ -684,6 +1463,7 @@ local SearchResults = wax.shared.Interface.New("ScrollingFrame", {
 		FillDirection = Enum.FillDirection.Vertical,
 		HorizontalAlignment = Enum.HorizontalAlignment.Left,
 		Padding = UDim.new(0, 6),
+		SortOrder = Enum.SortOrder.Name,
 	},
 
 	["UIPadding"] = {
@@ -694,10 +1474,11 @@ local SearchResults = wax.shared.Interface.New("ScrollingFrame", {
 	},
 })
 
-local function CreateSearchResult(Instance: Instance, Type: string, Active: boolean)
+local function CreateSearchResult(Instance: Instance, Type: string)
 	local SearchResult = wax.shared.Interface.New("TextButton", {
 		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-		BackgroundTransparency = Active and 0 or 1,
+		BackgroundTransparency = 1,
+		Name = Instance.Name,
 		Size = UDim2.new(1, 0, 0, 36),
 		Text = "",
 
@@ -712,13 +1493,6 @@ local function CreateSearchResult(Instance: Instance, Type: string, Active: bool
 			PaddingTop = UDim.new(0, 6),
 		},
 
-		["ImageLabel"] = {
-			BackgroundTransparency = 1,
-			Image = Images[Instance.ClassName],
-			Size = UDim2.fromScale(1, 1),
-			SizeConstraint = Enum.SizeConstraint.RelativeYY,
-		},
-
 		["TextLabel"] = {
 			Position = UDim2.fromOffset(30, 0),
 			Size = UDim2.new(1, -30, 1, 0),
@@ -727,8 +1501,30 @@ local function CreateSearchResult(Instance: Instance, Type: string, Active: bool
 			TextXAlignment = Enum.TextXAlignment.Left,
 		},
 	})
+	do
+		SearchResult.MouseEnter:Connect(function()
+			local Index = table.find(CurrentResults, SearchResult)
+			if Index then
+				SelectResult(Index)
+			end
+		end)
+		SearchResult.MouseButton1Click:Connect(function()
+			local Index = table.find(CurrentResults, SearchResult)
+			if Index then
+				EnterResult(Index)
+			end
+		end)
+	end
 
-	wax.shared.Interface.New("TextLabel", {
+	local Image = wax.shared.Interface.New("ImageLabel", {
+		BackgroundTransparency = 1,
+		Image = Images[Instance.ClassName],
+		Size = UDim2.fromScale(1, 1),
+		SizeConstraint = Enum.SizeConstraint.RelativeYY,
+		Parent = SearchResult,
+	})
+
+	local TypeLabel = wax.shared.Interface.New("TextLabel", {
 		Size = UDim2.fromScale(1, 1),
 		Text = Type,
 		TextSize = 15,
@@ -859,8 +1655,7 @@ local SettingsButton = CreateTopButton("settings", 1, function()
 	OpenModal(SettingsFrame)
 end)
 local SearchButton = CreateTopButton("search", 0, function()
-	OpenModal(SearchFrame)
-	SearchBox:CaptureFocus()
+	OpenSearch()
 end)
 
 wax.shared.Drag.Setup(MainFrame, TopBar)
@@ -1029,7 +1824,8 @@ local LogsPagination = wax.shared.Interface.New("Frame", {
 })
 
 -- Functions
-local CurrentTab
+local Tabs = {}
+
 local CurrentLog
 local CurrentPage = {}
 
@@ -1069,7 +1865,7 @@ end
 
 function ShowLog(Log)
 	for _, Object in pairs(LogsList:GetChildren()) do
-		if Object.ClassName == "Frame" then
+		if Object.ClassName == "TextButton" then
 			Object:Destroy()
 		end
 	end
@@ -1113,9 +1909,12 @@ function ShowCalls(Log, Page)
 		end
 
 		CreateCallFrame({
+			Instance = Log.Instance,
 			Arguments = Call.Arguments,
 			Time = Call.Time,
 			Origin = Call.Origin,
+			Function = Call.Function,
+			Line = Call.Line,
 			Order = Index,
 		})
 	end
@@ -1153,6 +1952,7 @@ function CreateRemoteTab(TabName: string, Active: boolean, Logs)
 		Logs = Logs,
 		Instance = Button,
 	}
+	Tabs[TabName] = Tab
 
 	if Active then
 		CurrentTab = Tab
@@ -1317,47 +2117,57 @@ function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
 		TextSize = 15,
 		TextTransparency = 0.5,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
 
 		Parent = Holder,
 	})
 
-	wax.shared.Interface.New("TextLabel", {
+	local TypeLabel = wax.shared.Interface.New("TextLabel", {
 		Size = UDim2.fromScale(1, 1),
 		Text = typeof(Value),
 		TextSize = 15,
 		TextTransparency = 0.5,
 		TextXAlignment = Enum.TextXAlignment.Right,
+		TextYAlignment = Enum.TextYAlignment.Top,
 
 		Parent = Holder,
 	})
+	local TypeX = wax.shared.GetTextBounds(TypeLabel.Text, TypeLabel.FontFace, TypeLabel.TextSize)
 
-	wax.shared.Interface.New("TextLabel", {
+	local TextLabel = wax.shared.Interface.New("TextLabel", {
 		Position = UDim2.fromOffset(18, 0),
-		Size = UDim2.new(1, -18, 1, 0),
+		Size = UDim2.new(1, -(TypeX + 22), 1, 0),
 		TextColor3 = Color3.fromHex(wax.shared.Highlighter.GetArgumentColor(Value)),
-		Text = wax.shared.DisplayArgument(Value),
+		Text = tostring(wax.shared.DisplayArgument(Value)):gsub("<", "&lt;"):gsub(">", "&gt;"),
 		RichText = true,
 		TextSize = 15,
+		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
 
 		Parent = Holder,
 	})
+	local _, TextY =
+		wax.shared.GetTextBounds(TextLabel.Text, TextLabel.FontFace, TextLabel.TextSize, TextLabel.AbsoluteSize.X)
+	Holder.Size = UDim2.new(1, 0, 0, TextY + 12)
 
 	return Holder
 end
 
 function CreateCallFrame(CallInfo: {
-	Time: string,
+	Instance: Instance,
 	Arguments: { [any]: any },
-	Order: number,
+	Time: string,
 	Origin: BaseScript | nil,
+	Order: number,
+	Function: (...any) -> any,
+	Line: number,
 })
-	local CallFrame = wax.shared.Interface.New("Frame", {
+	local CallFrame = wax.shared.Interface.New("TextButton", {
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-		Size = UDim2.fromScale(1, 0),
-		Parent = LogsList,
 		LayoutOrder = CallInfo.Order,
+		Size = UDim2.fromScale(1, 0),
+		Text = "",
 
 		["UIListLayout"] = {
 			Padding = UDim.new(0, 6),
@@ -1371,9 +2181,11 @@ function CreateCallFrame(CallInfo: {
 		},
 
 		MainUICorner,
+
+		Parent = LogsList,
 	})
 
-	local _LogHighlightedStroke = wax.shared.Interface.New("UIStroke", {
+	local HighlightStroke = wax.shared.Interface.New("UIStroke", {
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 		Color = Color3.fromRGB(75, 75, 75),
 		Thickness = 2,
@@ -1381,6 +2193,25 @@ function CreateCallFrame(CallInfo: {
 
 		Parent = CallFrame,
 	})
+	do
+		CallFrame.MouseEnter:Connect(function()
+			wax.shared.TweenService
+				:Create(HighlightStroke, DefaultTweenInfo, {
+					Transparency = 0,
+				})
+				:Play()
+		end)
+		CallFrame.MouseLeave:Connect(function()
+			wax.shared.TweenService
+				:Create(HighlightStroke, DefaultTweenInfo, {
+					Transparency = 1,
+				})
+				:Play()
+		end)
+		CallFrame.MouseButton1Click:Connect(function()
+			OpenInfo(CallInfo)
+		end)
+	end
 
 	local ArgumentsFrame = wax.shared.Interface.New("Frame", {
 		AutomaticSize = Enum.AutomaticSize.Y,
@@ -1461,35 +2292,143 @@ end
 CreateRemoteTab("Outgoing", true, wax.shared.Logs.Outgoing)
 CreateRemoteTab("Incoming", false, wax.shared.Logs.Incoming)
 
+-- Search Functions
+function OpenSearch()
+	OpenModal(SearchFrame)
+	UpdateSearch()
+	SearchBox:CaptureFocus()
+end
 function HandleSearch(Text, Type)
 	for Instance, Log in pairs(wax.shared.Logs[Type]) do
-		if table.find(ExcludeSearchClass, Instance.ClassName) then
+		if not Log.SearchResult then
+			local SearchResult = CreateSearchResult(Instance, Type)
+			Log.SearchResult = SearchResult
+			ResultInfo[SearchResult] = {
+				Type = Type,
+				Callback = function()
+					ShowLog(Log)
+				end,
+			}
+		end
+
+		local LoweredName = string.lower(Instance.Name)
+		if not LoweredName:match(Text) or table.find(ExcludeSearchClass, Instance.ClassName) then
+			Log.SearchResult.Parent = nil
 			continue
 		end
 
-		if not Log.SearchResult then
-			local SearchResult = CreateSearchResult(Instance, Type, false)
-			Log.SearchResult = SearchResult
-		end
-
-		if not Instance.Name:lower():match(Text) then
-			Log.SearchResult.Parent = nil
-			return
-		end
-
+		Log.SearchResult.BackgroundTransparency = 1
 		Log.SearchResult.Parent = SearchResults
+		table.insert(CurrentResults, Log.SearchResult)
 	end
 end
-SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-	local Text = string.lower(SearchBox.Text)
-	if Text == "" then
-		CleanSearchResults()
+
+function SelectResult(NewResult, UpdateCanvasPosition)
+	if SelectedResult > 0 and CurrentResults[SelectedResult] then
+		CurrentResults[SelectedResult].BackgroundTransparency = 1
+	end
+	if NewResult == -1 or #CurrentResults == 0 then
+		SelectedResult = -1
 		return
 	end
 
+	SelectedResult = math.clamp(NewResult, 1, #CurrentResults)
+	CurrentResults[SelectedResult].BackgroundTransparency = 0
+
+	if UpdateCanvasPosition then
+		local ScrollSize = SearchResults.AbsoluteSize.Y
+
+		local SelectedMin = CurrentResults[SelectedResult].AbsolutePosition.Y - SearchResults.AbsolutePosition.Y
+		local SelectedMax = SelectedMin + CurrentResults[SelectedResult].AbsoluteSize.Y
+
+		if SelectedMin < 0 then
+			SearchResults.CanvasPosition += Vector2.new(0, SelectedMin - 6)
+		elseif SelectedMax > ScrollSize then
+			SearchResults.CanvasPosition += Vector2.new(0, SelectedMax - ScrollSize + 6)
+		end
+	end
+end
+function EnterResult(ResultIndex)
+	local Info = ResultInfo[CurrentResults[SelectedResult]]
+	pcall(ShowTab, Tabs[Info.Type])
+	pcall(Info.Callback)
+
+	CloseModal()
+end
+function HandleResults()
+	if #CurrentResults == 0 then
+		return
+	end
+
+	table.sort(CurrentResults, function(a, b)
+		return a.AbsolutePosition.Y < b.AbsolutePosition.Y
+	end)
+
+	SelectResult(1, true)
+end
+function UpdateSearch()
+	table.clear(CurrentResults)
+	SelectResult(-1)
+
+	local Text = string.lower(SearchBox.Text)
 	HandleSearch(Text, "Outgoing")
 	HandleSearch(Text, "Incoming")
-end)
+
+	HandleResults()
+end
+
+SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateSearch)
+
+-- Call Functions
+function OpenInfo(CallInfo)
+	InfoTitle.Text = CallInfo.Instance.Name
+	InfoIcon.Image = Images[CallInfo.Instance.ClassName]
+
+	CurrentInfo = CallInfo
+
+	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo, CurrentTab.Name))
+
+	FunctionInfoText.Text = wax.shared.CodeGen:BuildFunctionInfo(CallInfo)
+	do
+		for _, Object in pairs(ArgumentsInfoFrame:GetChildren()) do
+			if Object.ClassName ~= "Frame" then
+				continue
+			end
+			Object:Destroy()
+		end
+
+		for Index, Value in pairs(CallInfo.Arguments) do
+			CreateArgHolder(Index, Value, ArgumentsInfoFrame)
+		end
+	end
+
+	for _, tab in pairs({ "Function Info", "Code" }) do
+		local OldTabButton = InfoTabs:FindFirstChild(tab)
+		if OldTabButton then
+			OldTabButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+			OldTabButton.Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		end
+
+		local TabContent = InfoFrame:FindFirstChild(tab)
+		if TabContent then
+			TabContent.Visible = false
+		end
+	end
+
+	CurrentInfoTab = "Arguments"
+	local NewTabButton = InfoTabs:FindFirstChild(CurrentInfoTab)
+	if NewTabButton then
+		NewTabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		NewTabButton.Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	end
+
+	local NewTabContent = InfoFrame:FindFirstChild(CurrentInfoTab)
+	if NewTabContent then
+		NewTabContent.Visible = true
+	end
+
+	OpenModal(InfoFrame)
+end
 
 wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: InputObject)
 	local Delta = Input.Position - Info.StartPosition
@@ -1508,6 +2447,10 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 	end
 
 	local Log = wax.shared.Logs[Type][Instance]
+	if not Log then
+		print("Log not found for " .. Instance.Name)
+		return
+	end
 
 	local Page = CurrentPage[Log]
 	if not Page then
@@ -1528,15 +2471,42 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 
 		local Start, End = PaginationHelper:GetIndexRanges(Page)
 		if CallIndex < Start or CallIndex > End then
-			ShowPagination(Log)
+			--ShowPagination(Log)
 			return
 		end
 
 		CreateCallFrame({
+			Instance = Instance,
 			Arguments = CallInfo[1],
 			Time = CallInfo[2],
 			Origin = CallInfo[3],
+			Function = CallInfo[4],
+			Line = CallInfo[5],
 			Order = CallIndex,
 		})
+	end
+end))
+
+wax.shared.Connect(wax.shared.UserInputService.InputBegan:Connect(function(Input: InputObject)
+	if wax.shared.IsClickInput(Input) then
+		if
+			CurrentContext
+			and not (
+				wax.shared.IsMouseOverFrame(ContextMenu, Input.Position)
+				or wax.shared.IsMouseOverFrame(CurrentContext.Parent, Input.Position)
+			)
+		then
+			CurrentContext:Close()
+		end
+	elseif Input.KeyCode == Enum.KeyCode.K and wax.shared.UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+		OpenSearch()
+	elseif OpenedModal == SearchFrame then
+		if Input.KeyCode == Enum.KeyCode.Return then
+			EnterResult(SelectedResult)
+		elseif Input.KeyCode == Enum.KeyCode.Up then
+			SelectResult(SelectedResult - 1, true)
+		elseif Input.KeyCode == Enum.KeyCode.Down then
+			SelectResult(SelectedResult + 1, true)
+		end
 	end
 end))

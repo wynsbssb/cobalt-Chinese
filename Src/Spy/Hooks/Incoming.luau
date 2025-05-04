@@ -77,7 +77,41 @@ local function HandleInstance(Instance: any)
 			return
 		end
 
-		ListenToFunction(Instance, Callback, Method)
+		Instance[Method] = function(...)
+			if wax.shared.Unloaded then
+				return Callback(...)
+			end
+
+			local Log = wax.shared.Logs.Incoming[Instance]
+			if not Log then
+				Log = wax.shared.NewLog(Instance, Method, "Incoming")
+			end
+
+			if Log.Blocked then
+				return
+			elseif not Log.Ignored then
+				local Info = {
+					{ ... },
+					os.date("%X"),
+					getcallingscript(),
+					getcallingfunction(),
+					getcallingline(),
+				}
+				Log:Call(Info)
+				wax.shared.Communicator:Fire(Log.Instance, "Incoming", Info, #Log.Calls)
+			end
+
+			return Callback(...)
+		end
+	end
+end
+
+wax.shared.Connect(game.DescendantAdded:Connect(HandleInstance))
+
+-- getinstances() was unreliable and failed to find some instances... ts pmo bro..
+for _, Category in pairs({ getnilinstances(), game:GetDescendants() }) do
+	for _, Instance in pairs(Category) do
+		HandleInstance(Instance)
 	end
 end
 
@@ -93,27 +127,38 @@ wax.shared.NewIndexHook = hookmetamethod(
 			local Method = ClassesToHook[self.ClassName]
 
 			if key == Method and typeof(value) == "function" then
-				local Success, Callback = pcall(getcallbackvalue, self, Method)
-				if Success and typeof(Callback) ~= "function" then
-					wax.shared.restorefunction(Callback, true)
-				end
+				return wax.shared.NewIndexHook(self, key, function(...)
+					if wax.shared.Unloaded then
+						return value(...)
+					end
 
-				ListenToFunction(self, value, Method)
+					local Log = wax.shared.Logs.Incoming[self]
+					if not Log then
+						Log = wax.shared.NewLog(self, Method, "Incoming")
+					end
+
+					if Log.Blocked then
+						return
+					elseif not Log.Ignored then
+						local Info = {
+							{ ... },
+							os.date("%X"),
+							getcallingscript(),
+							getcallingfunction(),
+							getcallingline(),
+						}
+						Log:Call(Info)
+						wax.shared.Communicator:Fire(Log.Instance, "Incoming", Info, #Log.Calls)
+					end
+
+					return value(...)
+				end)
 			end
 		end
 
 		return wax.shared.NewIndexHook(self, key, value)
 	end)
 )
-
-wax.shared.Connect(game.DescendantAdded:Connect(HandleInstance))
-
--- getinstances() was unreliable and failed to find some instances... ts pmo bro..
-for _, Cateogry in pairs({ getnilinstances(), game:GetDescendants() }) do
-	for _, Instance in pairs(Cateogry) do
-		HandleInstance(Instance)
-	end
-end
 
 local SignalMetatable = wax.shared.getrawmetatable(Instance.new("Part").Touched)
 wax.shared.Hooks[SignalMetatable.__index] = hookfunction(SignalMetatable.__index, function(self, key)

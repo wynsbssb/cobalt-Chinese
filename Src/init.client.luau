@@ -1,11 +1,12 @@
 -- Environment
 for _, Service in pairs({
+	"ContentProvider",
 	"CoreGui",
 	"TweenService",
 	"Players",
-	"ContentProvider",
 	"RunService",
 	"UserInputService",
+	"TextService",
 }) do
 	wax.shared[Service] = cloneref(game:GetService(Service))
 end
@@ -13,9 +14,11 @@ end
 -- UI
 require("Utils/Connect")
 
+wax.shared.LuaEncode = require("Utils/Serializer/LuaEncode")
 wax.shared.Drag = require("Utils/Drag")
 wax.shared.Interface = require("Utils/Interface")
 wax.shared.Icons = require("Utils/Icons")
+wax.shared.Animations = require("Utils/Animations")
 wax.shared.Sonner = require("Utils/Sonner")
 wax.shared.Highlighter = require("Utils/Highlighter")
 wax.shared.Pagination = require("Utils/Pagination")
@@ -104,10 +107,16 @@ wax.shared.DisplayArgument = function(Argument)
 			wax.shared.DisplayNumber(Argument.Y),
 			wax.shared.DisplayNumber(Argument.Z)
 		)
+	elseif typeof(Argument) == "CFrame" then
+		local Components = { Argument:GetComponents() }
+		for Index, Value in pairs(Components) do
+			Components[Index] = wax.shared.DisplayNumber(Value)
+		end
+		return table.concat(Components, ", ")
 	elseif typeof(Argument) == "table" then
 		return "{...}"
 	elseif typeof(Argument) == "Instance" then
-		return wax.shared.CodeGen.GetFullPath(Argument)
+		return wax.shared.CodeGen.GetFullPath(Argument, true)
 	end
 
 	return tostring(Argument)
@@ -120,7 +129,19 @@ wax.shared.GetTableLength = function(Table)
 	end
 	return Length
 end
+wax.shared.GetTextBounds = function(Text: string, Font: Font, Size: number, Width: number?): (number, number)
+	local Params = Instance.new("GetTextBoundsParams")
+	Params.Text = Text
+	Params.RichText = true
+	Params.Font = Font
+	Params.Size = Size
+	Params.Width = Width or workspace.CurrentCamera.ViewportSize.X - 32
 
+	local Bounds = wax.shared.TextService:GetTextBoundsAsync(Params)
+	return Bounds.X, Bounds.Y
+end
+
+wax.shared.Unloaded = false
 wax.shared.Unload = function()
 	for _, Connection in pairs(wax.shared.Connections) do
 		wax.shared.Disconnect(Connection)
@@ -140,6 +161,8 @@ wax.shared.Unload = function()
 
 	wax.shared.Communicator:Destroy()
 	wax.shared.ScreenGui:Destroy()
+
+	wax.shared.Unloaded = true
 end
 
 -- Load Script

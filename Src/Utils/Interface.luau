@@ -7,7 +7,9 @@ local DefaultProperties = {
 	["Frame"] = {
 		BorderSizePixel = 0,
 	},
-
+	["ScrollingFrame"] = {
+		BorderSizePixel = 0,
+	},
 	["ImageLabel"] = {
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,

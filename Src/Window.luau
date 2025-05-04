@@ -1027,7 +1027,8 @@ local ArgumentsInfoFrame = wax.shared.Interface.New("Frame", {
 
 local CodeInfoUI, CodeScrollingFrame = CreateTabContent()
 CreateInfoTab("code", "Code", CodeInfoUI)
-CodeScrollingFrame.ScrollBarThickness = 1
+CodeScrollingFrame.ScrollBarThickness = 3
+CodeScrollingFrame.VerticalScrollBarInset = Enum.ScrollBarInset.None
 
 local CodeText = wax.shared.Interface.New("TextLabel", {
 	AutomaticSize = Enum.AutomaticSize.XY,

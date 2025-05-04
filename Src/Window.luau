@@ -1014,6 +1014,7 @@ ArgumentScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
 local ArgumentsInfoFrame = wax.shared.Interface.New("Frame", {
 	AutomaticSize = Enum.AutomaticSize.Y,
+	BackgroundTransparency = 1,
 	Size = UDim2.fromScale(1, 0),
 
 	["UIListLayout"] = {
@@ -1226,18 +1227,18 @@ CreateInfoDropdownButton("copy", "Copy", {
 
 local NetworkButton = CreateInfoDropdownButton("network", "Event", {
 	{
-		Text = "Code",
-		Icon = "code",
+		Text = "Replay",
+		Icon = "play",
 		Callback = function() end,
 	},
 	{
-		Text = "Script Path",
-		Icon = "file-search",
+		Text = "Ignore",
+		Icon = "eye-off",
 		Callback = function() end,
 	},
 	{
-		Text = "Function Info",
-		Icon = "parentheses",
+		Text = "Block",
+		Icon = "lock",
 		Callback = function() end,
 	},
 })

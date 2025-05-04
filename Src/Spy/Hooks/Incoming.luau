@@ -7,6 +7,7 @@ local ClassesToHook = {
 }
 
 local SignalMapping = {}
+local HookedFunctions = {}
 
 local function getcallingfunction()
 	return debug.info(4, "f")
@@ -16,6 +17,11 @@ local function getcallingline()
 end
 
 local function ListenToFunction(Instance, Function, Method)
+	if HookedFunctions[Function] then
+		return
+	end
+	HookedFunctions[Function] = true
+
 	wax.shared.Hooks[Function] = hookfunction(
 		Function,
 		wax.shared.newcclosure(function(...)

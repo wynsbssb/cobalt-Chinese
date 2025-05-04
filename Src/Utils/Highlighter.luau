@@ -17,6 +17,7 @@ local Highlighter = {
 		Local = "#f86d7c",
 		Text = "#ffffff",
 		LocalMethod = "#fdfbac",
+		LocalProperty = "#61a1f1",
 		BuiltIn = "#84d6f7",
 		Comment = "#666666",
 	},
@@ -119,7 +120,7 @@ local function GetHighlightColor(tokens, index)
 		return Highlighter.Colors.Comment
 	elseif LuaSet[token] then
 		return Highlighter.Colors.Keyword
-	elseif RobloxSet[token] then
+	elseif RobloxSet[token] or getgenv()[token] ~= nil then
 		return Highlighter.Colors.BuiltIn
 	elseif token:sub(1, 1) == '"' or token:sub(1, 1) == "'" then
 		return Highlighter.Colors.String
@@ -138,7 +139,7 @@ local function GetHighlightColor(tokens, index)
 		if tokens[index - 2] == "Enum" then
 			return Highlighter.Colors.BuiltIn
 		end
-		return Highlighter.Colors.LocalMethod
+		return Highlighter.Colors.LocalProperty
 	end
 
 	return nil

@@ -160,7 +160,6 @@ wax.shared.NewIndexHook = hookmetamethod(
 	end)
 )
 
-
 local SignalMetatable = wax.shared.getrawmetatable(Instance.new("Part").Touched)
 wax.shared.Hooks[SignalMetatable.__index] = hookfunction(SignalMetatable.__index, function(self, key)
 	if key == "Connect" or key == "ConnectParallel" then

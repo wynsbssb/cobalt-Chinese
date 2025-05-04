@@ -833,7 +833,7 @@ for Order, Data in pairs(Credits) do
 end
 
 -- Info
-local CurrentInfo
+local CurrentInfo, CurrentTab
 
 local InfoFrame = wax.shared.Interface.New("TextButton", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
@@ -1010,21 +1010,14 @@ end
 
 local ArgumentInfoUI, ArgumentScrollingFrame = CreateTabContent()
 CreateInfoTab("ellipsis", "Arguments", ArgumentInfoUI)
+ArgumentScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
 local ArgumentsInfoFrame = wax.shared.Interface.New("Frame", {
 	AutomaticSize = Enum.AutomaticSize.Y,
-	BackgroundColor3 = Color3.fromRGB(15, 15, 15),
 	Size = UDim2.fromScale(1, 0),
 
 	["UIListLayout"] = {
 		Padding = UDim.new(0, 6),
-	},
-
-	["UIPadding"] = {
-		PaddingLeft = UDim.new(0, 6),
-		PaddingRight = UDim.new(0, 6),
-		PaddingTop = UDim.new(0, 6),
-		PaddingBottom = UDim.new(0, 6),
 	},
 
 	MainUICorner,
@@ -1034,6 +1027,7 @@ local ArgumentsInfoFrame = wax.shared.Interface.New("Frame", {
 
 local CodeInfoUI, CodeScrollingFrame = CreateTabContent()
 CreateInfoTab("code", "Code", CodeInfoUI)
+CodeScrollingFrame.ScrollBarThickness = 1
 
 local CodeText = wax.shared.Interface.New("TextLabel", {
 	AutomaticSize = Enum.AutomaticSize.XY,
@@ -1146,7 +1140,15 @@ CreateInfoDropdownButton("copy", "Copy", {
 				return
 			end
 
-			warn("thats what they all say")
+			local Code = wax.shared.CodeGen:BuildCallCode(CurrentInfo, CurrentTab.Name)
+			local Success, Error = pcall(setclipboard, Code)
+
+			if Success then
+				wax.shared.Sonner.success("Copied code to clipboard")
+			else
+				wax.shared.Sonner.error("Failed to copy code to clipboard")
+				warn("Failed to copy code to clipboard", Error)
+			end
 		end,
 	},
 	{
@@ -1156,7 +1158,13 @@ CreateInfoDropdownButton("copy", "Copy", {
 			if not CurrentInfo then
 				return
 			end
-			pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Instance))
+			local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Instance))
+			if Success then
+				wax.shared.Sonner.success("Copied remote path to clipboard")
+			else
+				wax.shared.Sonner.error("Failed to copy remote path to clipboard")
+				warn("Failed to copy remote path to clipboard", Error)
+			end
 		end,
 	},
 	{
@@ -1170,13 +1178,48 @@ CreateInfoDropdownButton("copy", "Copy", {
 				return
 			end
 
-			pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Origin))
+			local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Origin))
+			if Success then
+				wax.shared.Sonner.success("Copied script path to clipboard")
+			else
+				wax.shared.Sonner.error("Failed to copy script path to clipboard")
+				warn("Failed to copy script path to clipboard", Error)
+			end
 		end,
 	},
 	{
 		Text = "Function Info",
 		Icon = "parentheses",
-		Callback = function() end,
+		Callback = function()
+			if not CurrentInfo then
+				return
+			end
+
+			local Info = {
+				Function = {
+					Name = debug.info(CurrentInfo.Function, "n"),
+					Type = iscclosure(CurrentInfo.Function) and "C Closure" or "Luau function",
+					Address = tostring(CurrentInfo.Function),
+					Arguments = CurrentInfo.Arguments,
+				},
+				Script = CurrentInfo.Origin,
+				Line = CurrentInfo.Line,
+			}
+
+			if islclosure(CurrentInfo.Function) then
+				Info.Function["Upvalues"] = debug.getupvalues(CurrentInfo.Function)
+				Info.Function["Constants"] = debug.getconstants(CurrentInfo.Function)
+				Info.Function["Protos"] = debug.getprotos(CurrentInfo.Function)
+			end
+
+			local Success, Error = pcall(setclipboard, `local Info = {wax.shared.LuaEncode(Info, { Prettify = true })}`)
+			if Success then
+				wax.shared.Sonner.success("Copied function info to clipboard")
+			else
+				wax.shared.Sonner.error("Failed to copy function info to clipboard")
+				warn("Failed to copy function info to clipboard", Error)
+			end
+		end,
 	},
 })
 
@@ -1781,7 +1824,6 @@ local LogsPagination = wax.shared.Interface.New("Frame", {
 })
 
 -- Functions
-local CurrentTab
 local Tabs = {}
 
 local CurrentLog
@@ -2096,7 +2138,7 @@ function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
 		Position = UDim2.fromOffset(18, 0),
 		Size = UDim2.new(1, -(TypeX + 22), 1, 0),
 		TextColor3 = Color3.fromHex(wax.shared.Highlighter.GetArgumentColor(Value)),
-		Text = wax.shared.DisplayArgument(Value),
+		Text = tostring(wax.shared.DisplayArgument(Value)):gsub("<", "&lt;"):gsub(">", "&gt;"),
 		RichText = true,
 		TextSize = 15,
 		TextWrapped = true,
@@ -2339,8 +2381,6 @@ SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateSearch)
 
 -- Call Functions
 function OpenInfo(CallInfo)
-	local FunctionName = debug.info(CallInfo.Function, "n")
-
 	InfoTitle.Text = CallInfo.Instance.Name
 	InfoIcon.Image = Images[CallInfo.Instance.ClassName]
 
@@ -2348,26 +2388,7 @@ function OpenInfo(CallInfo)
 
 	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo, CurrentTab.Name))
 
-	FunctionInfoText.Text = string.format(
-		[[<b>Function Address:</b> %s
-<b>Name:</b> %s
-<b>Source:</b> %s
-<b>Calling Line:</b> %s
-
-%s]],
-		tostring(CallInfo.Function):match("0x%x+") or tostring(CallInfo.Function),
-		FunctionName ~= "" and FunctionName or "Anonymous",
-		CallInfo.Origin and wax.shared.CodeGen.GetFullPath(CallInfo.Origin, true) or wax.shared.ExecutorName,
-		tostring(CallInfo.Line),
-
-		iscclosure(CallInfo.Function) and "<b>Closure Type</b>: C closure"
-			or string.format(
-				"<b>Closure Type</b>: Luau closure\n<b>Constants:</b> %s\n<b>Upvalues:</b> %s\n<b>Protos:</b> %s",
-				tostring(#debug.getconstants(CallInfo.Function)),
-				tostring(#debug.getupvalues(CallInfo.Function)),
-				tostring(#debug.getprotos(CallInfo.Function))
-			)
-	)
+	FunctionInfoText.Text = wax.shared.CodeGen:BuildFunctionInfo(CallInfo)
 	do
 		for _, Object in pairs(ArgumentsInfoFrame:GetChildren()) do
 			if Object.ClassName ~= "Frame" then
@@ -2381,30 +2402,29 @@ function OpenInfo(CallInfo)
 		end
 	end
 
-	if CurrentInfoTab ~= "Arguments" then
-		local OldTabButton = InfoTabs:FindFirstChild(CurrentInfoTab)
+	for _, tab in pairs({ "Function Info", "Code" }) do
+		local OldTabButton = InfoTabs:FindFirstChild(tab)
 		if OldTabButton then
 			OldTabButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 			OldTabButton.Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 		end
 
-		local OldTabContent = InfoFrame:FindFirstChild(CurrentInfoTab)
-		if OldTabContent then
-			OldTabContent.Visible = false
+		local TabContent = InfoFrame:FindFirstChild(tab)
+		if TabContent then
+			TabContent.Visible = false
 		end
+	end
 
-		CurrentInfoTab = "Arguments"
+	CurrentInfoTab = "Arguments"
+	local NewTabButton = InfoTabs:FindFirstChild(CurrentInfoTab)
+	if NewTabButton then
+		NewTabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		NewTabButton.Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	end
 
-		local NewTabButton = InfoTabs:FindFirstChild(CurrentInfoTab)
-		if NewTabButton then
-			NewTabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-			NewTabButton.Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-		end
-
-		local NewTabContent = InfoFrame:FindFirstChild(CurrentInfoTab)
-		if NewTabContent then
-			OldTabContent.Visible = true
-		end
+	local NewTabContent = InfoFrame:FindFirstChild(CurrentInfoTab)
+	if NewTabContent then
+		NewTabContent.Visible = true
 	end
 
 	OpenModal(InfoFrame)
@@ -2427,6 +2447,10 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 	end
 
 	local Log = wax.shared.Logs[Type][Instance]
+	if not Log then
+		print("Log not found for " .. Instance.Name)
+		return
+	end
 
 	local Page = CurrentPage[Log]
 	if not Page then

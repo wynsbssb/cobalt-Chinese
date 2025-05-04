@@ -126,8 +126,13 @@ wax.shared.Unload = function()
 		wax.shared.Disconnect(Connection)
 	end
 
-	hookmetamethod(game, "__namecall", wax.shared.NamecallHook)
-	hookmetamethod(game, "__newindex", wax.shared.NewIndexHook)
+	if restorefunction then
+		restorefunction(getrawmetatable(game).__namecall)
+		restorefunction(getrawmetatable(game).__newindex)
+	else
+		hookmetamethod(game, "__namecall", wax.shared.NamecallHook)
+		hookmetamethod(game, "__newindex", wax.shared.NewIndexHook)
+	end
 
 	for Function, Original in pairs(wax.shared.Hooks) do
 		wax.shared.restorefunction(Function, true)

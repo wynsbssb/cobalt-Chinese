@@ -2390,7 +2390,11 @@ function OpenInfo(CallInfo)
 
 	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo, CurrentTab.Name))
 
-	FunctionInfoText.Text = wax.shared.CodeGen:BuildFunctionInfo(CallInfo)
+	local FunctionInfoSuccess, FunctionInfoText = pcall(function()
+		return wax.shared.CodeGen:BuildFunctionInfo(CallInfo)
+	end)
+	FunctionInfoText.Text = FunctionInfoSuccess and FunctionInfoText
+		or "Error while fetching function data: " .. FunctionInfoText
 	do
 		for _, Object in pairs(ArgumentsInfoFrame:GetChildren()) do
 			if Object.ClassName ~= "Frame" then

@@ -581,6 +581,7 @@ local function CreateSettingsRemoteList(
 )
 	local RemoteList = {
 		Value = {},
+		InfoMapping = {},
 	}
 
 	local RemoteListContainer = wax.shared.Interface.New("Frame", {
@@ -632,7 +633,12 @@ local function CreateSettingsRemoteList(
 
 		NoRemotesText.Visible = (#self.Value == 0)
 
-		for _, remote in self.Value do
+		for _, remoteData in self.Value do
+			local remote = remoteData.Instance
+			if not remote then
+				continue
+			end
+
 			local ListElement = wax.shared.Interface.New("Frame", {
 				BackgroundColor3 = Color3.fromRGB(0, 0, 0),
 				Size = UDim2.new(1, 0, 0, 32),
@@ -712,18 +718,21 @@ local function CreateSettingsRemoteList(
 			end)
 
 			RemoveButton.MouseButton1Click:Connect(function()
-				self:RemoveFromList(remote)
+				self:RemoveFromList(remoteData)
+				if Options.Callback then
+					Options.Callback(remoteData)
+				end
 			end)
 		end
 	end
 
-	function RemoteList:AddToList(remote: SupportedRemoteTypes)
+	function RemoteList:AddToList(remote)
 		table.insert(self.Value, remote)
 
 		self:Display()
 	end
 
-	function RemoteList:RemoveFromList(remote: SupportedRemoteTypes)
+	function RemoteList:RemoveFromList(remote)
 		local index = table.find(self.Value, remote)
 		if not index then
 			return
@@ -748,7 +757,7 @@ end
 
 local FilterSection = CreateSettingsSection("Filter")
 
-CreateSettingsDropdown("IgnoreRemotes", {
+CreateSettingsDropdown("IgnoreRemotesDropdown", {
 	Text = "Ignore Remotes",
 	Values = ClassOrder,
 	AllowNull = true,
@@ -770,9 +779,23 @@ CreateSettingsRemoteList("IgnoredRemotes", {
 	Text = "Ignored Remotes",
 	NullMessage = "No remotes have been ignored yet.",
 	Section = IgnoredSection,
+	Callback = function(Remote)
+		Remote.Ignored = false
+	end,
 })
 local RemoveIgnored = CreateSettingsButton("Remove All", function()
-	-- TODO: implement
+	local IgnoredRemoteList = wax.shared.Settings["IgnoreRemotes"]
+	if IgnoredRemoteList then
+		local ToRemove = {}
+		for _, remote in wax.shared.Settings["IgnoredRemotes"].Value do
+			remote.Ignored = false
+			table.insert(ToRemove, remote)
+		end
+
+		for _, remote in ToRemove do
+			wax.shared.Settings["IgnoredRemotes"]:RemoveFromList(remote)
+		end
+	end
 	wax.shared.Sonner.success("Removed all ignored remotes")
 end, IgnoredSection)
 RemoveIgnored.Visible = false
@@ -783,9 +806,23 @@ CreateSettingsRemoteList("BlockedRemotes", {
 	Text = "Blocked Remotes",
 	NullMessage = "No remotes have been blocked yet.",
 	Section = BlockedSection,
+	Callback = function(Remote)
+		Remote.Blocked = false
+	end,
 })
 local RemoveBlocked = CreateSettingsButton("Remove All", function()
-	-- TODO: implement
+	local IgnoredRemoteList = wax.shared.Settings["BlockedRemotes"]
+	if IgnoredRemoteList then
+		local ToRemove = {}
+		for _, remote in wax.shared.Settings["BlockedRemotes"].Value do
+			remote.Blocked = false
+			table.insert(ToRemove, remote)
+		end
+
+		for _, remote in ToRemove do
+			wax.shared.Settings["BlockedRemotes"]:RemoveFromList(remote)
+		end
+	end
 	wax.shared.Sonner.success("Removed all blocked remotes")
 end, BlockedSection)
 RemoveBlocked.Visible = false
@@ -833,7 +870,7 @@ for Order, Data in pairs(Credits) do
 end
 
 -- Info
-local CurrentInfo, CurrentTab
+local CurrentInfo, CurrentTab, CurrentLog
 
 local InfoFrame = wax.shared.Interface.New("TextButton", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
@@ -1130,7 +1167,7 @@ local function CreateInfoDropdownButton(Icon: string, Title: string, Options: {}
 			:Play()
 	end)
 	Button.MouseButton1Click:Connect(Menu.Toggle)
-	return Button
+	return Menu
 end
 
 CreateInfoDropdownButton("copy", "Copy", {
@@ -1225,7 +1262,8 @@ CreateInfoDropdownButton("copy", "Copy", {
 	},
 })
 
-local NetworkButton = CreateInfoDropdownButton("network", "Event", {
+local NetworkButton
+NetworkButton = CreateInfoDropdownButton("network", "Event", {
 	{
 		Text = "Replay",
 		Icon = "play",
@@ -1247,12 +1285,66 @@ local NetworkButton = CreateInfoDropdownButton("network", "Event", {
 	{
 		Text = "Ignore",
 		Icon = "eye-off",
-		Callback = function() end,
+		Callback = function()
+			if not CurrentLog then
+				return
+			end
+
+			CurrentLog:Ignore()
+
+			for Button, Data in NetworkButton.Options do
+				if Data.Text ~= "Ignore" then
+					continue
+				end
+
+				Button.TextLabel.Text = CurrentLog.Ignored and "Unignore" or "Ignore"
+				wax.shared.Icons.SetIcon(Button.ImageLabel, CurrentLog.Ignored and "eye" or "eye-off")
+				break
+			end
+
+			local IgnoredRemoteList = wax.shared.Settings["IgnoreRemotes"]
+			if IgnoredRemoteList then
+				if CurrentLog.Ignored then
+					IgnoredRemoteList:AddToList(CurrentLog)
+				else
+					IgnoredRemoteList:RemoveFromList(CurrentLog)
+				end
+			end
+
+			wax.shared.Sonner.success(`{CurrentLog.Ignored and "Started" or "Stopped"} ignoring event`)
+		end,
 	},
 	{
 		Text = "Block",
 		Icon = "lock",
-		Callback = function() end,
+		Callback = function()
+			if not CurrentLog then
+				return
+			end
+
+			CurrentLog:Block()
+
+			for Button, Data in NetworkButton.Options do
+				if Data.Text ~= "Block" then
+					continue
+				end
+
+				Button.TextLabel.Text = CurrentLog.Blocked and "Unblock" or "Block"
+				wax.shared.Icons.SetIcon(Button.ImageLabel, CurrentLog.Blocked and "lock-open" or "lock")
+				break
+			end
+
+			local BlockedRemoteList = wax.shared.Settings["BlockedRemotes"]
+			if BlockedRemoteList then
+				if CurrentLog.Blocked then
+					BlockedRemoteList:AddToList(CurrentLog)
+				else
+					BlockedRemoteList:RemoveFromList(CurrentLog)
+				end
+			end
+
+			wax.shared.Sonner.success(`{CurrentLog.Blocked and "Started" or "Stopped"} blocking event`)
+		end,
 	},
 })
 
@@ -1840,8 +1932,6 @@ local LogsPagination = wax.shared.Interface.New("Frame", {
 
 -- Functions
 local Tabs = {}
-
-local CurrentLog
 local CurrentPage = {}
 
 function ShowTab(Tab)
@@ -2401,6 +2491,16 @@ function OpenInfo(CallInfo)
 
 	CurrentInfo = CallInfo
 
+	for Button, Data in NetworkButton.Options do
+		if Data.Text == "Ignore" then
+			Button.TextLabel.Text = CurrentLog.Ignored and "Unignore" or "Ignore"
+			wax.shared.Icons.SetIcon(Button.ImageLabel, CurrentLog.Ignored and "eye" or "eye-off")
+		elseif Data.Text == "Block" then
+			Button.TextLabel.Text = CurrentLog.Blocked and "Unblock" or "Block"
+			wax.shared.Icons.SetIcon(Button.ImageLabel, CurrentLog.Blocked and "lock-open" or "lock")
+		end
+	end
+
 	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo, CurrentTab.Name))
 
 	local FuncInfoSuccess, GeneratedFuncInfo = pcall(function()
@@ -2467,7 +2567,6 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 
 	local Log = wax.shared.Logs[Type][Instance]
 	if not Log then
-		print("Log not found for " .. Instance.Name)
 		return
 	end
 

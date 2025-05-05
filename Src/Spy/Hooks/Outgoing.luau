@@ -61,6 +61,7 @@ wax.shared.NamecallHook = hookmetamethod(
 					getcallingscript(),
 					getcallingfunction(),
 					getcallingline(),
+					checkcaller(),
 				}
 				Log:Call(Info)
 				wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, "Outgoing", Info, #Log.Calls)
@@ -84,6 +85,7 @@ wax.shared.NamecallHook = hookmetamethod(
 							getcallingscript(),
 							getcallingfunction(),
 							getcallingline(),
+							checkcaller(),
 							{ ... },
 						}
 						Log:Call(RFResultInfo)
@@ -129,6 +131,7 @@ for _, Function in pairs(FunctionsToHook) do
 						getcallingscript(),
 						getcallingfunction(),
 						getcallingline(),
+						checkcaller(),
 					}
 					Log:Call(Info)
 					wax.shared.Communicator:Fire(Log.Instance, "Outgoing", Info, #Log.Calls)
@@ -152,6 +155,7 @@ for _, Function in pairs(FunctionsToHook) do
 								getcallingscript(),
 								getcallingfunction(),
 								getcallingline(),
+								checkcaller(),
 								{ ... },
 							}
 							Log:Call(RFResultInfo)

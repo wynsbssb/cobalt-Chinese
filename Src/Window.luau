@@ -2020,6 +2020,7 @@ function ShowCalls(Log, Page)
 			Origin = Call.Origin,
 			Function = Call.Function,
 			Line = Call.Line,
+			IsExecutor = Call.IsExecutor,
 			OriginalInvokeArgs = Call.OriginalInvokeArgs,
 			Order = Index,
 		})
@@ -2267,6 +2268,7 @@ function CreateCallFrame(CallInfo: {
 	Order: number,
 	Function: (...any) -> any,
 	Line: number,
+	IsExecutor: boolean,
 })
 	local CallFrame = wax.shared.Interface.New("TextButton", {
 		AutomaticSize = Enum.AutomaticSize.Y,
@@ -2363,7 +2365,9 @@ function CreateCallFrame(CallInfo: {
 			Position = UDim2.new(0, 30, 1, 0),
 			Size = UDim2.new(0.5, -24, 0, 22),
 			BackgroundTransparency = 1,
-			Text = CallInfo.Origin and CallInfo.Origin.Name or wax.shared.ExecutorName,
+			Text = CallInfo.IsExecutor and wax.shared.ExecutorName
+				or CallInfo.Origin and CallInfo.Origin.Name
+				or "Unknown",
 			TextSize = 16,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			TextTransparency = 0.5,
@@ -2601,7 +2605,8 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 			Origin = CallInfo[3],
 			Function = CallInfo[4],
 			Line = CallInfo[5],
-			OriginalInvokeArgs = CallInfo[6],
+			IsExecutor = CallInfo[6],
+			OriginalInvokeArgs = CallInfo[7],
 			Order = CallIndex,
 		})
 	end

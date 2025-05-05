@@ -20,10 +20,11 @@ function Log:Call(Info)
 		Origin = Info[3],
 		Function = Info[4],
 		Line = Info[5],
+		IsExecutor = Info[6],
 	}
 
-	if Info[6] then
-		Data.OriginalInvokeArgs = Info[6]
+	if Info[7] then
+		Data.OriginalInvokeArgs = Info[7]
 	end
 
 	table.insert(self.Calls, Data)

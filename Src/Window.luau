@@ -2344,6 +2344,10 @@ function CreateCallFrame(CallInfo: {
 	})
 	do
 		for Index, Value in pairs(CallInfo.Arguments) do
+			if Index % 25 == 0 then
+				task.wait()
+			end
+
 			CreateArgHolder(Index, Value, ArgumentsFrame)
 		end
 	end
@@ -2522,6 +2526,10 @@ function OpenInfo(CallInfo)
 		end
 
 		for Index, Value in pairs(CallInfo.Arguments) do
+			if Index % 25 == 0 then
+				task.wait()
+			end
+
 			CreateArgHolder(Index, Value, ArgumentsInfoFrame)
 		end
 	end

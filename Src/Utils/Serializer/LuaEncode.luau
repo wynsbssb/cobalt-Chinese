@@ -265,6 +265,10 @@ local function LuaEncode(inputTable, options)
 				return NegativeInf
 			end
 
+			if value == math.pi then
+				return "math.pi"
+			end
+
 			-- Return fixed-formatted precision num
 			return string_format("%.14g", value)
 		end
@@ -366,6 +370,10 @@ local function LuaEncode(inputTable, options)
 		end
 
 		TypeCases["CFrame"] = function(value)
+			if value == CFrame.identity then
+				return "CFrame.identity"
+			end
+
 			return "CFrame.new(" .. Args(value:components()) .. ")"
 		end
 

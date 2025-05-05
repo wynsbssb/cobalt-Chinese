@@ -2020,6 +2020,7 @@ function ShowCalls(Log, Page)
 			Origin = Call.Origin,
 			Function = Call.Function,
 			Line = Call.Line,
+			OriginalInvokeArgs = Call.OriginalInvokeArgs,
 			Order = Index,
 		})
 	end
@@ -2600,6 +2601,7 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 			Origin = CallInfo[3],
 			Function = CallInfo[4],
 			Line = CallInfo[5],
+			OriginalInvokeArgs = CallInfo[6],
 			Order = CallIndex,
 		})
 	end

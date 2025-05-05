@@ -58,6 +58,7 @@ wax.shared.NamecallHook = hookmetamethod(
 							getcallingscript(),
 							getcallingfunction(),
 							getcallingline(),
+							{ ... },
 						}
 						Log:Call(RFResultInfo)
 						wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
@@ -125,6 +126,7 @@ for _, Function in pairs(FunctionsToHook) do
 								getcallingscript(),
 								getcallingfunction(),
 								getcallingline(),
+								{ ... },
 							}
 							Log:Call(RFResultInfo)
 							wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)

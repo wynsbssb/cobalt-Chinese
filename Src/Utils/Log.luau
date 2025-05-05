@@ -14,13 +14,19 @@ function Log.new(Instance, Method, Index)
 end
 
 function Log:Call(Info)
-	table.insert(self.Calls, {
+	local Data = {
 		Arguments = Info[1],
 		Time = Info[2],
 		Origin = Info[3],
 		Function = Info[4],
 		Line = Info[5],
-	})
+	}
+
+	if Info[6] then
+		Data.OriginalInvokeArgs = Info[6]
+	end
+
+	table.insert(self.Calls, Data)
 end
 
 function Log:Ignore()

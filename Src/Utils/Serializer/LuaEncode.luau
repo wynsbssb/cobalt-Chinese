@@ -192,7 +192,6 @@ local function LuaEncode(inputTable, options)
 	local IndentCount = options.IndentCount or (Prettify and 4) or 0
 	local InsertCycles = (options.InsertCycles == nil and false) or options.InsertCycles
 	local OutputWarnings = (options.OutputWarnings == nil and true) or options.OutputWarnings
-	local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw
 	local UseInstancePaths = (options.UseInstancePaths == nil and true) or options.UseInstancePaths
 	local SerializeMathHuge = (options.SerializeMathHuge == nil and true) or options.SerializeMathHuge
 
@@ -307,17 +306,37 @@ local function LuaEncode(inputTable, options)
 		end
 
 		TypeCases["function"] = function(value)
-			-- If `FunctionsReturnRaw` is set as true, we'll call the function here itself, expecting
-			-- a raw value for FunctionsReturnRaw to add as the key/value, you may want to do this for custom userdata or
-			-- function closures. Thank's for listening to my Ted Talk!
-			if FunctionsReturnRaw then
-				return value()
+			-- We can't serialize functions so we just return a comment block with function information
+			local FunctionName, ArgumentCount, VarArg, Line = debug.info(value, "nal")
+
+			local Arguments = {}
+			for Index = 1, ArgumentCount do
+				Arguments[Index] = string_format("arg%d", Index)
 			end
 
 			return string_format(
-				"function()%sreturn end",
-				(OutputWarnings and " --[[LuaEncode: `options.FunctionsReturnRaw` false; can't serialize functions]] ")
-					or ""
+				[[function(%s)%s%s%s%s%sreturn%send]],
+				`{table_concat(Arguments, ", ")}{VarArg and `{Arguments[1] and ", " or ""}...` or ""}`,
+
+				`{CodegenNewline}{IndentString}{IndentStringBase}-- Name: {FunctionName == "" and "Anonymous Function" or FunctionName} | Line: {Line}`,
+
+				`{CodegenNewline}{IndentString}{IndentStringBase}-- {islclosure(value) and `Upvalues: {#debug.getupvalues(
+					value
+				)}` or "Upvalues: N/A (C Closure)"}`,
+
+				`{CodegenNewline}{IndentString}{IndentStringBase}-- `
+					.. (
+						getfunctionhash
+							and `{islclosure(value) and `Function Hash: {getfunctionhash(value)}` or "Function Hash: N/A (C Closure)"}`
+						or "Function Hash: N/A (getfunctionhash == nil)"
+					),
+
+				OutputWarnings
+						and `{CodegenNewline}{IndentString}{IndentStringBase}-- LuaEncode: Unable to serialize function`
+					or "",
+
+				`{CodegenNewline}{IndentString}{IndentStringBase}`,
+				`{CodegenNewline}{IndentString}`
 			)
 		end
 

@@ -1,6 +1,6 @@
 # Cobalt
 
-A Roblox event interceptor/sniffer with opinionated UI
+A runtime developer tool for the Roblox Game Engine to monitor and intercept incoming and outgoing network traffic with beautiful opinionated UI
 
 ```lua
 loadstring(game:HttpGet("https://github.com/notpoiu/cobalt/releases/latest/download/Cobalt.luau"))()

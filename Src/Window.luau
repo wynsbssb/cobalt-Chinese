@@ -2407,7 +2407,7 @@ function OpenInfo(CallInfo)
 		return wax.shared.CodeGen:BuildFunctionInfo(CallInfo)
 	end)
 	FunctionInfoText.Text = FuncInfoSuccess and GeneratedFuncInfo
-		or "Error while fetching function data: " .. GeneratedFuncInfo
+		or `Error while fetching function data.\nCalling Function: {CallInfo.Function} (type: {typeof(CallInfo.Function)})\n\nError: {GeneratedFuncInfo}`
 	do
 		for _, Object in pairs(ArgumentsInfoFrame:GetChildren()) do
 			if Object.ClassName ~= "Frame" then

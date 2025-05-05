@@ -134,65 +134,6 @@ local function CommentBlock(inputString)
 	return "--[" .. Padding .. "[" .. inputString .. "]" .. Padding .. "]"
 end
 
-local EvaluateInstancePath
-do
-	local function IsService(object)
-		-- Logically, if an object is actually under a service, that service *has* to already exist, as we've
-		-- presumably evaluated to said path
-		local FindServiceSuccess, ServiceObject = pcall(game.FindService, game, object.ClassName)
-		if FindServiceSuccess and ServiceObject then
-			return true
-		end
-
-		return false
-	end
-
-	-- Evaluates an instances' accessable "path" with just it's ref, and if the root parent is nil/isn't
-	-- under `game` or `workspace`, returns nil.
-	function EvaluateInstancePath(object)
-		local ObjectPointer = object
-
-		-- Input itself doesn't exist?
-		if not ObjectPointer then
-			return
-		end
-
-		local Path = ""
-
-		while ObjectPointer do
-			local ObjectName = ObjectPointer.Name
-			local ObjectClassName = ObjectPointer.ClassName
-			local ObjectParent = ObjectPointer.Parent
-
-			if ObjectParent == game and IsService(ObjectPointer) then
-				-- ^^ Then we'll use GetService directly, since it's actually a service under the DataModel
-
-				Path = ":GetService(" .. SerializeString(ObjectClassName) .. ")" .. Path
-			elseif not LuaKeywords[ObjectName] and string_match(ObjectName, "^[A-Za-z_][A-Za-z0-9_]*$") then
-				-- ^^ Like the string data type, this means means we can index the name directly in Lua
-				-- without an explicit string
-				Path = "." .. ObjectName .. Path
-			else
-				Path = "[" .. SerializeString(ObjectName) .. "]" .. Path
-			end
-
-			if ObjectParent == game then
-				Path = "game" .. Path
-				return Path
-			elseif ObjectParent == workspace then
-				Path = "workspace" .. Path
-				return Path
-			end
-
-			-- Advance ObjectPointer, whether it exists or not (JUMPBACK)
-			ObjectPointer = ObjectParent
-		end
-
-		-- Fall back to no ret.. Only objects parented under game/workspace will be serialized
-		return
-	end
-end
-
 --[[
 LuaEncode(inputTable: {[any]: any}, options: {[string]: any}): string
 
@@ -510,7 +451,7 @@ local function LuaEncode(inputTable, options)
 		-- nil or some DataModel not under `game`, it'll just return nil
 		TypeCases["Instance"] = function(value)
 			if UseInstancePaths then
-				local InstancePath = EvaluateInstancePath(value)
+				local InstancePath = wax.shared.CodeGen.GetFullPath(value, true)
 				if InstancePath then
 					return InstancePath
 				end

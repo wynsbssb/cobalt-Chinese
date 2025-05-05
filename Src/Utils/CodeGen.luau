@@ -81,7 +81,8 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName)
 			local Parent = CurrentObject.Parent
 			if Parent then
 				if Parent == workspace then
-					IndexName = "workspace"
+					Path = "workspace" .. Path
+					break
 				elseif Parent == game and game.FindService(game, CurrentObject.ClassName) == CurrentObject then
 					IndexName = ':GetService("' .. CurrentObject.ClassName .. '")'
 				end
@@ -101,10 +102,6 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName)
 		Path = IndexName .. Path
 
 		if wax.shared.LocalPlayer.Character and CurrentObject == wax.shared.LocalPlayer.Character then
-			break
-		end
-
-		if CurrentObject == workspace then
 			break
 		end
 

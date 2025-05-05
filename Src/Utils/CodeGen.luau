@@ -123,6 +123,15 @@ function CodeGen:BuildCallCode(CallInfo: CallInfo, Type: "Incoming" | "Outgoing"
 
 	if Type == "Incoming" then
 		if DoesUseCallbackValue(CallInfo.Instance) then
+			local Success, Callback = pcall(function()
+				return getcallbackvalue(CallInfo.Instance, Method)
+			end)
+
+			-- If no callback value, then the RF is used like :InvokeServer() -> result so ye skibidi
+			if not Success or Callback == nil then
+				return string.format([[%slocal Result = %s:%s(%s)]], CodeGenHeader, Path, Method, SerializedArgs)
+			end
+
 			return string.format(
 				[[%slocal Callback = getcallbackvalue(%s, "%s")
 

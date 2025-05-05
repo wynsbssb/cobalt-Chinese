@@ -40,24 +40,28 @@ wax.shared.NamecallHook = hookmetamethod(
 				wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, "Outgoing", Info, #Log.Calls)
 
 				-- For RemoteFunction return value (ex: local result = RemoteFunction:InvokeServer())
-				if self.ClassName == "RemoteFunction" then
-					local Result = { wax.shared.NamecallHook(self, ...) }
-					local RFResultInfo = {
-						Result,
-						os.date("%X"),
-						getcallingscript(),
-						getcallingfunction(),
-						getcallingline(),
-					}
+				if self.ClassName == "RemoteFunction" and Method == "InvokeServer" then
+					Log = wax.shared.Logs.Incoming[self]
+					if not Log then
+						Log = wax.shared.NewLog(self, Method, "Incoming")
+					end
 
-					Log:Call(RFResultInfo)
-					wax.shared.Communicator.Fire(
-						wax.shared.Communicator,
-						Log.Instance,
-						"Incoming",
-						RFResultInfo,
-						#Log.Calls
-					)
+					if Log.Blocked then
+						return
+					end
+
+					local Result = { wax.shared.NamecallHook(self, ...) }
+					if not Log.Ignored then
+						local RFResultInfo = {
+							Result,
+							os.date("%X"),
+							getcallingscript(),
+							getcallingfunction(),
+							getcallingline(),
+						}
+						Log:Call(RFResultInfo)
+						wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
+					end
 
 					return table.unpack(Result)
 				end
@@ -104,23 +108,27 @@ for _, Function in pairs(FunctionsToHook) do
 
 					-- For RemoteFunction return value (ex: local result = RemoteFunction:InvokeServer())
 					if self.ClassName == "RemoteFunction" and Method == "InvokeServer" then
-						local Result = { wax.shared.Hooks[Function](self, ...) }
-						local RFResultInfo = {
-							Result,
-							os.date("%X"),
-							getcallingscript(),
-							getcallingfunction(),
-							getcallingline(),
-						}
+						Log = wax.shared.Logs.Incoming[self]
+						if not Log then
+							Log = wax.shared.NewLog(self, Method, "Incoming")
+						end
 
-						Log:Call(RFResultInfo)
-						wax.shared.Communicator.Fire(
-							wax.shared.Communicator,
-							Log.Instance,
-							"Incoming",
-							RFResultInfo,
-							#Log.Calls
-						)
+						if Log.Blocked then
+							return
+						end
+
+						local Result = { wax.shared.Hooks[Function](self, ...) }
+						if not Log.Ignored then
+							local RFResultInfo = {
+								Result,
+								os.date("%X"),
+								getcallingscript(),
+								getcallingfunction(),
+								getcallingline(),
+							}
+							Log:Call(RFResultInfo)
+							wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
+						end
 
 						return table.unpack(Result)
 					end

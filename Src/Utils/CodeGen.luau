@@ -127,13 +127,11 @@ function CodeGen:BuildCallCode(CallInfo: CallInfo, Type: "Incoming" | "Outgoing"
 				return getcallbackvalue(CallInfo.Instance, Method)
 			end)
 
-			-- If no callback value, then the RF is used like :InvokeServer() -> result so ye skibidi
 			if not Success or Callback == nil then
 				return string.format(
-					[[%slocal Result = %s:%s(%s)]],
+					[[%s--There is no real way to replicate this call as it originates from a :InvokeServer() call.
+local Result = %s]],
 					CodeGenHeader,
-					Path,
-					FunctionForClasses.Outgoing[CallInfo.Instance.ClassName],
 					SerializedArgs
 				)
 			end

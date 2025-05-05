@@ -210,7 +210,12 @@ function Sonner.promise(func, options)
 		local spinnerThread = task.spawn(function()
 			repeat
 				wax.shared.RunService.RenderStepped:Wait()
-				notif.ImageLabel.Rotation = (notif.ImageLabel.Rotation + 1) % 360
+
+				local icon = notif:FindFirstChild("ImageLabel")
+				if not icon then
+					continue
+				end
+				icon.Rotation = (icon.Rotation + 1) % 360
 			until success == false or resultOrError ~= nil
 		end)
 

@@ -229,7 +229,7 @@ function Sonner.promise(func, options)
 			:Play()
 		task.wait(0.15)
 
-		if coroutine.status(spinnerThread) == "running" then
+		if coroutine.status(spinnerThread) ~= "dead" then
 			coroutine.close(spinnerThread)
 		end
 		notif.ImageLabel.Rotation = 0

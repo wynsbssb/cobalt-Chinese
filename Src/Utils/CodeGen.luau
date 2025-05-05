@@ -71,6 +71,8 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName)
 			IndexName = 'game:GetService("Players").LocalPlayer.Character'
 		elseif CurrentObject.Name and CurrentObject.Name == wax.shared.LocalPlayer.Name then
 			IndexName = '[game:GetService("Players").LocalPlayer.Name]'
+		elseif CurrentObject.Name and CurrentObject.Name == tostring(wax.shared.LocalPlayer.UserId) then
+			IndexName = '[game:GetService("Players").LocalPlayer.UserId]'
 		elseif CurrentObject.ClassName then
 			if string.match(CurrentObject.Name, "^[%a_][%w_]*$") then
 				IndexName = "." .. CurrentObject.Name

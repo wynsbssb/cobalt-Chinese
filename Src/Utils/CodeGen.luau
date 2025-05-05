@@ -154,4 +154,24 @@ function CodeGen:BuildFunctionInfo(CallInfo: CallInfo)
 	)
 end
 
+wax.shared.ReplayCallInfo = function(CallInfo: CallInfo, Type: "Incoming" | "Outgoing")
+	local Method = FunctionForClasses[Type][CallInfo.Instance.ClassName]
+
+	if Type == "Incoming" then
+		assert(firesignal or getconnections, "No firesignal or getconnections found")
+
+		if firesignal then
+			firesignal(CallInfo.Instance[Method], table.unpack(CallInfo.Arguments))
+		elseif getconnections then
+			for _, conn in getconnections(CallInfo.Instance[Method]) do
+				conn:Fire(table.unpack(CallInfo.Arguments))
+			end
+		end
+
+		return
+	end
+
+	CallInfo.Instance[Method](CallInfo.Instance, table.unpack(CallInfo.Arguments))
+end
+
 return CodeGen

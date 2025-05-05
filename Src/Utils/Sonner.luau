@@ -207,7 +207,7 @@ function Sonner.promise(func, options)
 	toast("loader-circle", loadingText, internalTime, function(notif, time)
 		local success, resultOrError = nil, nil
 
-		task.spawn(function()
+		local spinnerThread = task.spawn(function()
 			repeat
 				wax.shared.RunService.RenderStepped:Wait()
 				notif.ImageLabel.Rotation = (notif.ImageLabel.Rotation + 1) % 360
@@ -223,6 +223,10 @@ function Sonner.promise(func, options)
 			})
 			:Play()
 		task.wait(0.15)
+
+		if coroutine.status(spinnerThread) == "running" then
+			coroutine.close(spinnerThread)
+		end
 		notif.ImageLabel.Rotation = 0
 
 		if success then

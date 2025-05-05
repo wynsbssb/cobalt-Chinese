@@ -1229,7 +1229,20 @@ local NetworkButton = CreateInfoDropdownButton("network", "Event", {
 	{
 		Text = "Replay",
 		Icon = "play",
-		Callback = function() end,
+		Callback = function()
+			if not CurrentInfo then
+				return
+			end
+
+			wax.shared.Sonner.promise(function()
+				wax.shared.ReplayCallInfo(CurrentInfo, CurrentTab.Name)
+			end, {
+				loadingText = "Replaying event...",
+				successText = "Replayed event successfully!",
+				errorText = "Failed to replay event",
+				time = 4.5,
+			})
+		end,
 	},
 	{
 		Text = "Ignore",
@@ -2390,11 +2403,11 @@ function OpenInfo(CallInfo)
 
 	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo, CurrentTab.Name))
 
-	local FunctionInfoSuccess, FunctionInfoText = pcall(function()
+	local FuncInfoSuccess, GeneratedFuncInfo = pcall(function()
 		return wax.shared.CodeGen:BuildFunctionInfo(CallInfo)
 	end)
-	FunctionInfoText.Text = FunctionInfoSuccess and FunctionInfoText
-		or "Error while fetching function data: " .. FunctionInfoText
+	FunctionInfoText.Text = FuncInfoSuccess and GeneratedFuncInfo
+		or "Error while fetching function data: " .. GeneratedFuncInfo
 	do
 		for _, Object in pairs(ArgumentsInfoFrame:GetChildren()) do
 			if Object.ClassName ~= "Frame" then

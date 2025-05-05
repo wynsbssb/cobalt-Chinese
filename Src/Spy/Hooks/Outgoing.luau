@@ -3,9 +3,35 @@ local AllowedClassNames =
 	{ "RemoteEvent", "RemoteFunction", "UnreliableRemoteEvent", "BindableEvent", "BindableFunction" }
 
 local function getcallingfunction()
+	for i = 4, 10 do
+		local Function, Source = debug.info(i, "fs")
+		if not Function or not Source then
+			break
+		end
+
+		if Source == "[C]" then
+			continue
+		end
+
+		return Function
+	end
+
 	return debug.info(4, "f")
 end
 local function getcallingline()
+	for i = 4, 10 do
+		local Source, Line = debug.info(i, "sl")
+		if not Source then
+			break
+		end
+
+		if Source == "[C]" then
+			continue
+		end
+
+		return Line
+	end
+
 	return debug.info(4, "l")
 end
 

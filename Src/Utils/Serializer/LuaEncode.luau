@@ -579,6 +579,14 @@ local function LuaEncode(inputTable, options)
 		end
 
 		TypeCases["UDim2"] = function(value)
+			if value.X.Offset == 0 and value.Y.Offset == 0 then
+				return "UDim2.fromScale(" .. Args(value.X.Scale, value.Y.Scale) .. ")"
+			end
+
+			if value.X.Scale == 0 and value.Y.Scale == 0 then
+				return "UDim2.fromOffset(" .. Args(value.X.Offset, value.Y.Offset) .. ")"
+			end
+
 			return "UDim2.new("
 				.. Args(
 					-- Not directly using X and Y UDims for better output (i.e. would be
@@ -591,7 +599,18 @@ local function LuaEncode(inputTable, options)
 				.. ")"
 		end
 
+		local Vector2Replacements = {
+			[Vector2.zero] = "Vector2.zero",
+			[Vector2.one] = "Vector2.one",
+			[Vector2.xAxis] = "Vector2.xAxis",
+			[Vector2.yAxis] = "Vector2.yAxis",
+		}
+
 		TypeCases["Vector2"] = function(value)
+			if Vector2Replacements[value] then
+				return Vector2Replacements[value]
+			end
+
 			return "Vector2.new(" .. Args(value.X, value.Y) .. ")"
 		end
 
@@ -599,7 +618,19 @@ local function LuaEncode(inputTable, options)
 			return "Vector2int16.new(" .. Args(value.X, value.Y) .. ")"
 		end
 
+		local Vector3Replacements = {
+			[Vector3.zero] = "Vector3.zero",
+			[Vector3.one] = "Vector3.one",
+			[Vector3.xAxis] = "Vector3.xAxis",
+			[Vector3.yAxis] = "Vector3.yAxis",
+			[Vector3.zAxis] = "Vector3.zAxis",
+		}
+
 		TypeCases["Vector3"] = function(value)
+			if Vector3Replacements[value] then
+				return Vector3Replacements[value]
+			end
+
 			return "Vector3.new(" .. Args(value.X, value.Y, value.Z) .. ")"
 		end
 

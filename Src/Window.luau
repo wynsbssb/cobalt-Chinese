@@ -8,6 +8,9 @@ wax.shared.Settings = {}
 local Tabs = {}
 local CurrentPage = {}
 
+local LogsList
+local ShowPagination, ShowCalls
+
 local DefaultTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Exponential)
 
 type SupportedRemoteTypes = RemoteEvent | RemoteFunction | BindableEvent | BindableFunction | UnreliableRemoteEvent
@@ -1361,6 +1364,21 @@ NetworkButton = CreateInfoDropdownButton("network", "Event", {
 			PaginationHelper:Update(#CurrentLog)
 			PaginationHelper:SetPage(1)
 			CurrentPage[CurrentLog] = 1
+
+			for _, Object in pairs(LogsList:GetChildren()) do
+				if Object.ClassName == "TextButton" then
+					Object:Destroy()
+				end
+			end
+
+			CurrentLog.Button.Calls.Text = "x" .. #CurrentLog.Calls
+
+			ShowPagination(CurrentLog)
+			ShowCalls(CurrentLog, 1)
+
+			CloseModal()
+
+			wax.shared.Sonner.success("Cleared logs for event successfully!")
 		end,
 	},
 })
@@ -1858,8 +1876,6 @@ local RemoteList = wax.shared.Interface.New("ScrollingFrame", {
 	},
 })
 
-local LogsList
-
 local RemoteListLine = wax.shared.Interface.New("Frame", {
 	AnchorPoint = Vector2.yAxis,
 	BackgroundColor3 = Color3.fromRGB(25, 25, 25),
@@ -2019,7 +2035,7 @@ function ShowLog(Log)
 	ShowCalls(Log, Page)
 end
 
-function ShowCalls(Log, Page)
+ShowCalls = function(Log, Page)
 	local Start, End = PaginationHelper:GetIndexRanges(Page)
 
 	for Index = Start, End do
@@ -2042,7 +2058,7 @@ function ShowCalls(Log, Page)
 	end
 end
 
-function ShowPagination(Log)
+ShowPagination = function(Log)
 	for _, Object in pairs(LogsPagination:GetChildren()) do
 		if Object.ClassName == "TextButton" or Object.ClassName == "TextBox" then
 			Object:Destroy()
@@ -2617,7 +2633,7 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 
 		local Start, End = PaginationHelper:GetIndexRanges(Page)
 		if CallIndex < Start or CallIndex > End then
-			--ShowPagination(Log)
+			ShowPagination(Log)
 			return
 		end
 

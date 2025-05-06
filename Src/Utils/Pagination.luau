@@ -37,6 +37,9 @@ function Pagination:GetIndexRanges(Page: number?)
 	Page = Page or self.CurrentPage
 
 	local TotalPages = math.ceil(self.TotalItems / self.ItemsPerPage)
+	if TotalPages == 0 then
+		return 1, 0
+	end
 	assert(
 		Page <= TotalPages,
 		"Attempted to get invalid page out of range, got " .. Page .. " but max is " .. TotalPages
@@ -50,6 +53,10 @@ end
 
 function Pagination:SetPage(Page: number)
 	local TotalPages = math.ceil(self.TotalItems / self.ItemsPerPage)
+	if TotalPages == 0 then
+		self.CurrentPage = 1
+		return
+	end
 	assert(Page <= TotalPages, "Attempted to set page out of range, got " .. Page .. " but max is " .. TotalPages)
 
 	self.CurrentPage = Page
@@ -85,6 +92,10 @@ function Pagination:GetVisualInfo(Page: number?)
 	Page = Page or self.CurrentPage
 
 	local TotalPages = math.ceil(self.TotalItems / self.ItemsPerPage)
+	if TotalPages == 0 then
+		return {}
+	end
+
 	assert(
 		Page <= TotalPages,
 		"Attempted to get invalid page out of range, got " .. Page .. " but max is " .. TotalPages

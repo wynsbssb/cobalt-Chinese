@@ -5,6 +5,9 @@ local PaginationHelper = wax.shared.Pagination.new({
 
 wax.shared.Settings = {}
 
+local Tabs = {}
+local CurrentPage = {}
+
 local DefaultTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Exponential)
 
 type SupportedRemoteTypes = RemoteEvent | RemoteFunction | BindableEvent | BindableFunction | UnreliableRemoteEvent
@@ -876,7 +879,7 @@ local InfoFrame = wax.shared.Interface.New("TextButton", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
 	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.new(0.65, 0, 0, 285),
+	Size = UDim2.fromScale(0.65, 0.712),
 	Text = "",
 	Visible = false,
 	Parent = ModalBackground,
@@ -1011,7 +1014,7 @@ end
 local function CreateTabContent()
 	local Container = wax.shared.Interface.New("Frame", {
 		Position = UDim2.fromOffset(6, 71),
-		Size = UDim2.new(1, -12, 0, 167),
+		Size = UDim2.new(1, -12, 0.586, 0),
 		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
 
 		["UICorner"] = {
@@ -1344,6 +1347,20 @@ NetworkButton = CreateInfoDropdownButton("network", "Event", {
 			end
 
 			wax.shared.Sonner.success(`{CurrentLog.Blocked and "Started" or "Stopped"} blocking event`)
+		end,
+	},
+	{
+		Text = "Clear Logs",
+		Icon = "trash",
+		Callback = function()
+			if not CurrentLog then
+				return
+			end
+
+			table.clear(CurrentLog.Calls)
+			PaginationHelper:Update(#CurrentLog)
+			PaginationHelper:SetPage(1)
+			CurrentPage[CurrentLog] = 1
 		end,
 	},
 })
@@ -1898,7 +1915,7 @@ LogsList = wax.shared.Interface.New("ScrollingFrame", {
 	Size = UDim2.new(1, 0, 1, -38),
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
 	CanvasSize = UDim2.new(0, 0, 0, 0),
-	ScrollBarThickness = 0,
+	ScrollBarThickness = 2,
 	Parent = LogsWrapper,
 
 	["UIListLayout"] = {
@@ -1931,8 +1948,6 @@ local LogsPagination = wax.shared.Interface.New("Frame", {
 })
 
 -- Functions
-local Tabs = {}
-local CurrentPage = {}
 
 function ShowTab(Tab)
 	for _, Object in pairs(RemoteList:GetChildren()) do

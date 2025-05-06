@@ -166,19 +166,15 @@ local function CreateContextMenu(Parent: GuiObject, Options: {}, MouseOnCursorPo
 			end
 		end)
 
-		TextButton.AncestryChanged:Connect(function(_, Parent)
-			if Parent == nil then
-				return
+		function Data:Display()
+			if typeof(Data.Text) == "function" then
+				ItemText.Text = Data.Text()
 			end
 
-			if typeof(TextToSet) == "function" then
-				ItemText.Text = TextToSet()
+			if typeof(Data.Icon) == "function" then
+				wax.shared.Icons.SetIcon(ItemIcon, Data.Icon())
 			end
-
-			if typeof(IconToSet) == "function" then
-				ItemIcon.Image = IconToSet()
-			end
-		end)
+		end
 
 		ContextData.Options[TextButton] = Data
 	end
@@ -198,6 +194,7 @@ local function CreateContextMenu(Parent: GuiObject, Options: {}, MouseOnCursorPo
 				continue
 			end
 			Object.Parent = ContextMenu
+			Data:Display()
 		end
 
 		if MouseOnCursorPosition then
@@ -591,15 +588,7 @@ local function CreateSettingsDropdown(
 		Parent = DropdownUI,
 	})
 
-	local ContextMenu = CreateContextMenu(DropdownIcon, {
-		{
-			Text = "Code",
-			Icon = "code",
-			Callback = function()
-				print("Test")
-			end,
-		},
-	})
+	local ContextMenu = CreateContextMenu(DropdownIcon, {})
 
 	DropdownUI.MouseButton1Click:Connect(ContextMenu.Toggle)
 
@@ -713,6 +702,7 @@ local function CreateSettingsRemoteList(
 						AnchorPoint = Vector2.new(0, 0.5),
 						BackgroundTransparency = 1,
 						ImageTransparency = 0.5,
+						LayoutOrder = 1,
 					},
 
 					["TextLabel"] = {
@@ -722,6 +712,7 @@ local function CreateSettingsRemoteList(
 						TextSize = 16,
 						TextXAlignment = Enum.TextXAlignment.Left,
 						BackgroundTransparency = 1,
+						LayoutOrder = 2,
 					},
 				},
 			})
@@ -794,7 +785,7 @@ end
 
 local FilterSection = CreateSettingsSection("Filter")
 
-CreateSettingsDropdown("IgnoreRemotesDropdown", {
+CreateSettingsDropdown("IgnoredRemotesDropdown", {
 	Text = "Ignore Remotes",
 	Values = ClassOrder,
 	AllowNull = true,
@@ -821,7 +812,7 @@ CreateSettingsRemoteList("IgnoredRemotes", {
 	end,
 })
 local RemoveIgnored = CreateSettingsButton("Remove All", function()
-	local IgnoredRemoteList = wax.shared.Settings["IgnoreRemotes"]
+	local IgnoredRemoteList = wax.shared.Settings["IgnoredRemotes"]
 	if IgnoredRemoteList then
 		local ToRemove = {}
 		for _, remote in wax.shared.Settings["IgnoredRemotes"].Value do
@@ -1340,7 +1331,7 @@ local NetworkButton = CreateInfoDropdownButton("network", "Event", {
 
 			CurrentLog:Ignore()
 
-			local IgnoredRemoteList = wax.shared.Settings["IgnoreRemotes"]
+			local IgnoredRemoteList = wax.shared.Settings["IgnoredRemotes"]
 			if IgnoredRemoteList then
 				if CurrentLog.Ignored then
 					IgnoredRemoteList:AddToList(CurrentLog)
@@ -2424,12 +2415,24 @@ function CreateCallFrame(CallInfo: {
 				end,
 			},
 			{
-				Text = "Toggle Ignored",
-				Icon = "eye-off",
+				Text = function()
+					if not CurrentLog then
+						return "Ignore"
+					end
+
+					return CurrentLog.Ignored and "Unignore" or "Ignore"
+				end,
+				Icon = function()
+					if not CurrentLog then
+						return "eye"
+					end
+
+					return CurrentLog.Ignored and "eye" or "eye-off"
+				end,
 				Callback = function()
 					CurrentLog:Ignore()
 
-					local IgnoredRemoteList = wax.shared.Settings["IgnoreRemotes"]
+					local IgnoredRemoteList = wax.shared.Settings["IgnoredRemotes"]
 					if IgnoredRemoteList then
 						if CurrentLog.Ignored then
 							IgnoredRemoteList:AddToList(CurrentLog)
@@ -2442,8 +2445,20 @@ function CreateCallFrame(CallInfo: {
 				end,
 			},
 			{
-				Text = "Toggle Blocked",
-				Icon = "lock",
+				Text = function()
+					if not CurrentLog then
+						return "Block"
+					end
+
+					return CurrentLog.Blocked and "Unblock" or "Block"
+				end,
+				Icon = function()
+					if not CurrentLog then
+						return "lock"
+					end
+
+					return CurrentLog.Blocked and "lock" or "lock-open"
+				end,
 				Callback = function()
 					CurrentLog:Block()
 

@@ -57,7 +57,7 @@ local MainFrame = wax.shared.Interface.New("Frame", {
 
 -- Resizing
 local HANDLE_SIZE = 6
-local CORNER_HANDLE_SIZE = 12
+local CORNER_HANDLE_SIZE = 20
 
 local function CalculateResizeProperties(
 	initialFramePosition: UDim2,
@@ -127,7 +127,9 @@ local function CalculateResizeProperties(
 end
 
 local LeftSide = wax.shared.Interface.New("Frame", {
-	Size = UDim2.new(0, HANDLE_SIZE, 1, 0),
+	Size = UDim2.new(0, HANDLE_SIZE, 1, -CORNER_HANDLE_SIZE * 2),
+	AnchorPoint = Vector2.new(0, 0.5),
+	Position = UDim2.fromScale(0, 0.5),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
 	ZIndex = 9e9,
@@ -143,9 +145,9 @@ do
 end
 
 local RightSide = wax.shared.Interface.New("Frame", {
-	Size = UDim2.new(0, HANDLE_SIZE, 1, 0),
-	AnchorPoint = Vector2.new(1, 0),
-	Position = UDim2.fromScale(1, 0),
+	Size = UDim2.new(0, HANDLE_SIZE, 1, -CORNER_HANDLE_SIZE * 2),
+	AnchorPoint = Vector2.new(1, 0.5),
+	Position = UDim2.fromScale(1, 0.5),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
 	ZIndex = 9e9,
@@ -161,9 +163,9 @@ do
 end
 
 local TopSide = wax.shared.Interface.New("Frame", {
-	Size = UDim2.new(1, 0, 0, HANDLE_SIZE),
-	AnchorPoint = Vector2.new(0, 0),
-	Position = UDim2.fromScale(0, 0),
+	Size = UDim2.new(1, -CORNER_HANDLE_SIZE * 2, 0, HANDLE_SIZE),
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.fromScale(0.5, 0),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
 	ZIndex = 9e9,
@@ -179,9 +181,9 @@ do
 end
 
 local BottomSide = wax.shared.Interface.New("Frame", {
-	Size = UDim2.new(1, 0, 0, HANDLE_SIZE),
-	AnchorPoint = Vector2.new(0, 1),
-	Position = UDim2.fromScale(0, 1),
+	Size = UDim2.new(1, -CORNER_HANDLE_SIZE * 2, 0, HANDLE_SIZE),
+	AnchorPoint = Vector2.new(0.5, 1),
+	Position = UDim2.fromScale(0.5, 1),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
 	ZIndex = 9e9,
@@ -788,7 +790,7 @@ local function CreateSettingsDropdown(
 	}
 
 	local DropdownUI = wax.shared.Interface.New("TextButton", {
-		Text = "Select",
+		Text = Options.Text,
 		TextSize = 16,
 		BackgroundTransparency = 1,
 		Size = UDim2.new(1, 0, 0, 20),
@@ -827,6 +829,8 @@ local function CreateSettingsRemoteList(
 		Value = {},
 		InfoMapping = {},
 	}
+
+	local RemoveIgnored
 
 	local RemoteListContainer = wax.shared.Interface.New("Frame", {
 		AutomaticSize = Enum.AutomaticSize.Y,
@@ -876,6 +880,7 @@ local function CreateSettingsRemoteList(
 		end
 
 		NoRemotesText.Visible = (#self.Value == 0)
+		RemoveIgnored.Visible = (#self.Value > 0)
 
 		for _, remoteData in self.Value do
 			local remote = remoteData.Instance
@@ -994,11 +999,35 @@ local function CreateSettingsRemoteList(
 		self:Display()
 	end
 
+	RemoveIgnored = CreateSettingsButton("Remove All", function()
+		if not Options.Callback then
+			return
+		end
+
+		local ToRemove = {}
+		for _, remote in RemoteList.Value do
+			Options.Callback(remote)
+			table.insert(ToRemove, remote)
+		end
+
+		for _, remote in ToRemove do
+			RemoteList:RemoveFromList(remote)
+		end
+		wax.shared.Sonner.success("Removed all remotes")
+	end, Options.Section)
+	RemoveIgnored.Visible = false
+
 	RemoteList:Display()
 
 	wax.shared.Settings[Idx] = RemoteList
 	return RemoteList
 end
+
+local MainSection = CreateSettingsSection("Main")
+CreateSettingsCheckbox("UseActors", {
+	Text = `Multithreaded Remote Logging`,
+	Section = MainSection,
+})
 
 local FilterSection = CreateSettingsSection("Filter")
 
@@ -1010,7 +1039,12 @@ CreateSettingsDropdown("IgnoredRemotesDropdown", {
 })
 
 CreateSettingsCheckbox("IgnoreSpammyRemotes", {
-	Text = "Ignore Spammy Remotes",
+	Text = "Auto Ignore Spammy Remotes",
+	Section = FilterSection,
+})
+CreateSettingsCheckbox("IgnoreExecutorOrigin", {
+	Text = `Show {wax.shared.ExecutorName} remotes`,
+	Default = true,
 	Section = FilterSection,
 })
 CreateSettingsButton("Reset Filtering to Default", function()
@@ -1028,22 +1062,6 @@ CreateSettingsRemoteList("IgnoredRemotes", {
 		Remote.Ignored = false
 	end,
 })
-local RemoveIgnored = CreateSettingsButton("Remove All", function()
-	local IgnoredRemoteList = wax.shared.Settings["IgnoredRemotes"]
-	if IgnoredRemoteList then
-		local ToRemove = {}
-		for _, remote in wax.shared.Settings["IgnoredRemotes"].Value do
-			remote.Ignored = false
-			table.insert(ToRemove, remote)
-		end
-
-		for _, remote in ToRemove do
-			wax.shared.Settings["IgnoredRemotes"]:RemoveFromList(remote)
-		end
-	end
-	wax.shared.Sonner.success("Removed all ignored remotes")
-end, IgnoredSection)
-RemoveIgnored.Visible = false
 
 local BlockedSection = CreateSettingsSection("Blocked")
 
@@ -1055,22 +1073,6 @@ CreateSettingsRemoteList("BlockedRemotes", {
 		Remote.Blocked = false
 	end,
 })
-local RemoveBlocked = CreateSettingsButton("Remove All", function()
-	local IgnoredRemoteList = wax.shared.Settings["BlockedRemotes"]
-	if IgnoredRemoteList then
-		local ToRemove = {}
-		for _, remote in wax.shared.Settings["BlockedRemotes"].Value do
-			remote.Blocked = false
-			table.insert(ToRemove, remote)
-		end
-
-		for _, remote in ToRemove do
-			wax.shared.Settings["BlockedRemotes"]:RemoveFromList(remote)
-		end
-	end
-	wax.shared.Sonner.success("Removed all blocked remotes")
-end, BlockedSection)
-RemoveBlocked.Visible = false
 
 local CreditsSection = CreateSettingsSection("Credits")
 
@@ -2468,6 +2470,100 @@ function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 		ShowLog(Log)
 	end)
 
+	local LogContextMenu = CreateContextMenu(Button, {
+		{
+			Text = function()
+				if not Log then
+					return "Ignore"
+				end
+
+				return Log.Ignored and "Unignore" or "Ignore"
+			end,
+			Icon = function()
+				if not Log then
+					return "eye"
+				end
+
+				return Log.Ignored and "eye" or "eye-off"
+			end,
+			Callback = function()
+				Log:Ignore()
+
+				local IgnoredRemoteList = wax.shared.Settings["IgnoredRemotes"]
+				if IgnoredRemoteList then
+					if Log.Ignored then
+						IgnoredRemoteList:AddToList(Log)
+					else
+						IgnoredRemoteList:RemoveFromList(Log)
+					end
+				end
+
+				wax.shared.Sonner.success(`{Log.Ignored and "Started" or "Stopped"} ignoring event`)
+			end,
+		},
+		{
+			Text = function()
+				if not Log then
+					return "Block"
+				end
+
+				return Log.Blocked and "Unblock" or "Block"
+			end,
+			Icon = function()
+				if not Log then
+					return "lock"
+				end
+
+				return Log.Blocked and "lock" or "lock-open"
+			end,
+			Callback = function()
+				Log:Block()
+
+				local BlockedRemoteList = wax.shared.Settings["BlockedRemotes"]
+				if BlockedRemoteList then
+					if Log.Blocked then
+						BlockedRemoteList:AddToList(Log)
+					else
+						BlockedRemoteList:RemoveFromList(Log)
+					end
+				end
+
+				wax.shared.Sonner.success(`{Log.Blocked and "Started" or "Stopped"} blocking event`)
+			end,
+		},
+		{
+			Text = "Clear Logs",
+			Icon = "trash",
+			Callback = function()
+				if not Log then
+					return
+				end
+
+				table.clear(Log.Calls)
+				CurrentPage[Log] = 1
+				CurrentLog.Button.Calls.Text = "x" .. #CurrentLog.Calls
+
+				if CurrentLog == Log then
+					PaginationHelper:Update(#Log.Calls)
+					PaginationHelper:SetPage(1)
+
+					for _, Object in pairs(LogsList:GetChildren()) do
+						if Object.ClassName == "TextButton" then
+							Object:Destroy()
+						end
+					end
+
+					ShowPagination(Log)
+					ShowCalls(Log, 1)
+				end
+
+				wax.shared.Sonner.success("Cleared logs for event successfully!")
+			end,
+		},
+	}, true)
+
+	Button.MouseButton2Click:Connect(LogContextMenu.Toggle)
+
 	return Button, Text, Amount
 end
 
@@ -2594,6 +2690,22 @@ function CreateCallFrame(CallInfo: {
 				end,
 			},
 			{
+				Text = "Copy Remote Path",
+				Icon = "package-search",
+				Callback = function()
+					if not CallInfo then
+						return
+					end
+					local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CallInfo.Instance))
+					if Success then
+						wax.shared.Sonner.success("Copied remote path to clipboard")
+					else
+						wax.shared.Sonner.error("Failed to copy remote path to clipboard")
+						warn("Failed to copy remote path to clipboard", Error)
+					end
+				end,
+			},
+			{
 				Text = "Copy Script Path",
 				Icon = "file-search",
 				Condition = function()
@@ -2629,93 +2741,6 @@ function CreateCallFrame(CallInfo: {
 						errorText = "Failed to replay event",
 						time = 4.5,
 					})
-				end,
-			},
-			{
-				Text = function()
-					if not CurrentLog then
-						return "Ignore"
-					end
-
-					return CurrentLog.Ignored and "Unignore" or "Ignore"
-				end,
-				Icon = function()
-					if not CurrentLog then
-						return "eye"
-					end
-
-					return CurrentLog.Ignored and "eye" or "eye-off"
-				end,
-				Callback = function()
-					CurrentLog:Ignore()
-
-					local IgnoredRemoteList = wax.shared.Settings["IgnoredRemotes"]
-					if IgnoredRemoteList then
-						if CurrentLog.Ignored then
-							IgnoredRemoteList:AddToList(CurrentLog)
-						else
-							IgnoredRemoteList:RemoveFromList(CurrentLog)
-						end
-					end
-
-					wax.shared.Sonner.success(`{CurrentLog.Ignored and "Started" or "Stopped"} ignoring event`)
-				end,
-			},
-			{
-				Text = function()
-					if not CurrentLog then
-						return "Block"
-					end
-
-					return CurrentLog.Blocked and "Unblock" or "Block"
-				end,
-				Icon = function()
-					if not CurrentLog then
-						return "lock"
-					end
-
-					return CurrentLog.Blocked and "lock" or "lock-open"
-				end,
-				Callback = function()
-					CurrentLog:Block()
-
-					local BlockedRemoteList = wax.shared.Settings["BlockedRemotes"]
-					if BlockedRemoteList then
-						if CurrentLog.Blocked then
-							BlockedRemoteList:AddToList(CallInfo)
-						else
-							BlockedRemoteList:RemoveFromList(CallInfo)
-						end
-					end
-
-					wax.shared.Sonner.success(`{CurrentLog.Blocked and "Started" or "Stopped"} blocking event`)
-				end,
-			},
-			{
-				Text = "Clear Logs",
-				Icon = "trash",
-				Callback = function()
-					if not CurrentLog then
-						return
-					end
-
-					table.clear(CurrentLog.Calls)
-					PaginationHelper:Update(#CurrentLog)
-					PaginationHelper:SetPage(1)
-					CurrentPage[CurrentLog] = 1
-
-					for _, Object in pairs(LogsList:GetChildren()) do
-						if Object.ClassName == "TextButton" then
-							Object:Destroy()
-						end
-					end
-
-					CurrentLog.Button.Calls.Text = "x" .. #CurrentLog.Calls
-
-					ShowPagination(CurrentLog)
-					ShowCalls(CurrentLog, 1)
-
-					wax.shared.Sonner.success("Cleared logs for event successfully!")
 				end,
 			},
 		}, true)
@@ -2763,7 +2788,7 @@ function CreateCallFrame(CallInfo: {
 	})
 	do
 		for Index, Value in pairs(CallInfo.Arguments) do
-			if Index % 25 == 0 then
+			if Index % 15 == 0 then
 				task.wait()
 			end
 

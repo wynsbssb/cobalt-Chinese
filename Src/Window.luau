@@ -1048,7 +1048,7 @@ end
 local function CreateTabContent()
 	local Container = wax.shared.Interface.New("Frame", {
 		Position = UDim2.fromOffset(6, 71),
-		Size = UDim2.new(1, -12, 0.586, 0),
+		Size = UDim2.new(1, -12, 1, -118),
 		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
 
 		["UICorner"] = {

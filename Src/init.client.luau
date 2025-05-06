@@ -45,7 +45,7 @@ wax.shared.restorefunction = function(Function: (...any) -> ...any, Silent: bool
 
 	assert(Original, "Function not hooked")
 
-	if restorefunction then
+	if restorefunction and isfunctionhooked(Function) then
 		restorefunction(Function)
 	else
 		hookfunction(Function, Original)
@@ -151,17 +151,8 @@ wax.shared.Unload = function()
 	local gameMetatable = getrawmetatable(game)
 
 	if restorefunction then
-		if isfunctionhooked(gameMetatable.__namecall) then
-			restorefunction(gameMetatable.__namecall)
-		else
-			hookmetamethod(game, "__namecall", wax.shared.NamecallHook)
-		end
-
-		if isfunctionhooked(gameMetatable.__newindex) then
-			restorefunction(gameMetatable.__newindex)
-		else
-			hookmetamethod(game, "__newindex", wax.shared.NewIndexHook)
-		end
+		restorefunction(gameMetatable.__namecall)
+		restorefunction(gameMetatable.__newindex)
 	else
 		hookmetamethod(game, "__namecall", wax.shared.NamecallHook)
 		hookmetamethod(game, "__newindex", wax.shared.NewIndexHook)

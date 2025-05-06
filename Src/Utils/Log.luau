@@ -1,13 +1,23 @@
 local Log = {}
 Log.__index = Log
 
+function IgnoreCondition(Instance)
+	-- Ignores any default Roblox BindableEvents in PlayerModule
+	if not Instance.IsDescendantOf(Instance, wax.shared.PlayerScripts) then
+		return false
+	end
+
+	local PlayerModule = Instance.FindFirstAncestor(Instance, "PlayerModule")
+	return PlayerModule and PlayerModule.Parent == wax.shared.PlayerScripts or false
+end
+
 function Log.new(Instance, Method, Index)
 	return setmetatable({
 		Instance = Instance,
 		Method = Method,
 		Index = Index,
 		Calls = {},
-		Ignored = false,
+		Ignored = IgnoreCondition(Instance),
 		Blocked = false,
 		Button = nil,
 	}, Log)

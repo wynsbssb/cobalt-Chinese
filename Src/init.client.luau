@@ -26,6 +26,7 @@ wax.shared.CodeGen = require("Utils/CodeGen")
 
 -- Variables
 wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer
+wax.shared.PlayerScripts = wax.shared.LocalPlayer:WaitForChild("PlayerScripts")
 wax.shared.ExecutorName = string.split(identifyexecutor(), " ")[1]
 
 -- Functions

@@ -86,7 +86,7 @@ local ContextMenu = wax.shared.Interface.New("Frame", {
 	Parent = ScreenGui,
 })
 
-local function CreateContextMenu(Parent: GuiObject, Options: {})
+local function CreateContextMenu(Parent: GuiObject, Options: {}, MouseOnCursorPosition: boolean?)
 	local ContextData = {
 		Parent = Parent,
 		Options = {},
@@ -112,18 +112,28 @@ local function CreateContextMenu(Parent: GuiObject, Options: {})
 			},
 		})
 
-		wax.shared.Interface.NewIcon(Data.Icon, {
+		local IconToSet = Data.Icon
+		if typeof(IconToSet) == "function" then
+			IconToSet = IconToSet()
+		end
+
+		local ItemIcon = wax.shared.Interface.NewIcon(IconToSet, {
 			Size = UDim2.fromScale(1, 1),
 			SizeConstraint = Enum.SizeConstraint.RelativeYY,
 
 			Parent = TextButton,
 		})
 
-		wax.shared.Interface.New("TextLabel", {
+		local TextToSet = Data.Text
+		if typeof(TextToSet) == "function" then
+			TextToSet = TextToSet()
+		end
+
+		local ItemText = wax.shared.Interface.New("TextLabel", {
 			AutomaticSize = Enum.AutomaticSize.X,
 			Position = UDim2.fromOffset(26, 0),
 			Size = UDim2.fromScale(0, 1),
-			Text = Data.Text,
+			Text = TextToSet,
 			TextSize = 16,
 			TextXAlignment = Enum.TextXAlignment.Left,
 
@@ -156,6 +166,20 @@ local function CreateContextMenu(Parent: GuiObject, Options: {})
 			end
 		end)
 
+		TextButton.AncestryChanged:Connect(function(_, Parent)
+			if Parent == nil then
+				return
+			end
+
+			if typeof(TextToSet) == "function" then
+				ItemText.Text = TextToSet()
+			end
+
+			if typeof(IconToSet) == "function" then
+				ItemIcon.Image = IconToSet()
+			end
+		end)
+
 		ContextData.Options[TextButton] = Data
 	end
 
@@ -176,8 +200,15 @@ local function CreateContextMenu(Parent: GuiObject, Options: {})
 			Object.Parent = ContextMenu
 		end
 
-		ContextMenu.Position =
-			UDim2.fromOffset(Parent.AbsolutePosition.X, Parent.AbsolutePosition.Y + Parent.AbsoluteSize.Y)
+		if MouseOnCursorPosition then
+			ContextMenu.Position = UDim2.fromOffset(
+				wax.shared.UserInputService:GetMouseLocation().X,
+				wax.shared.UserInputService:GetMouseLocation().Y - 45
+			)
+		else
+			ContextMenu.Position =
+				UDim2.fromOffset(Parent.AbsolutePosition.X, Parent.AbsolutePosition.Y + Parent.AbsoluteSize.Y)
+		end
 		ContextMenu.Visible = true
 	end
 
@@ -1268,8 +1299,7 @@ CreateInfoDropdownButton("copy", "Copy", {
 	},
 })
 
-local NetworkButton
-NetworkButton = CreateInfoDropdownButton("network", "Event", {
+local NetworkButton = CreateInfoDropdownButton("network", "Event", {
 	{
 		Text = "Replay",
 		Icon = "play",
@@ -1289,24 +1319,26 @@ NetworkButton = CreateInfoDropdownButton("network", "Event", {
 		end,
 	},
 	{
-		Text = "Ignore",
-		Icon = "eye-off",
+		Text = function()
+			if not CurrentLog then
+				return "Ignore"
+			end
+
+			return CurrentLog.Ignored and "Unignore" or "Ignore"
+		end,
+		Icon = function()
+			if not CurrentLog then
+				return "eye"
+			end
+
+			return CurrentLog.Ignored and "eye" or "eye-off"
+		end,
 		Callback = function()
 			if not CurrentLog then
 				return
 			end
 
 			CurrentLog:Ignore()
-
-			for Button, Data in NetworkButton.Options do
-				if Data.Text ~= "Ignore" then
-					continue
-				end
-
-				Button.TextLabel.Text = CurrentLog.Ignored and "Unignore" or "Ignore"
-				wax.shared.Icons.SetIcon(Button.ImageLabel, CurrentLog.Ignored and "eye" or "eye-off")
-				break
-			end
 
 			local IgnoredRemoteList = wax.shared.Settings["IgnoreRemotes"]
 			if IgnoredRemoteList then
@@ -1321,24 +1353,26 @@ NetworkButton = CreateInfoDropdownButton("network", "Event", {
 		end,
 	},
 	{
-		Text = "Block",
-		Icon = "lock",
+		Text = function()
+			if not CurrentLog then
+				return "Block"
+			end
+
+			return CurrentLog.Blocked and "Unblock" or "Block"
+		end,
+		Icon = function()
+			if not CurrentLog then
+				return "lock"
+			end
+
+			return CurrentLog.Blocked and "lock" or "lock-open"
+		end,
 		Callback = function()
 			if not CurrentLog then
 				return
 			end
 
 			CurrentLog:Block()
-
-			for Button, Data in NetworkButton.Options do
-				if Data.Text ~= "Block" then
-					continue
-				end
-
-				Button.TextLabel.Text = CurrentLog.Blocked and "Unblock" or "Block"
-				wax.shared.Icons.SetIcon(Button.ImageLabel, CurrentLog.Blocked and "lock-open" or "lock")
-				break
-			end
 
 			local BlockedRemoteList = wax.shared.Settings["BlockedRemotes"]
 			if BlockedRemoteList then
@@ -2297,6 +2331,8 @@ function CreateCallFrame(CallInfo: {
 	Time: string,
 	Origin: BaseScript | nil,
 	Order: number,
+	Ignored: boolean,
+	Blocked: boolean,
 	Function: (...any) -> any,
 	Line: number,
 	IsExecutor: boolean,
@@ -2333,6 +2369,125 @@ function CreateCallFrame(CallInfo: {
 		Parent = CallFrame,
 	})
 	do
+		local CallFrameContextMenu = CreateContextMenu(CallFrame, {
+			{
+				Text = "Copy Code",
+				Icon = "code",
+				Callback = function()
+					local Code = wax.shared.CodeGen:BuildCallCode(CallInfo, CurrentTab.Name)
+					local Success, Error = pcall(setclipboard, Code)
+
+					if Success then
+						wax.shared.Sonner.success("Copied code to clipboard")
+					else
+						wax.shared.Sonner.error("Failed to copy code to clipboard")
+						warn("Failed to copy code to clipboard", Error)
+					end
+				end,
+			},
+			{
+				Text = "Copy Script Path",
+				Icon = "file-search",
+				Condition = function()
+					return CallInfo and typeof(CallInfo.Origin) == "Instance"
+				end,
+				Callback = function()
+					if not CallInfo then
+						return
+					end
+
+					local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CallInfo.Origin))
+					if Success then
+						wax.shared.Sonner.success("Copied script path to clipboard")
+					else
+						wax.shared.Sonner.error("Failed to copy script path to clipboard")
+						warn("Failed to copy script path to clipboard", Error)
+					end
+				end,
+			},
+			{
+				Text = "Replay",
+				Icon = "play",
+				Callback = function()
+					if not CallInfo then
+						return
+					end
+
+					wax.shared.Sonner.promise(function()
+						wax.shared.ReplayCallInfo(CallInfo, CurrentTab.Name)
+					end, {
+						loadingText = "Replaying event...",
+						successText = "Replayed event successfully!",
+						errorText = "Failed to replay event",
+						time = 4.5,
+					})
+				end,
+			},
+			{
+				Text = "Toggle Ignored",
+				Icon = "eye-off",
+				Callback = function()
+					CurrentLog:Ignore()
+
+					local IgnoredRemoteList = wax.shared.Settings["IgnoreRemotes"]
+					if IgnoredRemoteList then
+						if CurrentLog.Ignored then
+							IgnoredRemoteList:AddToList(CurrentLog)
+						else
+							IgnoredRemoteList:RemoveFromList(CurrentLog)
+						end
+					end
+
+					wax.shared.Sonner.success(`{CurrentLog.Ignored and "Started" or "Stopped"} ignoring event`)
+				end,
+			},
+			{
+				Text = "Toggle Blocked",
+				Icon = "lock",
+				Callback = function()
+					CurrentLog:Block()
+
+					local BlockedRemoteList = wax.shared.Settings["BlockedRemotes"]
+					if BlockedRemoteList then
+						if CurrentLog.Blocked then
+							BlockedRemoteList:AddToList(CallInfo)
+						else
+							BlockedRemoteList:RemoveFromList(CallInfo)
+						end
+					end
+
+					wax.shared.Sonner.success(`{CurrentLog.Blocked and "Started" or "Stopped"} blocking event`)
+				end,
+			},
+			{
+				Text = "Clear Logs",
+				Icon = "trash",
+				Callback = function()
+					if not CurrentLog then
+						return
+					end
+
+					table.clear(CurrentLog.Calls)
+					PaginationHelper:Update(#CurrentLog)
+					PaginationHelper:SetPage(1)
+					CurrentPage[CurrentLog] = 1
+
+					for _, Object in pairs(LogsList:GetChildren()) do
+						if Object.ClassName == "TextButton" then
+							Object:Destroy()
+						end
+					end
+
+					CurrentLog.Button.Calls.Text = "x" .. #CurrentLog.Calls
+
+					ShowPagination(CurrentLog)
+					ShowCalls(CurrentLog, 1)
+
+					wax.shared.Sonner.success("Cleared logs for event successfully!")
+				end,
+			},
+		}, true)
+
 		CallFrame.MouseEnter:Connect(function()
 			wax.shared.TweenService
 				:Create(HighlightStroke, DefaultTweenInfo, {
@@ -2350,6 +2505,7 @@ function CreateCallFrame(CallInfo: {
 		CallFrame.MouseButton1Click:Connect(function()
 			OpenInfo(CallInfo)
 		end)
+		CallFrame.MouseButton2Click:Connect(CallFrameContextMenu.Open)
 	end
 
 	local ArgumentsFrame = wax.shared.Interface.New("Frame", {
@@ -2423,14 +2579,6 @@ function CreateCallFrame(CallInfo: {
 	})
 
 	return CallFrame
-end
-
-function CleanSearchResults()
-	for _, Result in pairs(SearchResults:GetChildren()) do
-		if Result.ClassName == "TextButton" then
-			Result.Parent = nil
-		end
-	end
 end
 
 -- UI Handling
@@ -2530,16 +2678,6 @@ function OpenInfo(CallInfo)
 	InfoIcon.Image = Images[CallInfo.Instance.ClassName]
 
 	CurrentInfo = CallInfo
-
-	for Button, Data in NetworkButton.Options do
-		if Data.Text == "Ignore" then
-			Button.TextLabel.Text = CurrentLog.Ignored and "Unignore" or "Ignore"
-			wax.shared.Icons.SetIcon(Button.ImageLabel, CurrentLog.Ignored and "eye" or "eye-off")
-		elseif Data.Text == "Block" then
-			Button.TextLabel.Text = CurrentLog.Blocked and "Unblock" or "Block"
-			wax.shared.Icons.SetIcon(Button.ImageLabel, CurrentLog.Blocked and "lock-open" or "lock")
-		end
-	end
 
 	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo, CurrentTab.Name))
 

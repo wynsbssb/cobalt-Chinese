@@ -263,9 +263,9 @@ local function LuaEncode(inputTable, options)
 				return PositiveInf
 			elseif value == -1 / 0 then
 				return NegativeInf
-			end
-
-			if value == math.pi then
+			elseif value ~= value then
+				return "0/0"
+			elseif value == math.pi then
 				return "math.pi"
 			end
 

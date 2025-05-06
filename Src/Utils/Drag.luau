@@ -2,6 +2,7 @@ local Drag = {
 	Dragging = false,
 	Frame = nil,
 	FramePosition = nil,
+	FrameSize = nil, -- Added to store initial frame size
 	StartPosition = nil,
 	ChangedConnection = nil,
 	Callback = nil,
@@ -31,6 +32,7 @@ function Drag.Setup(Frame: GuiObject, DragFrame: GuiObject, Callback: (Info: {},
 		Drag.Frame = Frame
 		Drag.FramePosition = Frame.Position
 		Drag.StartPosition = Input.Position
+		Drag.FrameSize = Frame.Size
 		Drag.Callback = Callback
 
 		Drag.ChangedConnection = Input.Changed:Connect(function()

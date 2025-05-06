@@ -3,6 +3,9 @@ local PaginationHelper = wax.shared.Pagination.new({
 	TotalItems = 0,
 })
 
+local MIN_FRAME_WIDTH = 640
+local MIN_FRAME_HEIGHT = 420
+
 wax.shared.Settings = {}
 
 local Tabs = {}
@@ -51,6 +54,110 @@ local MainFrame = wax.shared.Interface.New("Frame", {
 	MainUICorner,
 	Parent = ScreenGui,
 })
+
+-- Resizing
+local LeftSide = wax.shared.Interface.New("Frame", {
+	Size = UDim2.new(0, 6, 1, 0),
+	BackgroundTransparency = 1,
+	Parent = MainFrame,
+	ZIndex = 9e9,
+})
+do
+	wax.shared.Drag.Setup(MainFrame, LeftSide, function(Info, Input: InputObject)
+		local mouseDeltaX = Input.Position.X - Info.StartPosition.X
+		local currentScreenGuiAbsSize = ScreenGui.AbsoluteSize
+
+		local initialAbsCenterX = currentScreenGuiAbsSize.X * Info.FramePosition.X.Scale + Info.FramePosition.X.Offset
+		local initialAbsSizeX = Info.FrameSize.X.Offset
+
+		local initialRightEdge = initialAbsCenterX + initialAbsSizeX / 2
+		local initialLeftEdge = initialAbsCenterX - initialAbsSizeX / 2
+
+		local newLeftEdge = initialLeftEdge + mouseDeltaX
+		local newWidth = initialRightEdge - newLeftEdge
+		local clampedWidth = math.max(MIN_FRAME_WIDTH, newWidth)
+
+		if clampedWidth ~= newWidth then
+			newLeftEdge = initialRightEdge - clampedWidth
+		end
+
+		local newAbsCenterX = newLeftEdge + clampedWidth / 2
+		local newPosOffsetX = newAbsCenterX - currentScreenGuiAbsSize.X * 0.5
+
+		MainFrame.Size = UDim2.new(0, clampedWidth, 0, Info.FrameSize.Y.Offset)
+		MainFrame.Position = UDim2.new(0.5, newPosOffsetX, Info.FramePosition.Y.Scale, Info.FramePosition.Y.Offset)
+	end)
+end
+
+local RightSide = wax.shared.Interface.New("Frame", {
+	Size = UDim2.new(0, 6, 1, 0),
+	AnchorPoint = Vector2.new(1, 0),
+	Position = UDim2.fromScale(1, 0),
+	BackgroundTransparency = 1,
+	Parent = MainFrame,
+	ZIndex = 9e9,
+})
+do
+	wax.shared.Drag.Setup(MainFrame, RightSide, function(Info, Input: InputObject)
+		local mouseDeltaX = Input.Position.X - Info.StartPosition.X
+		local currentScreenGuiAbsSize = ScreenGui.AbsoluteSize
+
+		local initialAbsCenterX = currentScreenGuiAbsSize.X * Info.FramePosition.X.Scale + Info.FramePosition.X.Offset
+		local initialAbsSizeX = Info.FrameSize.X.Offset
+
+		local initialLeftEdge = initialAbsCenterX - initialAbsSizeX / 2
+		local initialRightEdge = initialAbsCenterX + initialAbsSizeX / 2
+
+		local newRightEdge = initialRightEdge + mouseDeltaX
+		local newWidth = newRightEdge - initialLeftEdge
+		local clampedWidth = math.max(MIN_FRAME_WIDTH, newWidth)
+
+		if clampedWidth ~= newWidth then
+			newRightEdge = initialLeftEdge + clampedWidth
+		end
+
+		local newAbsCenterX = initialLeftEdge + clampedWidth / 2
+		local newPosOffsetX = newAbsCenterX - currentScreenGuiAbsSize.X * 0.5
+
+		MainFrame.Size = UDim2.new(0, clampedWidth, 0, Info.FrameSize.Y.Offset)
+		MainFrame.Position = UDim2.new(0.5, newPosOffsetX, Info.FramePosition.Y.Scale, Info.FramePosition.Y.Offset)
+	end)
+end
+
+local BottomSide = wax.shared.Interface.New("Frame", {
+	Size = UDim2.new(1, 0, 0, 6),
+	AnchorPoint = Vector2.new(0, 1),
+	Position = UDim2.fromScale(0, 1),
+	BackgroundTransparency = 1,
+	Parent = MainFrame,
+	ZIndex = 9e9,
+})
+do
+	wax.shared.Drag.Setup(MainFrame, BottomSide, function(Info, Input: InputObject)
+		local mouseDeltaY = Input.Position.Y - Info.StartPosition.Y
+		local currentScreenGuiAbsSize = ScreenGui.AbsoluteSize
+
+		local initialAbsCenterY = currentScreenGuiAbsSize.Y * Info.FramePosition.Y.Scale + Info.FramePosition.Y.Offset
+		local initialAbsSizeY = Info.FrameSize.Y.Offset
+
+		local initialTopEdge = initialAbsCenterY - initialAbsSizeY / 2
+		local initialBottomEdge = initialAbsCenterY + initialAbsSizeY / 2
+
+		local newBottomEdge = initialBottomEdge + mouseDeltaY
+		local newHeight = newBottomEdge - initialTopEdge
+		local clampedHeight = math.max(MIN_FRAME_HEIGHT, newHeight)
+
+		if clampedHeight ~= newHeight then
+			newBottomEdge = initialTopEdge + clampedHeight
+		end
+
+		local newAbsCenterY = initialTopEdge + clampedHeight / 2
+		local newPosOffsetY = newAbsCenterY - currentScreenGuiAbsSize.Y * 0.5
+
+		MainFrame.Size = UDim2.new(0, Info.FrameSize.X.Offset, 0, clampedHeight)
+		MainFrame.Position = UDim2.new(Info.FramePosition.X.Scale, Info.FramePosition.X.Offset, 0.5, newPosOffsetY)
+	end)
+end
 
 -- Context Menus
 local CurrentContext

@@ -701,7 +701,6 @@ local function CreateSettingsRemoteList(
 						Image = Images[remote.ClassName],
 						AnchorPoint = Vector2.new(0, 0.5),
 						BackgroundTransparency = 1,
-						ImageTransparency = 0.5,
 						LayoutOrder = 1,
 					},
 

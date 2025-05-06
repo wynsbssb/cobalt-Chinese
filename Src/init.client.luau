@@ -159,7 +159,7 @@ wax.shared.Unload = function()
 	end
 
 	for Function, Original in pairs(wax.shared.Hooks) do
-		wax.shared.restorefunction(Function, true)
+		task.spawn(pcall, wax.shared.restorefunction, Function, true)
 	end
 
 	wax.shared.Communicator:Destroy()

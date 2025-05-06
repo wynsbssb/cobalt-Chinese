@@ -148,9 +148,20 @@ wax.shared.Unload = function()
 		wax.shared.Disconnect(Connection)
 	end
 
+	local gameMetatable = getrawmetatable(game)
+
 	if restorefunction then
-		restorefunction(getrawmetatable(game).__namecall)
-		restorefunction(getrawmetatable(game).__newindex)
+		if isfunctionhooked(gameMetatable.__namecall) then
+			restorefunction(gameMetatable.__namecall)
+		else
+			hookmetamethod(game, "__namecall", wax.shared.NamecallHook)
+		end
+
+		if isfunctionhooked(gameMetatable.__newindex) then
+			restorefunction(gameMetatable.__newindex)
+		else
+			hookmetamethod(game, "__newindex", wax.shared.NewIndexHook)
+		end
 	else
 		hookmetamethod(game, "__namecall", wax.shared.NamecallHook)
 		hookmetamethod(game, "__newindex", wax.shared.NewIndexHook)

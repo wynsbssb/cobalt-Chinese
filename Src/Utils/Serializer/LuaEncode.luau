@@ -66,6 +66,23 @@ local KeyIndexTypes = LookupTable({
 	"Enums",
 })
 
+-- Returns the length of the array part (including holes) and if it's a pure array
+local function GetIsArrayAndLength(tbl)
+	local maxIndex = 0
+	local count = 0
+	for k, _ in pairs(tbl) do
+		if type(k) == "number" and k > 0 and math.floor(k) == k then
+			if k > maxIndex then
+				maxIndex = k
+			end
+			count = count + 1
+		else
+			return 0, false
+		end
+	end
+	return maxIndex, true
+end
+
 -- Simple function for directly checking the type on values, with their input, variable name,
 -- and desired type name(s) to check
 local function CheckType(inputData, dataName, ...)
@@ -196,6 +213,7 @@ local function LuaEncode(inputTable, options)
 	local SerializeMathHuge = (options.SerializeMathHuge == nil and true) or options.SerializeMathHuge
 
 	local StackLevel = options._StackLevel or 1
+	local EntryStackLevel = options._StackLevel or 1
 	local VisitedTables = options._VisitedTables or {} -- [Ref: table] = true
 
 	-- Lazy serialization reference values
@@ -674,9 +692,13 @@ local function LuaEncode(inputTable, options)
 
 	while TablePointer do
 		-- Update StackLevel for formatting
-		StackLevel = #TableStack + 1
-		IndentString = (Prettify and string_rep(IndentStringBase, StackLevel)) or IndentStringBase
-		EndingIndentString = (#IndentString > 0 and string_sub(IndentString, 1, -IndentCount - 1)) or ""
+		StackLevel = EntryStackLevel + #TableStack
+		IndentString = (Prettify and string_rep(IndentStringBase, StackLevel)) or ""
+		if Prettify and StackLevel > 1 then
+			EndingIndentString = string_rep(IndentStringBase, StackLevel - 1)
+		else
+			EndingIndentString = ""
+		end
 
 		-- Only append an opening brace to the table if this isn't just a continution up the stack
 		if IsNewTable then
@@ -688,6 +710,63 @@ local function LuaEncode(inputTable, options)
 		end
 
 		VisitedTables[TablePointer] = true
+
+		local ArrayLength, IsArray = GetIsArrayAndLength(TablePointer)
+		if IsArray and ArrayLength > 0 then
+			for i = 1, ArrayLength do
+				if Prettify then
+					Output[#Output + 1] = NewEntryString .. IndentString
+				end
+				local Value = TablePointer[i]
+				local ValueType = Type(Value)
+
+				if ValueType == "table" then
+					-- Create a new options table for the recursive call
+					local Encoded = LuaEncode(
+						Value,
+						setmetatable({
+							Prettify = Prettify,
+							IndentCount = IndentCount,
+							_StackLevel = StackLevel + 1,
+							_VisitedTables = VisitedTables,
+						}, { __index = options })
+					)
+					Output[#Output + 1] = Encoded
+				elseif TypeCases[ValueType] then
+					local ValueEncodedSuccess, EncodedValueOrError = pcall(TypeCases[ValueType], Value, false)
+					if ValueEncodedSuccess and EncodedValueOrError then
+						Output[#Output + 1] = EncodedValueOrError
+					else
+						Output[#Output + 1] = `nil{OutputWarnings and " " .. CommentBlock(
+							string.format(
+								"LuaEncode: Failed to encode value of data type %s: %s",
+								ValueType,
+								EncodedValueOrError
+							)
+						) or ""}`
+					end
+				else
+					Output[#Output + 1] = `nil{OutputWarnings and " " .. CommentBlock(
+						string.format("LuaEncode: Serialization of data type %s is not supported", ValueType)
+					) or ""}`
+				end
+
+				if i < ArrayLength then
+					Output[#Output + 1] = ","
+				end
+			end
+			Output[#Output + 1] = NewEntryString .. EndingIndentString .. "}"
+			if #TableStack > 0 then
+				local TableUp = TableStack[#TableStack]
+				TableStack[#TableStack] = nil
+				TablePointer, NextKey, KeyNumIndex = TableUp[1], TableUp[2], TableUp[3] -- Reverted to TablePointer, NextKey, KeyNumIndex (from outer scope)
+				IsNewTable = false
+			else
+				break
+			end
+
+			continue
+		end
 
 		-- Just because of control flow restrictions with Lua compatibility
 		local SkipStackPop = false

@@ -824,12 +824,20 @@ CreateSettingsCheckbox("UseActors", {
 })
 
 CreateSettingsButton("Clear All Logs", function()
-	wax.shared.Logs = {
-		Incoming = {},
-		Outgoing = {},
-	}
+	for _, Logs in wax.shared.Logs do
+		for _, Log in Logs do
+			Log.Button.Instance:Destroy()
+		end
+	end
 
-	CurrentL
+	for _, Object in pairs(LogsList:GetChildren()) do
+		if Object.ClassName == "TextButton" then
+			Object:Destroy()
+		end
+	end
+
+	wax.shared.Logs.Incoming = {}
+	wax.shared.Logs.Outgoing = {}
 
 	wax.shared.Sonner.success("Successfully Cleared All Logs")
 end, MainSection)
@@ -1290,7 +1298,9 @@ CreateInfoDropdownButton("copy", "Copy", {
 			local Info = {
 				Function = {
 					Name = CurrentInfo.Function and debug.info(CurrentInfo.Function, "n") or "Unknown",
-					Type = CurrentInfo.Function and (iscclosure(CurrentInfo.Function) and "C Closure" or "Luau function") or "N/A",
+					Type = CurrentInfo.Function
+							and (iscclosure(CurrentInfo.Function) and "C Closure" or "Luau function")
+						or "N/A",
 					Address = tostring(CurrentInfo.Function),
 					Arguments = CurrentInfo.Arguments,
 				},
@@ -1306,8 +1316,10 @@ CreateInfoDropdownButton("copy", "Copy", {
 				}
 
 				for Type, Func in pairs(FunctionInfo) do
-					if not Func then continue end
-					
+					if not Func then
+						continue
+					end
+
 					Info.Function[Type] = Func(CurrentInfo.Function)
 				end
 			end

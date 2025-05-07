@@ -823,6 +823,17 @@ CreateSettingsCheckbox("UseActors", {
 	Section = MainSection,
 })
 
+CreateSettingsButton("Clear All Logs", function()
+	wax.shared.Logs = {
+		Incoming = {},
+		Outgoing = {},
+	}
+
+	CurrentL
+
+	wax.shared.Sonner.success("Successfully Cleared All Logs")
+end, MainSection)
+
 local FilterSection = CreateSettingsSection("Filter")
 
 CreateSettingsDropdown("IgnoredRemotesDropdown", {
@@ -1278,8 +1289,8 @@ CreateInfoDropdownButton("copy", "Copy", {
 
 			local Info = {
 				Function = {
-					Name = debug.info(CurrentInfo.Function, "n"),
-					Type = iscclosure(CurrentInfo.Function) and "C Closure" or "Luau function",
+					Name = CurrentInfo.Function and debug.info(CurrentInfo.Function, "n") or "Unknown",
+					Type = CurrentInfo.Function and (iscclosure(CurrentInfo.Function) and "C Closure" or "Luau function") or "N/A",
 					Address = tostring(CurrentInfo.Function),
 					Arguments = CurrentInfo.Arguments,
 				},
@@ -1287,10 +1298,18 @@ CreateInfoDropdownButton("copy", "Copy", {
 				Line = CurrentInfo.Line,
 			}
 
-			if islclosure(CurrentInfo.Function) then
-				Info.Function["Upvalues"] = debug.getupvalues(CurrentInfo.Function)
-				Info.Function["Constants"] = debug.getconstants(CurrentInfo.Function)
-				Info.Function["Protos"] = debug.getprotos(CurrentInfo.Function)
+			if CurrentInfo.Function and islclosure(CurrentInfo.Function) then
+				local FunctionInfo = {
+					Constants = debug.getconstants,
+					Upvalues = debug.getupvalues,
+					Protos = debug.getprotos,
+				}
+
+				for Type, Func in pairs(FunctionInfo) do
+					if not Func then continue end
+					
+					Info.Function[Type] = Func(CurrentInfo.Function)
+				end
 			end
 
 			local Success, Error = pcall(setclipboard, `local Info = {wax.shared.LuaEncode(Info, { Prettify = true })}`)

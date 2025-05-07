@@ -741,7 +741,7 @@ local function LuaEncode(inputTable, options)
 							string.format(
 								"LuaEncode: Failed to encode value of data type %s: %s",
 								ValueType,
-								EncodedValueOrError
+								SerializeString(EncodedValueOrError)
 							)
 						) or ""}`
 					end

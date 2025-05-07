@@ -256,28 +256,31 @@ function Sonner.promise(func, options)
 			)
 		end
 
-		wax.shared.Animations.FadeIn(notif.ImageLabel)
-		wax.shared.TweenService
-			:Create(notif.ImageLabel, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
-				Size = UDim2.new(0, 20, 0, 20),
-			})
-			:Play()
-
-		task.delay(time, function()
-			if not table.find(Sonner.Queue, notif) then
-				return
-			end
-			table.remove(Sonner.Queue, table.find(Sonner.Queue, notif))
-
-			wax.shared.Animations.FadeOut(notif, 0.35)
+		task.spawn(function()
+			setthreadidentity(8)
+			wax.shared.Animations.FadeIn(notif.ImageLabel)
 			wax.shared.TweenService
-				:Create(notif, Sonner.TweenInfo, {
-					Position = UDim2.new(0.5, 0, 1, 50),
+				:Create(notif.ImageLabel, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
+					Size = UDim2.new(0, 20, 0, 20),
 				})
 				:Play()
 
-			task.wait(0.5)
-			notif:Destroy()
+			task.delay(time, function()
+				if not table.find(Sonner.Queue, notif) then
+					return
+				end
+				table.remove(Sonner.Queue, table.find(Sonner.Queue, notif))
+
+				wax.shared.Animations.FadeOut(notif, 0.35)
+				wax.shared.TweenService
+					:Create(notif, Sonner.TweenInfo, {
+						Position = UDim2.new(0.5, 0, 1, 50),
+					})
+					:Play()
+
+				task.wait(0.5)
+				notif:Destroy()
+			end)
 		end)
 	end)
 end

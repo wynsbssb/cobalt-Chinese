@@ -1,16 +1,28 @@
 local Log = {}
 Log.__index = Log
 
-function Log.new(Instance, Method, Index)
-	return setmetatable({
+function Log.new(Instance, Method, Index, CallingScript)
+	local PlayerModule = CallingScript and CallingScript.FindFirstAncestor(CallingScript, "PlayerModule") or nil
+	local ShouldIgnore = (PlayerModule and PlayerModule.Parent == wax.shared.PlayerScripts or false)
+
+	local NewLog = setmetatable({
 		Instance = Instance,
 		Method = Method,
 		Index = Index,
 		Calls = {},
-		Ignored = false,
+		Ignored = ShouldIgnore,
 		Blocked = false,
 		Button = nil,
 	}, Log)
+
+	if ShouldIgnore then
+		task.spawn(function()
+			setthreadidentity(8)
+			wax.shared.Settings.IgnoredRemotes:AddToList(NewLog)
+		end)
+	end
+
+	return NewLog
 end
 
 function Log:Call(Info)

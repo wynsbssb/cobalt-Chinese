@@ -178,8 +178,9 @@ wax.shared.Logs = {
 	Incoming = {},
 }
 
-wax.shared.NewLog = function(Instance, Method, Type)
-	local Log = wax.shared.Log.new(Instance, Method, wax.shared.GetTableLength(wax.shared.Logs[Type]) + 1)
+wax.shared.NewLog = function(Instance, Method, Type, CallingScript)
+	local Log =
+		wax.shared.Log.new(Instance, Method, wax.shared.GetTableLength(wax.shared.Logs[Type]) + 1, CallingScript)
 	wax.shared.Logs[Type][Instance] = Log
 	return Log
 end

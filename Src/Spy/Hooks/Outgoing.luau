@@ -49,7 +49,7 @@ wax.shared.NamecallHook = hookmetamethod(
 		then
 			local Log = wax.shared.Logs.Outgoing[self]
 			if not Log then
-				Log = wax.shared.NewLog(self, Method, "Outgoing")
+				Log = wax.shared.NewLog(self, Method, "Outgoing", getcallingscript())
 			end
 
 			if Log.Blocked then
@@ -70,7 +70,7 @@ wax.shared.NamecallHook = hookmetamethod(
 				if self.ClassName == "RemoteFunction" and Method == "InvokeServer" then
 					Log = wax.shared.Logs.Incoming[self]
 					if not Log then
-						Log = wax.shared.NewLog(self, Method, "Incoming")
+						Log = wax.shared.NewLog(self, Method, "Incoming", getcallingscript())
 					end
 
 					if Log.Blocked then
@@ -119,7 +119,7 @@ for _, Function in pairs(FunctionsToHook) do
 			if self ~= wax.shared.Communicator then
 				local Log = wax.shared.Logs.Outgoing[self]
 				if not Log then
-					Log = wax.shared.NewLog(self, Method, "Outgoing")
+					Log = wax.shared.NewLog(self, Method, "Outgoing", getcallingscript())
 				end
 
 				if Log.Blocked then
@@ -140,7 +140,7 @@ for _, Function in pairs(FunctionsToHook) do
 					if self.ClassName == "RemoteFunction" and Method == "InvokeServer" then
 						Log = wax.shared.Logs.Incoming[self]
 						if not Log then
-							Log = wax.shared.NewLog(self, Method, "Incoming")
+							Log = wax.shared.NewLog(self, Method, "Incoming", getcallingscript())
 						end
 
 						if Log.Blocked then

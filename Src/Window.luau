@@ -2985,6 +2985,10 @@ function OpenInfo(CallInfo)
 		NewTabContent.Visible = true
 	end
 
+	if CurrentContext then
+		CurrentContext:Close()
+	end
+
 	OpenModal(InfoFrame)
 end
 

@@ -2541,7 +2541,7 @@ function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 
 				table.clear(Log.Calls)
 				CurrentPage[Log] = 1
-				CurrentLog.Button.Calls.Text = "x" .. #CurrentLog.Calls
+				Log.Button.Calls.Text = "x" .. #Log.Calls
 
 				if CurrentLog == Log then
 					PaginationHelper:Update(#Log.Calls)

@@ -103,91 +103,132 @@ local function CreateContextMenu(Parent: GuiObject, Options: {}, MouseOnCursorPo
 		Options = {},
 	}
 
-	for Order, Data in pairs(Options) do
-		local TextButton = wax.shared.Interface.New("TextButton", {
-			BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-			BackgroundTransparency = 1,
-			LayoutOrder = Order,
-			Size = UDim2.new(1, 0, 0, 30),
-			Text = "",
+	local function BuildContextMenu(Options: {})
+		for Order, Data in pairs(Options) do
+			local TextButton = wax.shared.Interface.New("TextButton", {
+				BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+				BackgroundTransparency = 1,
+				LayoutOrder = Order,
+				Size = UDim2.new(1, 0, 0, 30),
+				Text = "",
 
-			["UICorner"] = {
-				CornerRadius = UDim.new(0, 6),
-			},
+				["UICorner"] = {
+					CornerRadius = UDim.new(0, 6),
+				},
 
-			["UIPadding"] = {
-				PaddingBottom = UDim.new(0, 6),
-				PaddingLeft = UDim.new(0, 6),
-				PaddingRight = UDim.new(0, 6),
-				PaddingTop = UDim.new(0, 6),
-			},
-		})
+				["UIPadding"] = {
+					PaddingBottom = UDim.new(0, 6),
+					PaddingLeft = UDim.new(0, 6),
+					PaddingRight = UDim.new(0, 6),
+					PaddingTop = UDim.new(0, 6),
+				},
+			})
 
-		local IconToSet = Data.Icon
-		if typeof(IconToSet) == "function" then
-			IconToSet = IconToSet()
-		end
+			local IconToSet = Data.Icon
+			if typeof(IconToSet) == "function" then
+				IconToSet = IconToSet()
+			end
 
-		local ItemIcon = wax.shared.Interface.NewIcon(IconToSet, {
-			Size = UDim2.fromScale(1, 1),
-			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+			local ItemIcon
+			if tostring(IconToSet):match("rbxasset") then
+				ItemIcon = wax.shared.Interface.New("ImageLabel", {
+					Image = IconToSet,
+					Size = UDim2.fromScale(1, 1),
+					SizeConstraint = Enum.SizeConstraint.RelativeYY,
 
-			Parent = TextButton,
-		})
-
-		local TextToSet = Data.Text
-		if typeof(TextToSet) == "function" then
-			TextToSet = TextToSet()
-		end
-
-		local ItemText = wax.shared.Interface.New("TextLabel", {
-			AutomaticSize = Enum.AutomaticSize.X,
-			Position = UDim2.fromOffset(26, 0),
-			Size = UDim2.fromScale(0, 1),
-			Text = TextToSet,
-			TextSize = 16,
-			TextXAlignment = Enum.TextXAlignment.Left,
-
-			Parent = TextButton,
-		})
-
-		TextButton.MouseEnter:Connect(function()
-			wax.shared.TweenService
-				:Create(TextButton, DefaultTweenInfo, {
-					BackgroundTransparency = 0,
+					Parent = TextButton,
 				})
-				:Play()
-		end)
-		TextButton.MouseLeave:Connect(function()
-			wax.shared.TweenService
-				:Create(TextButton, DefaultTweenInfo, {
-					BackgroundTransparency = 1,
+			else
+				ItemIcon = wax.shared.Interface.NewIcon(IconToSet, {
+					Size = UDim2.fromScale(1, 1),
+					SizeConstraint = Enum.SizeConstraint.RelativeYY,
+
+					Parent = TextButton,
 				})
-				:Play()
-		end)
-		TextButton.MouseButton1Click:Connect(function()
-			TextButton.BackgroundTransparency = 1
-
-			if Data.Callback then
-				Data.Callback()
 			end
 
-			if Data.CloseOnClick ~= false then
-				ContextData:Close()
-			end
-		end)
-
-		function Data:Display()
-			if typeof(Data.Text) == "function" then
-				ItemText.Text = Data.Text()
+			local TextToSet = Data.Text
+			if typeof(TextToSet) == "function" then
+				TextToSet = TextToSet()
 			end
 
-			if typeof(Data.Icon) == "function" then
-				wax.shared.Icons.SetIcon(ItemIcon, Data.Icon())
+			local ItemText = wax.shared.Interface.New("TextLabel", {
+				AutomaticSize = Enum.AutomaticSize.X,
+				Position = UDim2.fromOffset(26, 0),
+				Size = UDim2.fromScale(0, 1),
+				Text = TextToSet,
+				TextSize = 16,
+				TextXAlignment = Enum.TextXAlignment.Left,
+
+				Parent = TextButton,
+			})
+
+			if Data.TextProperties then
+				local Properties = typeof(Data.TextProperties) == "function" and Data.TextProperties()
+					or Data.TextProperties
+				for Property, Value in pairs(Properties) do
+					ItemText[Property] = Value
+				end
 			end
+
+			TextButton.MouseEnter:Connect(function()
+				wax.shared.TweenService
+					:Create(TextButton, DefaultTweenInfo, {
+						BackgroundTransparency = 0,
+					})
+					:Play()
+			end)
+			TextButton.MouseLeave:Connect(function()
+				wax.shared.TweenService
+					:Create(TextButton, DefaultTweenInfo, {
+						BackgroundTransparency = 1,
+					})
+					:Play()
+			end)
+			TextButton.MouseButton1Click:Connect(function()
+				TextButton.BackgroundTransparency = 1
+
+				if Data.Callback then
+					Data.Callback()
+				end
+
+				if Data.CloseOnClick ~= false then
+					ContextData:Close()
+				else
+					for _, Option in pairs(ContextData.Options) do
+						Option:Display()
+					end
+				end
+			end)
+
+			function Data:Display()
+				if typeof(Data.Text) == "function" then
+					ItemText.Text = Data.Text()
+				end
+
+				if typeof(Data.Icon) == "function" then
+					IconToSet = Data.Icon()
+
+					if tostring(IconToSet):match("rbxasset") then
+						ItemIcon.ImageRectOffset = Vector2.new(0, 0)
+						ItemIcon.ImageRectSize = Vector2.new(0, 0)
+						ItemIcon.Image = IconToSet
+					else
+						wax.shared.Icons.SetIcon(ItemIcon, IconToSet)
+					end
+				end
+
+				if Data.TextProperties then
+					local Properties = typeof(Data.TextProperties) == "function" and Data.TextProperties()
+						or Data.TextProperties
+					for Property, Value in pairs(Properties) do
+						ItemText[Property] = Value
+					end
+				end
+			end
+
+			ContextData.Options[TextButton] = Data
 		end
-
-		ContextData.Options[TextButton] = Data
 	end
 
 	function ContextData:Open()
@@ -237,6 +278,15 @@ local function CreateContextMenu(Parent: GuiObject, Options: {}, MouseOnCursorPo
 		CurrentContext = nil
 	end
 
+	function ContextData:SetContextMenu(Options: { any })
+		for Object, Data in pairs(ContextData.Options) do
+			Object:Destroy()
+		end
+		ContextData.Options = {}
+		BuildContextMenu(Options)
+	end
+
+	BuildContextMenu(Options)
 	return ContextData
 end
 
@@ -579,8 +629,20 @@ local function CreateSettingsDropdown(
 	local AllowNull = Options.AllowNull or false
 	assert(AllowNull or Options.Default ~= nil, "Default value must be provided when AllowNull is false")
 
+	local function CreateLookupTable(Values: { any })
+		local LookupTable = {}
+		for _, Value in Values do
+			LookupTable[Value] = true
+		end
+		return LookupTable
+	end
+
 	local Dropdown = {
-		Value = Options.Default or nil,
+		Values = Options.Values or {},
+		Value = Options.Default and CreateLookupTable(Options.Default)
+			or Options.AllowNull and (Options.Multi and {} or Options.Values[1])
+			or {},
+		Multi = Options.Multi or false,
 	}
 
 	local DropdownUI = wax.shared.Interface.New("TextButton", {
@@ -602,7 +664,53 @@ local function CreateSettingsDropdown(
 		Parent = DropdownUI,
 	})
 
-	local ContextMenu = CreateContextMenu(DropdownIcon, {})
+	local function BuildDropdownContext()
+		local Options = {}
+		for Image, Object in Dropdown.Values do
+			local IsArray = typeof(Image) == "number"
+
+			local ContextOption = {
+				Text = tostring(Object),
+				CloseOnClick = not Dropdown.Multi,
+				Callback = function()
+					local Value = IsArray and Object or Image
+
+					if Dropdown.Multi then
+						Dropdown.Value[Value] = not (Dropdown.Value[Value] or false)
+					else
+						Dropdown.Value = Value
+					end
+				end,
+				TextProperties = function()
+					local Value = IsArray and Object or Image
+
+					if Dropdown.Multi and Dropdown.Value[Value] then
+						return {
+							TextTransparency = 0,
+						}
+					elseif not Dropdown.Multi and Dropdown.Value == Value then
+						return {
+							TextTransparency = 0,
+						}
+					end
+
+					return {
+						TextTransparency = 0.5,
+					}
+				end,
+			}
+
+			if not IsArray then
+				ContextOption.Text = Image
+				ContextOption.Icon = Object
+			end
+
+			table.insert(Options, ContextOption)
+		end
+		return Options
+	end
+
+	local ContextMenu = CreateContextMenu(DropdownIcon, BuildDropdownContext())
 
 	DropdownUI.MouseButton1Click:Connect(ContextMenu.Toggle)
 
@@ -846,8 +954,10 @@ local FilterSection = CreateSettingsSection("Filter")
 
 CreateSettingsDropdown("IgnoredRemotesDropdown", {
 	Text = "Ignore Remotes",
-	Values = ClassOrder,
+	Values = Images,
+	Default = { "BindableEvent", "BindableFunction" },
 	AllowNull = true,
+	Multi = true,
 	Section = FilterSection,
 })
 
@@ -861,7 +971,7 @@ CreateSettingsCheckbox("IgnoreExecutorOrigin", {
 	Section = FilterSection,
 })
 CreateSettingsButton("Reset Filtering to Default", function()
-	-- TODO: implement
+	wax.shared.Settings.IgnoreExecutorOrigin:SetValue(true)
 	wax.shared.Sonner.success("Successfully reset remote filtering to default")
 end, FilterSection)
 

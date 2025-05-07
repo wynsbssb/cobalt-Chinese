@@ -58,6 +58,10 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName)
 	local Path = ""
 
 	repeat
+		if typeof(CurrentObject) ~= "Instance" then
+			break
+		end
+
 		if CurrentObject == game then
 			Path = "game" .. Path
 			break

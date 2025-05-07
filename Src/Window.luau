@@ -3,9 +3,6 @@ local PaginationHelper = wax.shared.Pagination.new({
 	TotalItems = 0,
 })
 
-local MIN_FRAME_WIDTH = 640
-local MIN_FRAME_HEIGHT = 420
-
 wax.shared.Settings = {}
 
 local Tabs = {}
@@ -56,220 +53,14 @@ local MainFrame = wax.shared.Interface.New("Frame", {
 })
 
 -- Resizing
-local HANDLE_SIZE = 6
-local CORNER_HANDLE_SIZE = 20
+wax.shared.Resize.new({
+	MainFrame = MainFrame,
 
-local function CalculateResizeProperties(
-	initialFramePosition: UDim2,
-	initialFrameSize: UDim2,
-	mouseDelta: Vector2,
-	resizeTypeX: string?,
-	resizeTypeY: string?
-)
-	local currentScreenGuiAbsSize = ScreenGui.AbsoluteSize
+	MinimumSize = Vector2.new(640, 420),
 
-	local newCalculatedWidth = initialFrameSize.X.Offset
-	local newCalculatedHeight = initialFrameSize.Y.Offset
-	local newCalculatedPosOffsetX = initialFramePosition.X.Offset
-	local newCalculatedPosOffsetY = initialFramePosition.Y.Offset
-
-	-- Calculate initial absolute properties
-	local initialAbsCenterX = currentScreenGuiAbsSize.X * initialFramePosition.X.Scale + initialFramePosition.X.Offset
-	local initialAbsSizeX = initialFrameSize.X.Offset
-	local initialRightEdgeX = initialAbsCenterX + initialAbsSizeX / 2
-	local initialLeftEdgeX = initialAbsCenterX - initialAbsSizeX / 2
-
-	local initialAbsCenterY = currentScreenGuiAbsSize.Y * initialFramePosition.Y.Scale + initialFramePosition.Y.Offset
-	local initialAbsSizeY = initialFrameSize.Y.Offset
-	local initialBottomEdgeY = initialAbsCenterY + initialAbsSizeY / 2
-	local initialTopEdgeY = initialAbsCenterY - initialAbsSizeY / 2
-
-	-- Handle X-axis resizing
-	if resizeTypeX then
-		if resizeTypeX == "Left" then
-			local newLeftEdge = initialLeftEdgeX + mouseDelta.X
-			newCalculatedWidth = math.max(MIN_FRAME_WIDTH, initialRightEdgeX - newLeftEdge)
-			if newCalculatedWidth ~= (initialRightEdgeX - newLeftEdge) then
-				newLeftEdge = initialRightEdgeX - newCalculatedWidth
-			end
-			local newAbsCenterX = newLeftEdge + newCalculatedWidth / 2
-			newCalculatedPosOffsetX = newAbsCenterX - currentScreenGuiAbsSize.X * 0.5
-		elseif resizeTypeX == "Right" then
-			local newRightEdge = initialRightEdgeX + mouseDelta.X
-			newCalculatedWidth = math.max(MIN_FRAME_WIDTH, newRightEdge - initialLeftEdgeX)
-			local newAbsCenterX = initialLeftEdgeX + newCalculatedWidth / 2
-			newCalculatedPosOffsetX = newAbsCenterX - currentScreenGuiAbsSize.X * 0.5
-		end
-	end
-
-	-- Handle Y-axis resizing
-	if resizeTypeY then
-		if resizeTypeY == "Top" then
-			local newTopEdge = initialTopEdgeY + mouseDelta.Y
-			newCalculatedHeight = math.max(MIN_FRAME_HEIGHT, initialBottomEdgeY - newTopEdge)
-			if newCalculatedHeight ~= (initialBottomEdgeY - newTopEdge) then
-				newTopEdge = initialBottomEdgeY - newCalculatedHeight
-			end
-			local newAbsCenterY = newTopEdge + newCalculatedHeight / 2
-			newCalculatedPosOffsetY = newAbsCenterY - currentScreenGuiAbsSize.Y * 0.5
-		elseif resizeTypeY == "Bottom" then
-			local newBottomEdge = initialBottomEdgeY + mouseDelta.Y
-			newCalculatedHeight = math.max(MIN_FRAME_HEIGHT, newBottomEdge - initialTopEdgeY)
-			local newAbsCenterY = initialTopEdgeY + newCalculatedHeight / 2
-			newCalculatedPosOffsetY = newAbsCenterY - currentScreenGuiAbsSize.Y * 0.5
-		end
-	end
-
-	local finalNewSize = UDim2.new(0, newCalculatedWidth, 0, newCalculatedHeight)
-	local finalNewPosition = UDim2.new(0.5, newCalculatedPosOffsetX, 0.5, newCalculatedPosOffsetY)
-
-	return finalNewSize, finalNewPosition
-end
-
-local LeftSide = wax.shared.Interface.New("Frame", {
-	Size = UDim2.new(0, HANDLE_SIZE, 1, -CORNER_HANDLE_SIZE * 2),
-	AnchorPoint = Vector2.new(0, 0.5),
-	Position = UDim2.fromScale(0, 0.5),
-	BackgroundTransparency = 1,
-	Parent = MainFrame,
-	ZIndex = 9e6,
+	CornerHandleSize = 20,
+	HandleSize = 6,
 })
-do
-	wax.shared.Drag.Setup(MainFrame, LeftSide, function(Info, Input: InputObject)
-		local mouseDelta = Input.Position - Info.StartPosition
-		local newSize, newPosition =
-			CalculateResizeProperties(Info.FramePosition, Info.FrameSize, mouseDelta, "Left", nil)
-		MainFrame.Size = newSize
-		MainFrame.Position = newPosition
-	end)
-end
-
-local RightSide = wax.shared.Interface.New("Frame", {
-	Size = UDim2.new(0, HANDLE_SIZE, 1, -CORNER_HANDLE_SIZE * 2),
-	AnchorPoint = Vector2.new(1, 0.5),
-	Position = UDim2.fromScale(1, 0.5),
-	BackgroundTransparency = 1,
-	Parent = MainFrame,
-	ZIndex = 9e6,
-})
-do
-	wax.shared.Drag.Setup(MainFrame, RightSide, function(Info, Input: InputObject)
-		local mouseDelta = Input.Position - Info.StartPosition
-		local newSize, newPosition =
-			CalculateResizeProperties(Info.FramePosition, Info.FrameSize, mouseDelta, "Right", nil)
-		MainFrame.Size = newSize
-		MainFrame.Position = newPosition
-	end)
-end
-
-local TopSide = wax.shared.Interface.New("Frame", {
-	Size = UDim2.new(1, -CORNER_HANDLE_SIZE * 2, 0, HANDLE_SIZE),
-	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.fromScale(0.5, 0),
-	BackgroundTransparency = 1,
-	Parent = MainFrame,
-	ZIndex = 9e6,
-})
-do
-	wax.shared.Drag.Setup(MainFrame, TopSide, function(Info, Input: InputObject)
-		local mouseDelta = Input.Position - Info.StartPosition
-		local newSize, newPosition =
-			CalculateResizeProperties(Info.FramePosition, Info.FrameSize, mouseDelta, nil, "Top")
-		MainFrame.Size = newSize
-		MainFrame.Position = newPosition
-	end)
-end
-
-local BottomSide = wax.shared.Interface.New("Frame", {
-	Size = UDim2.new(1, -CORNER_HANDLE_SIZE * 2, 0, HANDLE_SIZE),
-	AnchorPoint = Vector2.new(0.5, 1),
-	Position = UDim2.fromScale(0.5, 1),
-	BackgroundTransparency = 1,
-	Parent = MainFrame,
-	ZIndex = 9e6,
-})
-do
-	wax.shared.Drag.Setup(MainFrame, BottomSide, function(Info, Input: InputObject)
-		local mouseDelta = Input.Position - Info.StartPosition
-		local newSize, newPosition =
-			CalculateResizeProperties(Info.FramePosition, Info.FrameSize, mouseDelta, nil, "Bottom")
-		MainFrame.Size = newSize
-		MainFrame.Position = newPosition
-	end)
-end
-
--- Corner Resizing
-local TopLeftCorner = wax.shared.Interface.New("Frame", {
-	Size = UDim2.fromOffset(CORNER_HANDLE_SIZE, CORNER_HANDLE_SIZE),
-	AnchorPoint = Vector2.new(0, 0),
-	Position = UDim2.fromScale(0, 0),
-	BackgroundTransparency = 1,
-	Parent = MainFrame,
-	ZIndex = 9e6 + 1,
-})
-do
-	wax.shared.Drag.Setup(MainFrame, TopLeftCorner, function(Info, Input: InputObject)
-		local mouseDelta = Input.Position - Info.StartPosition
-		local newSize, newPosition =
-			CalculateResizeProperties(Info.FramePosition, Info.FrameSize, mouseDelta, "Left", "Top")
-		MainFrame.Size = newSize
-		MainFrame.Position = newPosition
-	end)
-end
-
-local TopRightCorner = wax.shared.Interface.New("Frame", {
-	Size = UDim2.fromOffset(CORNER_HANDLE_SIZE, CORNER_HANDLE_SIZE),
-	AnchorPoint = Vector2.new(1, 0),
-	Position = UDim2.fromScale(1, 0),
-	BackgroundTransparency = 1,
-	Parent = MainFrame,
-	ZIndex = 9e6 + 1,
-})
-do
-	wax.shared.Drag.Setup(MainFrame, TopRightCorner, function(Info, Input: InputObject)
-		local mouseDelta = Input.Position - Info.StartPosition
-		local newSize, newPosition =
-			CalculateResizeProperties(Info.FramePosition, Info.FrameSize, mouseDelta, "Right", "Top")
-		MainFrame.Size = newSize
-		MainFrame.Position = newPosition
-	end)
-end
-
-local BottomLeftCorner = wax.shared.Interface.New("Frame", {
-	Size = UDim2.fromOffset(CORNER_HANDLE_SIZE, CORNER_HANDLE_SIZE),
-	AnchorPoint = Vector2.new(0, 1),
-	Position = UDim2.fromScale(0, 1),
-	BackgroundTransparency = 1,
-	Parent = MainFrame,
-	ZIndex = 9e6 + 1,
-})
-do
-	wax.shared.Drag.Setup(MainFrame, BottomLeftCorner, function(Info, Input: InputObject)
-		local mouseDelta = Input.Position - Info.StartPosition
-		local newSize, newPosition =
-			CalculateResizeProperties(Info.FramePosition, Info.FrameSize, mouseDelta, "Left", "Bottom")
-		MainFrame.Size = newSize
-		MainFrame.Position = newPosition
-	end)
-end
-
-local BottomRightCorner = wax.shared.Interface.New("Frame", {
-	Size = UDim2.fromOffset(CORNER_HANDLE_SIZE, CORNER_HANDLE_SIZE),
-	AnchorPoint = Vector2.new(1, 1),
-	Position = UDim2.fromScale(1, 1),
-	BackgroundTransparency = 1,
-	Parent = MainFrame,
-	ZIndex = 9e6 + 1,
-})
-do
-	wax.shared.Drag.Setup(MainFrame, BottomRightCorner, function(Info, Input: InputObject)
-		local mouseDelta = Input.Position - Info.StartPosition
-		local newSize, newPosition =
-			CalculateResizeProperties(Info.FramePosition, Info.FrameSize, mouseDelta, "Right", "Bottom")
-		MainFrame.Size = newSize
-		MainFrame.Position = newPosition
-	end)
-end
 
 -- Context Menus
 local CurrentContext
@@ -532,7 +323,10 @@ local function CreateModalTop(Title: string, Icon: string, Parent: GuiObject)
 	local ModalTitle = wax.shared.Interface.New("TextLabel", {
 		Text = Title,
 		TextSize = 17,
-		Size = UDim2.new(1, 0, 1, 0),
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		Size = UDim2.new(1, -60, 1, 0),
+		Position = UDim2.fromScale(0.5, 0.5),
+		AnchorPoint = Vector2.new(0.5, 0.5),
 		Parent = ModalTop,
 	})
 
@@ -1140,6 +934,7 @@ local InfoFrame = wax.shared.Interface.New("TextButton", {
 })
 
 local InfoTitle, InfoIcon = CreateModalTop("...", Images["RemoteEvent"], InfoFrame)
+local InfoModalTab = {}
 
 local InfoTabs = wax.shared.Interface.New("Frame", {
 	BackgroundTransparency = 1,
@@ -1163,7 +958,6 @@ local function CreateInfoTab(Icon: string, Title: string, TabContents: Frame?)
 	local IsTabSelected = CurrentInfoTab == Title
 
 	if TabContents then
-		TabContents.Name = Title
 		TabContents.Parent = InfoFrame
 		TabContents.Visible = IsTabSelected
 	end
@@ -1175,7 +969,6 @@ local function CreateInfoTab(Icon: string, Title: string, TabContents: Frame?)
 		AutomaticSize = Enum.AutomaticSize.X,
 		Text = "",
 		Parent = InfoTabs,
-		Name = Title,
 
 		["UICorner"] = {
 			CornerRadius = UDim.new(0, 8),
@@ -1194,6 +987,11 @@ local function CreateInfoTab(Icon: string, Title: string, TabContents: Frame?)
 			BackgroundColor3 = ButtonColor,
 		},
 	})
+
+	InfoModalTab[Title] = {
+		TabButton = TabButton,
+		TabContents = TabContents,
+	}
 
 	local TextWrapper = wax.shared.Interface.New("Frame", {
 		BackgroundTransparency = 1,
@@ -1233,16 +1031,13 @@ local function CreateInfoTab(Icon: string, Title: string, TabContents: Frame?)
 	})
 
 	wax.shared.Connect(TabButton.MouseButton1Click:Connect(function()
-		local OldTabButton = InfoTabs:FindFirstChild(CurrentInfoTab)
-		if OldTabButton then
-			OldTabButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			OldTabButton.Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		end
+		local OldTab = InfoModalTab[CurrentInfoTab]
+		local OldTabButton = OldTab.TabButton
+		local OldTabContents = OldTab.TabContents
 
-		local OldTabContent = InfoFrame:FindFirstChild(CurrentInfoTab)
-		if OldTabContent then
-			OldTabContent.Visible = false
-		end
+		OldTabButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		OldTabButton.Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		OldTabContents.Visible = false
 
 		CurrentInfoTab = Title
 
@@ -2629,18 +2424,7 @@ function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
 	return Holder
 end
 
-function CreateCallFrame(CallInfo: {
-	Instance: Instance,
-	Arguments: { [any]: any },
-	Time: string,
-	Origin: BaseScript | nil,
-	Order: number,
-	Ignored: boolean,
-	Blocked: boolean,
-	Function: (...any) -> any,
-	Line: number,
-	IsExecutor: boolean,
-})
+function CreateCallFrame(CallInfo)
 	local CallFrame = wax.shared.Interface.New("TextButton", {
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
@@ -2961,28 +2745,28 @@ function OpenInfo(CallInfo)
 	end
 
 	for _, tab in pairs({ "Function Info", "Code" }) do
-		local OldTabButton = InfoTabs:FindFirstChild(tab)
-		if OldTabButton then
-			OldTabButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			OldTabButton.Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		local OldTab = InfoModalTab[tab]
+		if not OldTab then
+			continue
 		end
 
-		local TabContent = InfoFrame:FindFirstChild(tab)
-		if TabContent then
-			TabContent.Visible = false
-		end
+		local OldTabButton = OldTab.TabButton
+		local OldTabContent = OldTab.TabContents
+
+		OldTabButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		OldTabButton.Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+
+		OldTabContent.Visible = false
 	end
 
 	CurrentInfoTab = "Arguments"
-	local NewTabButton = InfoTabs:FindFirstChild(CurrentInfoTab)
-	if NewTabButton then
-		NewTabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-		NewTabButton.Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	end
+	if InfoModalTab["Arguments"] then
+		local TabButton = InfoModalTab["Arguments"].TabButton
+		local TabContent = InfoModalTab["Arguments"].TabContents
 
-	local NewTabContent = InfoFrame:FindFirstChild(CurrentInfoTab)
-	if NewTabContent then
-		NewTabContent.Visible = true
+		TabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		TabButton.Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		TabContent.Visible = true
 	end
 
 	if CurrentContext then

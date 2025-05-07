@@ -23,6 +23,7 @@ wax.shared.Sonner = require("Utils/Sonner")
 wax.shared.Highlighter = require("Utils/Highlighter")
 wax.shared.Pagination = require("Utils/Pagination")
 wax.shared.CodeGen = require("Utils/CodeGen")
+wax.shared.Resize = require("Utils/Resize")
 
 -- Variables
 wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer

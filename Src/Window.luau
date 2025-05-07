@@ -132,7 +132,7 @@ local LeftSide = wax.shared.Interface.New("Frame", {
 	Position = UDim2.fromScale(0, 0.5),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
-	ZIndex = 9e9,
+	ZIndex = 9e6,
 })
 do
 	wax.shared.Drag.Setup(MainFrame, LeftSide, function(Info, Input: InputObject)
@@ -150,7 +150,7 @@ local RightSide = wax.shared.Interface.New("Frame", {
 	Position = UDim2.fromScale(1, 0.5),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
-	ZIndex = 9e9,
+	ZIndex = 9e6,
 })
 do
 	wax.shared.Drag.Setup(MainFrame, RightSide, function(Info, Input: InputObject)
@@ -168,7 +168,7 @@ local TopSide = wax.shared.Interface.New("Frame", {
 	Position = UDim2.fromScale(0.5, 0),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
-	ZIndex = 9e9,
+	ZIndex = 9e6,
 })
 do
 	wax.shared.Drag.Setup(MainFrame, TopSide, function(Info, Input: InputObject)
@@ -186,7 +186,7 @@ local BottomSide = wax.shared.Interface.New("Frame", {
 	Position = UDim2.fromScale(0.5, 1),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
-	ZIndex = 9e9,
+	ZIndex = 9e6,
 })
 do
 	wax.shared.Drag.Setup(MainFrame, BottomSide, function(Info, Input: InputObject)
@@ -205,7 +205,7 @@ local TopLeftCorner = wax.shared.Interface.New("Frame", {
 	Position = UDim2.fromScale(0, 0),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
-	ZIndex = 9e9 + 1,
+	ZIndex = 9e6 + 1,
 })
 do
 	wax.shared.Drag.Setup(MainFrame, TopLeftCorner, function(Info, Input: InputObject)
@@ -223,7 +223,7 @@ local TopRightCorner = wax.shared.Interface.New("Frame", {
 	Position = UDim2.fromScale(1, 0),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
-	ZIndex = 9e9 + 1,
+	ZIndex = 9e6 + 1,
 })
 do
 	wax.shared.Drag.Setup(MainFrame, TopRightCorner, function(Info, Input: InputObject)
@@ -241,7 +241,7 @@ local BottomLeftCorner = wax.shared.Interface.New("Frame", {
 	Position = UDim2.fromScale(0, 1),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
-	ZIndex = 9e9 + 1,
+	ZIndex = 9e6 + 1,
 })
 do
 	wax.shared.Drag.Setup(MainFrame, BottomLeftCorner, function(Info, Input: InputObject)
@@ -259,7 +259,7 @@ local BottomRightCorner = wax.shared.Interface.New("Frame", {
 	Position = UDim2.fromScale(1, 1),
 	BackgroundTransparency = 1,
 	Parent = MainFrame,
-	ZIndex = 9e9 + 1,
+	ZIndex = 9e6 + 1,
 })
 do
 	wax.shared.Drag.Setup(MainFrame, BottomRightCorner, function(Info, Input: InputObject)

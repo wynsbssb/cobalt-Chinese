@@ -209,9 +209,9 @@ function CodeGen:BuildFunctionInfo(CallInfo: CallInfo)
 		iscclosure(CallInfo.Function) and "<b>Closure Type</b>: C closure"
 			or string.format(
 				"<b>Closure Type</b>: Luau closure\n<b>Constants:</b> %s\n<b>Upvalues:</b> %s\n<b>Protos:</b> %s",
-				tostring(#debug.getconstants(CallInfo.Function)),
-				tostring(#debug.getupvalues(CallInfo.Function)),
-				tostring(#debug.getprotos(CallInfo.Function))
+				debug.getconstants and tostring(#debug.getconstants(CallInfo.Function)) or "N/A",
+				debug.getupvalues and tostring(#debug.getupvalues(CallInfo.Function)) or "N/A",
+				debug.getprotos and tostring(#debug.getprotos(CallInfo.Function)) or "N/A"
 			)
 	)
 end

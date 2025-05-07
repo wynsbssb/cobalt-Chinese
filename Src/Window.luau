@@ -1399,7 +1399,7 @@ local NetworkButton = CreateInfoDropdownButton("network", "Event", {
 				return
 			end
 
-			table.clear(CurrentLog.Calls)
+			CurrentLog.Calls = {}
 			PaginationHelper:Update(#CurrentLog)
 			PaginationHelper:SetPage(1)
 			CurrentPage[CurrentLog] = 1
@@ -2334,7 +2334,7 @@ function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 					return
 				end
 
-				table.clear(Log.Calls)
+				Log.Calls = {}
 				CurrentPage[Log] = 1
 				Log.Button.Calls.Text = "x" .. #Log.Calls
 

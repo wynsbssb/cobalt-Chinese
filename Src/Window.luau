@@ -938,14 +938,14 @@ CreateSettingsCheckbox("UseActors", {
 
 CreateSettingsButton("Clear All Logs", function()
 	for _, Logs in pairs(wax.shared.Logs) do
-		for _, Log in pairs(Logs) do
+		for Index, Log in pairs(Logs) do
 			if Log.Button then
 				Log.Button.Instance:Destroy()
 				Log.Button = nil
 			end
 
 			CurrentPage[Log] = nil
-			Log = nil
+			Logs[Index] = nil
 		end
 
 		table.clear(Logs)

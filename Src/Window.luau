@@ -598,7 +598,11 @@ local function CreateSettingsCheckbox(
 	})
 
 	CheckboxUI.MouseButton1Click:Connect(function()
-		Checkbox.Value = not Checkbox.Value
+		Checkbox:SetValue(not Checkbox.Value)
+	end)
+
+	function Checkbox:SetValue(NewValue)
+		Checkbox.Value = NewValue
 
 		wax.shared.TweenService
 			:Create(CheckImage, DefaultTweenInfo, {
@@ -609,7 +613,7 @@ local function CreateSettingsCheckbox(
 		if Options.Callback then
 			Options.Callback(Checkbox.Value)
 		end
-	end)
+	end
 
 	wax.shared.Settings[Idx] = Checkbox
 	return Checkbox

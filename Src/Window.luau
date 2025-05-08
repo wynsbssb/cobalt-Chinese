@@ -973,6 +973,11 @@ CreateSettingsCheckbox("IgnoreSpammyRemotes", {
 	Text = "Auto Ignore Spammy Remotes",
 	Section = FilterSection,
 })
+CreateSettingsCheckbox("IgnorePlayerModule", {
+	Text = "Ignore Player Module Remotes",
+	Default = true,
+	Section = FilterSection,
+})
 CreateSettingsCheckbox("ShowExecutorLogs", {
 	Text = `Show {wax.shared.ExecutorName} Logs`,
 	Default = true,

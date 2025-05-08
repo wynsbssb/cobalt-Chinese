@@ -46,7 +46,7 @@ wax.shared.NamecallHook = hookmetamethod(
 			table.find(AllowedClassNames, self.ClassName)
 			and self ~= wax.shared.Communicator
 			and table.find(NamecallMethods, string.lower(Method))
-			and not wax.shared.Settings.IgnoredRemotesDropdown.Value[self.ClassName]
+			and not wax.shared.ShouldIgnore(self, getcallingscript())
 		then
 			local Log = wax.shared.Logs.Outgoing[self]
 			if not Log then
@@ -117,10 +117,7 @@ for _, Function in pairs(FunctionsToHook) do
 	wax.shared.Hooks[Function] = hookfunction(
 		Function,
 		wax.shared.newcclosure(function(self, ...)
-			if
-				self ~= wax.shared.Communicator
-				and not wax.shared.Settings.IgnoredRemotesDropdown.Value[self.ClassName]
-			then
+			if self ~= wax.shared.Communicator and not wax.shared.ShouldIgnore(self, getcallingscript()) then
 				local Log = wax.shared.Logs.Outgoing[self]
 				if not Log then
 					Log = wax.shared.NewLog(self, "Outgoing", Method, getcallingscript())

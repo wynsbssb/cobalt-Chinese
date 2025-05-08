@@ -51,7 +51,7 @@ local function ListenToFunction(Instance, Function, Method)
 	wax.shared.Hooks[Function] = hookfunction(
 		Function,
 		wax.shared.newcclosure(function(...)
-			if not wax.shared.Settings.IgnoredRemotesDropdown.Value[Instance.ClassName] then
+			if not wax.shared.ShouldIgnore(Instance, getcallingscript()) then
 				local Log = wax.shared.Logs.Incoming[Instance]
 				if not Log then
 					Log = wax.shared.NewLog(Instance, "Incoming", Method, getcallingscript())
@@ -113,7 +113,7 @@ local function HandleInstance(Instance: any)
 		end
 
 		Instance[Method] = function(...)
-			if wax.shared.Unloaded or wax.shared.Settings.IgnoredRemotesDropdown.Value[Instance.ClassName] then
+			if wax.shared.Unloaded or wax.shared.ShouldIgnore(Instance, getcallingscript()) then
 				return Callback(...)
 			end
 
@@ -163,7 +163,7 @@ wax.shared.NewIndexHook = hookmetamethod(
 
 			if key == Method and typeof(value) == "function" then
 				return wax.shared.NewIndexHook(self, key, function(...)
-					if wax.shared.Unloaded or wax.shared.Settings.IgnoredRemotesDropdown.Value[self.ClassName] then
+					if wax.shared.Unloaded or wax.shared.ShouldIgnore(self, getcallingscript()) then
 						return value(...)
 					end
 

@@ -89,6 +89,15 @@ wax.shared.IsMouseOverFrame = function(Frame: GuiObject, Position: Vector2): boo
 		and Position.Y <= AbsPos.Y + AbsSize.Y
 end
 
+wax.shared.IsPlayerModule = function(Origin: LocalScript | ModuleScript)
+	local PlayerModule = Origin and Origin.FindFirstAncestor(Origin, "PlayerModule") or nil
+	return PlayerModule and PlayerModule.Parent == wax.shared.PlayerScripts
+end
+wax.shared.ShouldIgnore = function(Instance, Origin)
+	return wax.shared.Settings.IgnoredRemotesDropdown.Value[Instance.ClassName] == true
+		or (wax.shared.Settings.IgnorePlayerModule.Value and wax.shared.IsPlayerModule(Origin))
+end
+
 wax.shared.DisplayNumber = function(Number: number)
 	if Number % 1 ~= 0 then
 		return string.format("%.3f", Number)

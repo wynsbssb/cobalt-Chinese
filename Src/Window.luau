@@ -2513,10 +2513,10 @@ ShowPagination = function(Log)
 	local Pages = PaginationHelper:GetVisualInfo()
 
 	for Order, Info in pairs(Pages) do
-		if Info == "ellipsis" then
+		if Info == "none" then
 			local Ellipsis = PaginationElements.Ellipsis[Order]
-			if Ellipsis and Ellipsis.Parent == nil then
-				Ellipsis:SetVisible(true)
+			if Ellipsis then
+				Ellipsis:SetVisible(false)
 			end
 
 			local Button = PaginationElements.Buttons[Order]
@@ -2525,10 +2525,10 @@ ShowPagination = function(Log)
 			end
 
 			continue
-		elseif Info == "none" then
+		elseif Info == "ellipsis" then
 			local Ellipsis = PaginationElements.Ellipsis[Order]
-			if Ellipsis then
-				Ellipsis:SetVisible(false)
+			if Ellipsis and Ellipsis.Parent == nil then
+				Ellipsis:SetVisible(true)
 			end
 
 			local Button = PaginationElements.Buttons[Order]

@@ -53,7 +53,7 @@ local function ListenToFunction(Instance, Function, Method)
 		wax.shared.newcclosure(function(...)
 			local Log = wax.shared.Logs.Incoming[Instance]
 			if not Log then
-				Log = wax.shared.NewLog(Instance, Method, "Incoming", getcallingscript())
+				Log = wax.shared.NewLog(Instance, "Incoming", Method, getcallingscript())
 			end
 
 			if Log.Blocked then
@@ -116,7 +116,7 @@ local function HandleInstance(Instance: any)
 
 			local Log = wax.shared.Logs.Incoming[Instance]
 			if not Log then
-				Log = wax.shared.NewLog(Instance, Method, "Incoming", getcallingscript())
+				Log = wax.shared.NewLog(Instance, "Incoming", Method, getcallingscript())
 			end
 
 			if Log.Blocked then
@@ -166,7 +166,7 @@ wax.shared.NewIndexHook = hookmetamethod(
 
 					local Log = wax.shared.Logs.Incoming[self]
 					if not Log then
-						Log = wax.shared.NewLog(self, Method, "Incoming", getcallingscript())
+						Log = wax.shared.NewLog(self, "Incoming", Method, getcallingscript())
 					end
 
 					if Log.Blocked then

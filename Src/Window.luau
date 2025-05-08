@@ -835,7 +835,7 @@ local function CreateSettingsRemoteList(
 					},
 
 					["TextLabel"] = {
-						Text = remote.Name,
+						Text = `{remote.Name} ({remoteData.Type})`,
 						Size = UDim2.fromScale(1, 1),
 						AutomaticSize = Enum.AutomaticSize.X,
 						TextSize = 16,
@@ -939,14 +939,23 @@ CreateSettingsCheckbox("UseActors", {
 CreateSettingsButton("Clear All Logs", function()
 	for _, Logs in wax.shared.Logs do
 		for _, Log in Logs do
-			Log.Button.Instance:Destroy()
 		end
 	end
 
-	CleanLogsList()
+	for _, Logs in pairs(wax.shared.Logs) do
+		for _, Log in pairs(Logs) do
+			if Log.Button then
+				Log.Button.Instance:Destroy()
+				Log.Button = nil
+			end
 
-	wax.shared.Logs.Incoming = {}
-	wax.shared.Logs.Outgoing = {}
+			Log = nil
+		end
+
+		table.clear(Logs)
+	end
+
+	CleanLogsList()
 
 	wax.shared.Sonner.success("Successfully Cleared All Logs")
 end, MainSection)

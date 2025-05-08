@@ -1,12 +1,13 @@
 local Log = {}
 Log.__index = Log
 
-function Log.new(Instance, Method, Index, CallingScript)
+function Log.new(Instance, Type, Method, Index, CallingScript)
 	local PlayerModule = CallingScript and CallingScript.FindFirstAncestor(CallingScript, "PlayerModule") or nil
 	local ShouldIgnore = (PlayerModule and PlayerModule.Parent == wax.shared.PlayerScripts or false)
 
 	local NewLog = setmetatable({
 		Instance = Instance,
+		Type = Type,
 		Method = Method,
 		Index = Index,
 		Calls = {},

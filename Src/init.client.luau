@@ -1,3 +1,6 @@
+local FileLogger = require(script.Utils.FileLog)
+local FileLog = FileLogger.new(`Cobalt/Logs/{DateTime.now():ToIsoDate()}.log`, FileLogger.LOG_LEVELS.INFO, true)
+
 -- Environment
 for _, Service in pairs({
 	"ContentProvider",
@@ -180,6 +183,65 @@ end
 
 -- Load Script
 wax.shared.Communicator = Instance.new("BindableEvent")
+
+wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(RemoteInstance, Type, CallDataFromHook, CallOrderInLog)
+	local LogEntry = wax.shared.Logs[Type][RemoteInstance]
+	if not LogEntry then
+		return
+	end
+
+	local success, err = pcall(function()
+		local callInfoForProcessing = {
+			Instance = RemoteInstance,
+			Arguments = CallDataFromHook.Arguments,
+			Time = CallDataFromHook.Time,
+			Origin = CallDataFromHook.Origin,
+			Function = CallDataFromHook.Function,
+			Line = CallDataFromHook.Line,
+			Order = CallOrderInLog,
+			OriginalInvokeArgs = CallDataFromHook.OriginalInvokeArgs,
+		}
+
+		local generatedCode = wax.shared.CodeGen:BuildCallCode(callInfoForProcessing, Type)
+		
+		local comprehensiveDataToSerialize = {
+			RemoteInstanceInfo = {
+				Name = RemoteInstance and RemoteInstance.Name,
+				ClassName = RemoteInstance and RemoteInstance.ClassName,
+				Path = RemoteInstance and wax.shared.CodeGen.GetFullPath(RemoteInstance, true)
+			},
+			EventType = Type,
+			CallOrderInLog = CallOrderInLog,
+			DataFromHook = CallDataFromHook,
+		}
+		local serializedEventData = wax.shared.LuaEncode(comprehensiveDataToSerialize, { Prettify = true, InsertCycles = true, UseInstancePaths = true })
+
+		local instanceName = RemoteInstance and RemoteInstance.Name or "UnknownInstance"
+		local instanceClassName = RemoteInstance and RemoteInstance.ClassName or "UnknownClass"
+		local instancePath = RemoteInstance and wax.shared.CodeGen.GetFullPath(RemoteInstance, true) or "UnknownPath"
+
+		local logParts = {
+			("Instance: %s (%s)"):format(instanceName, instanceClassName),
+			("Path: %s"):format(instancePath),
+			("Call Order In Log: %s"):format(CallOrderInLog or "N/A"),
+			"-------------------- Event Data --------------------",
+			serializedEventData,
+			"-------------------- Generated Code --------------------",
+			generatedCode,
+		}
+		local logMessage = table.concat(logParts, "\n\t")
+		local threadId = ("%s:%s"):format(Type or "S", instanceName)
+
+		FileLog:Info(threadId, logMessage)
+	end)
+
+	if not success then
+		local instanceNameForError = RemoteInstance and RemoteInstance.Name or "Unknown"
+		FileLog:Error("Logger", ("Failed to log remote communication for %s:%s - %s"):format(Type or "UnknownType", instanceNameForError, tostring(err)))
+
+		warn(("Cobalt: Failed to log remote communication for %s:%s - %s"):format(Type or "UnknownType", instanceNameForError, tostring(err)))
+	end
+end))
 
 wax.shared.Log = require("Utils/Log")
 wax.shared.Logs = {

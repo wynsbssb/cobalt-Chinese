@@ -2429,8 +2429,6 @@ function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 			PaddingTop = UDim.new(0, 6),
 			PaddingBottom = UDim.new(0, 6),
 		},
-
-		Parent = RemoteList,
 	})
 
 	local Text = wax.shared.Interface.New("TextLabel", {
@@ -3005,6 +3003,7 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 
 	Log.Button.Name.Text = Log.Instance.Name
 	Log.Button.Calls.Text = "x" .. #Log.Calls
+	Log.Button.Instance.Parent = RemoteList
 
 	if CurrentLog == Log then
 		PaginationHelper:Update(#Log.Calls)

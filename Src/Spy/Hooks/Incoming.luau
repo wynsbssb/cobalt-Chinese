@@ -51,24 +51,27 @@ local function ListenToFunction(Instance, Function, Method)
 	wax.shared.Hooks[Function] = hookfunction(
 		Function,
 		wax.shared.newcclosure(function(...)
-			local Log = wax.shared.Logs.Incoming[Instance]
-			if not Log then
-				Log = wax.shared.NewLog(Instance, "Incoming", Method, getcallingscript())
+			if not wax.shared.Settings.IgnoredRemotesDropdown.Value[Instance.ClassName] then
+				local Log = wax.shared.Logs.Incoming[Instance]
+				if not Log then
+					Log = wax.shared.NewLog(Instance, "Incoming", Method, getcallingscript())
+				end
+
+				if Log.Blocked then
+					return
+				elseif not Log.Ignored then
+					local Info = {
+						{ ... },
+						os.date("%X"),
+						getcallingscript(),
+						getcallingfunction(),
+						getcallingline(),
+					}
+					Log:Call(Info)
+					wax.shared.Communicator:Fire(Log.Instance, "Incoming", Info, #Log.Calls)
+				end
 			end
 
-			if Log.Blocked then
-				return
-			elseif not Log.Ignored then
-				local Info = {
-					{ ... },
-					os.date("%X"),
-					getcallingscript(),
-					getcallingfunction(),
-					getcallingline(),
-				}
-				Log:Call(Info)
-				wax.shared.Communicator:Fire(Log.Instance, "Incoming", Info, #Log.Calls)
-			end
 			return wax.shared.Hooks[Function](...)
 		end)
 	)
@@ -110,7 +113,7 @@ local function HandleInstance(Instance: any)
 		end
 
 		Instance[Method] = function(...)
-			if wax.shared.Unloaded then
+			if wax.shared.Unloaded or wax.shared.Settings.IgnoredRemotesDropdown.Value[Instance.ClassName] then
 				return Callback(...)
 			end
 
@@ -160,7 +163,7 @@ wax.shared.NewIndexHook = hookmetamethod(
 
 			if key == Method and typeof(value) == "function" then
 				return wax.shared.NewIndexHook(self, key, function(...)
-					if wax.shared.Unloaded then
+					if wax.shared.Unloaded or wax.shared.Settings.IgnoredRemotesDropdown.Value[self.ClassName] then
 						return value(...)
 					end
 

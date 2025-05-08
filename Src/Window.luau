@@ -2403,20 +2403,148 @@ ShowCalls = function(Log, Page)
 	end
 end
 
-function CleanPagination()
-	for _, Object in pairs(LogsPagination:GetChildren()) do
-		if Object.ClassName == "TextButton" or Object.ClassName == "TextBox" then
-			Object:Destroy()
+function CreatePaginationEllipsis(Order: number, Visible: boolean)
+	local Ellipsis = {
+		Ellipsis = wax.shared.Interface.New("TextBox", {
+			BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+			Size = UDim2.fromScale(1, 1),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+			LayoutOrder = Order,
+			PlaceholderText = "-",
+			Text = "",
+			TextSize = 15,
+			RichText = false,
+			Parent = Visible and LogsPagination or nil,
+
+			["UICorner"] = {
+				CornerRadius = UDim.new(0, 4),
+			},
+		}),
+	}
+
+	function Ellipsis:SetVisible(Visible: boolean)
+		if not Visible then
+			self.Ellipsis.Text = ""
 		end
+		self.Ellipsis.Parent = Visible and LogsPagination or nil
 	end
+
+	Ellipsis.Ellipsis.FocusLost:Connect(function(EnterPressed)
+		if not EnterPressed then
+			return
+		end
+
+		local Page = tonumber(Ellipsis.Ellipsis.Text)
+		if not Page then
+			Ellipsis.Text = ""
+			return
+		end
+
+		local Success = pcall(function()
+			PaginationHelper:SetPage(Page)
+			CurrentPage[CurrentLog] = Page
+			ShowLog(CurrentLog)
+		end)
+
+		if not Success then
+			wax.shared.Sonner.error("Invalid page number provided!")
+		end
+
+		Ellipsis.Ellipsis.Text = ""
+	end)
+
+	return Ellipsis
+end
+
+function CreatePaginationButton(Order: number, Active: boolean, Visible: boolean)
+	local ButtonData = {
+		Button = wax.shared.Interface.New("TextButton", {
+			BackgroundColor3 = Active and Color3.fromRGB(50, 50, 50) or Color3.fromRGB(25, 25, 25),
+			Size = UDim2.fromScale(1, 1),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+			Text = tostring(1),
+			LayoutOrder = Order,
+			TextSize = 15,
+			Parent = Visible and LogsPagination or nil,
+
+			["UICorner"] = {
+				CornerRadius = UDim.new(0, 4),
+			},
+		}),
+	}
+
+	function ButtonData:SetActive(Active: boolean)
+		self.Button.BackgroundColor3 = Active and Color3.fromRGB(50, 50, 50) or Color3.fromRGB(25, 25, 25)
+	end
+
+	function ButtonData:SetText(Text: string)
+		self.Button.Text = Text
+	end
+
+	function ButtonData:SetVisible(Visible: boolean)
+		self.Button.Parent = Visible and LogsPagination or nil
+	end
+
+	ButtonData.Button.MouseButton1Click:Connect(function()
+		local Page = tonumber(ButtonData.Button.Text)
+
+		PaginationHelper:SetPage(Page)
+		CurrentPage[CurrentLog] = Page
+		ShowLog(CurrentLog)
+	end)
+
+	return ButtonData
+end
+
+local MaxButtons = (5 + PaginationHelper.SiblingCount * 2)
+local PaginationElements = {
+	Buttons = {},
+	Ellipsis = {
+		[2] = CreatePaginationEllipsis(1, false),
+		[MaxButtons - 1] = CreatePaginationEllipsis(MaxButtons - 1, false),
+	},
+}
+
+for i = 1, MaxButtons do
+	table.insert(PaginationElements.Buttons, CreatePaginationButton(i, false, false))
 end
 
 ShowPagination = function(Log)
-	CleanPagination()
-
 	local Pages = PaginationHelper:GetVisualInfo()
+
 	for Order, Info in pairs(Pages) do
-		CreatePageElement(Info, Order, Info == CurrentPage[Log], Log)
+		if Info == "ellipsis" then
+			local Ellipsis = PaginationElements.Ellipsis[Order]
+			if Ellipsis and Ellipsis.Parent == nil then
+				Ellipsis:SetVisible(true)
+			end
+
+			local Button = PaginationElements.Buttons[Order]
+			if Button then
+				Button:SetVisible(false)
+			end
+
+			continue
+		elseif Info == "none" then
+			local Ellipsis = PaginationElements.Ellipsis[Order]
+			if Ellipsis then
+				Ellipsis:SetVisible(false)
+			end
+
+			local Button = PaginationElements.Buttons[Order]
+			if Button then
+				Button:SetVisible(false)
+			end
+
+			continue
+		end
+
+		local Button = PaginationElements.Buttons[Order]
+		if Button then
+			Button:SetVisible(true)
+			Button:SetText(tostring(Info))
+			Button:SetActive(CurrentPage[Log] == Info)
+		end
 	end
 end
 
@@ -2454,70 +2582,6 @@ function CreateRemoteTab(TabName: string, Active: boolean, Logs)
 	end)
 
 	return Button
-end
-
-function CreatePageElement(PageOrType, Order, Active, Log)
-	if PageOrType == "ellipsis" then
-		local Ellipsis = wax.shared.Interface.New("TextBox", {
-			BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-			Size = UDim2.fromScale(1, 1),
-			SizeConstraint = Enum.SizeConstraint.RelativeYY,
-			LayoutOrder = 1,
-			PlaceholderText = "-",
-			Text = "",
-			TextSize = 15,
-			RichText = false,
-			Parent = LogsPagination,
-
-			["UICorner"] = {
-				CornerRadius = UDim.new(0, 4),
-			},
-		})
-
-		Ellipsis.FocusLost:Connect(function(EnterPressed)
-			if not EnterPressed then
-				return
-			end
-
-			local Page = tonumber(Ellipsis.Text)
-			if not Page then
-				Ellipsis.Text = ""
-				return
-			end
-
-			local Success = pcall(function()
-				PaginationHelper:SetPage(Page)
-				CurrentPage[Log] = Page
-				ShowLog(CurrentLog)
-			end)
-
-			if not Success then
-				wax.shared.Sonner.error("Invalid page number provided!")
-			end
-		end)
-
-		return
-	end
-
-	local Button = wax.shared.Interface.New("TextButton", {
-		BackgroundColor3 = Active and Color3.fromRGB(50, 50, 50) or Color3.fromRGB(25, 25, 25),
-		Size = UDim2.fromScale(1, 1),
-		SizeConstraint = Enum.SizeConstraint.RelativeYY,
-		Text = tostring(PageOrType),
-		LayoutOrder = 1,
-		TextSize = 15,
-		Parent = LogsPagination,
-
-		["UICorner"] = {
-			CornerRadius = UDim.new(0, 4),
-		},
-	})
-
-	Button.MouseButton1Click:Connect(function()
-		PaginationHelper:SetPage(PageOrType)
-		CurrentPage[Log] = PageOrType
-		ShowLog(CurrentLog)
-	end)
 end
 
 function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)

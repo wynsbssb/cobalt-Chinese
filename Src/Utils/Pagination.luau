@@ -102,8 +102,12 @@ function Pagination:GetVisualInfo(Page: number?)
 	)
 
 	local MaxButtons = 5 + self.SiblingCount * 2
+	local Result = table.create(MaxButtons, "none")
 	if TotalPages <= MaxButtons then
-		return CreateArray(1, TotalPages)
+		for i = 1, TotalPages do
+			Result[i] = i
+		end
+		return Result
 	end
 
 	local LeftSibling = math.max(Page - self.SiblingCount, 1)
@@ -116,17 +120,45 @@ function Pagination:GetVisualInfo(Page: number?)
 	local ItemCount = TotalPageNumbers - 2
 
 	if not FakeLeft and FakeRight then
-		local LeftRange = CreateArray(1, ItemCount)
-		return MergeTables(LeftRange, "ellipsis", TotalPages)
+		for i = 1, ItemCount do
+			Result[i] = i
+		end
+		Result[ItemCount + 1] = "ellipsis"
+		Result[ItemCount + 2] = TotalPages
+		--return MergeTables(LeftRange, "ellipsis", TotalPages)
+		return Result
 	elseif FakeLeft and not FakeRight then
-		local RightRange = CreateArray(TotalPages - ItemCount + 1, TotalPages)
-		return MergeTables(1, "ellipsis", RightRange)
+		--local RightRange = CreateArray(TotalPages - ItemCount + 1, TotalPages)
+		local Index = 3
+		for i = TotalPages - ItemCount + 1, TotalPages do
+			Result[Index] = i
+			Index += 1
+		end
+		Result[2] = "ellipsis"
+		Result[1] = 1
+		--return MergeTables(1, "ellipsis", RightRange)
+		return Result
 	elseif FakeLeft and FakeRight then
-		local MiddleRange = CreateArray(LeftSibling, RightSibling)
-		return MergeTables(1, "ellipsis", MiddleRange, "ellipsis", TotalPages)
+		--local MiddleRange = CreateArray(LeftSibling, RightSibling)
+		Result[1] = 1
+		Result[2] = "ellipsis"
+		local Index = 3
+		for i = LeftSibling, RightSibling do
+			Result[Index] = i
+			Index += 1
+		end
+		Result[Index] = "ellipsis"
+		Result[Index + 1] = TotalPages
+		--return MergeTables(1, "ellipsis", MiddleRange, "ellipsis", TotalPages)
+		return Result
+		--return MergeTables(1, "ellipsis", MiddleRange, "ellipsis", TotalPages)
 	end
 
-	return CreateArray(1, TotalPages)
+	--return CreateArray(1, TotalPages)
+	for i = 1, TotalPages do
+		Result[i] = i
+	end
+	return Result
 end
 
 return Pagination

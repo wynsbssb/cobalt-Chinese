@@ -510,7 +510,7 @@ local function CreateSettingsSection(SectionName: string)
 	return Section
 end
 
-local function CreateSettingsButton(Text: string, Callback: () -> (), Section: Frame)
+local function CreateSettingsButton(Text: string, Callback: () -> (), Section: Frame, TextSize: number?)
 	local Button = wax.shared.Interface.New("TextButton", {
 		BackgroundColor3 = Color3.fromRGB(15, 15, 15),
 		Size = UDim2.new(1, 0, 0, 24),
@@ -530,7 +530,7 @@ local function CreateSettingsButton(Text: string, Callback: () -> (), Section: F
 
 		["TextLabel"] = {
 			Text = Text,
-			TextSize = 16,
+			TextSize = TextSize or 16,
 			TextTransparency = 0.5,
 			Size = UDim2.fromScale(1, 1),
 			Position = UDim2.fromOffset(0, -1),
@@ -1083,7 +1083,38 @@ wax.shared.Interface.New("TextLabel", {
 	TextWrapped = true,
 })
 
-CreateSettingsButton("Copy current session file path", function()
+local SessionButtons = wax.shared.Interface.New("Frame", {
+	BackgroundTransparency = 1,
+	Size = UDim2.fromScale(1, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	Parent = LoggingSection,
+
+	["UIListLayout"] = {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		Padding = UDim.new(0, 8),
+	},
+
+	["UIPadding"] = {
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 8),
+	},
+})
+local CopySessionName = CreateSettingsButton("Copy Session Name", function()
+	local ActualLogFileName = wax.shared.LogFileName:gsub("Cobalt/Logs/", "")
+	local Success, Error = pcall(setclipboard, ActualLogFileName)
+
+	if not Success then
+		warn(Error)
+		wax.shared.Sonner.error("Failed to copy session name")
+		return
+	end
+
+	wax.shared.Sonner.success("Successfully copied session name to clipboard")
+end, SessionButtons, 14)
+CopySessionName.Size = UDim2.new(0.5, -4, 0, 24)
+
+local CopyFullSessionPath = CreateSettingsButton("Copy Full Path", function()
 	local Success, Error = pcall(setclipboard, wax.shared.LogFileName)
 
 	if not Success then
@@ -1093,7 +1124,8 @@ CreateSettingsButton("Copy current session file path", function()
 	end
 
 	wax.shared.Sonner.success("Successfully copied log path to clipboard")
-end, LoggingSection)
+end, SessionButtons, 14)
+CopyFullSessionPath.Size = UDim2.new(0.5, -4, 0, 24)
 
 local CreditsSection = CreateSettingsSection("Credits")
 

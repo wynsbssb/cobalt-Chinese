@@ -1386,7 +1386,7 @@ CreateInfoDropdownButton("copy", "Copy", {
 			return CurrentInfo and typeof(CurrentInfo.Origin) == "Instance"
 		end,
 		Callback = function()
-			if not CurrentInfo then
+			if not (CurrentInfo and typeof(CurrentInfo.Origin) == "Instance") then
 				return
 			end
 
@@ -1442,6 +1442,32 @@ CreateInfoDropdownButton("copy", "Copy", {
 			else
 				wax.shared.Sonner.error("Failed to copy function info to clipboard")
 				warn("Failed to copy function info to clipboard", Error)
+			end
+		end,
+	},
+	{
+		Text = "Decompiled Script",
+		Icon = "file-text",
+		Condition = function()
+			return CurrentInfo and typeof(CurrentInfo.Origin) == "Instance" and typeof(decompile) == "function"
+		end,
+		Callback = function()
+			if not (CurrentInfo and typeof(CurrentInfo.Origin) == "Instance" and typeof(decompile) == "function") then
+				return
+			end
+
+			local Decompiled, Result = pcall(decompile, CurrentInfo.Origin)
+			if Decompiled then
+				local Success, Error = pcall(setclipboard, Result)
+				if Success then
+					wax.shared.Sonner.success("Copied decompiled script to clipboard")
+				else
+					wax.shared.Sonner.error("Failed to copy decompiled script to clipboard")
+					warn("Failed to copy decompield script to clipboard", Error)
+				end
+			else
+				wax.shared.Sonner.error("Failed to decompile script")
+				warn("Failed to decompile script", Result)
 			end
 		end,
 	},

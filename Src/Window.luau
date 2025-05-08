@@ -7,6 +7,7 @@ wax.shared.Settings = {}
 
 local Tabs = {}
 local CurrentPage = {}
+local CurrentInfo, CurrentTab, CurrentLog
 
 local LogsList
 local ShowPagination, ShowCalls
@@ -938,11 +939,7 @@ CreateSettingsButton("Clear All Logs", function()
 		end
 	end
 
-	for _, Object in pairs(LogsList:GetChildren()) do
-		if Object.ClassName == "TextButton" then
-			Object:Destroy()
-		end
-	end
+	CleanLogsList()
 
 	wax.shared.Logs.Incoming = {}
 	wax.shared.Logs.Outgoing = {}
@@ -965,13 +962,20 @@ CreateSettingsCheckbox("IgnoreSpammyRemotes", {
 	Text = "Auto Ignore Spammy Remotes",
 	Section = FilterSection,
 })
-CreateSettingsCheckbox("IgnoreExecutorOrigin", {
-	Text = `Show {wax.shared.ExecutorName} remotes`,
+CreateSettingsCheckbox("ShowExecutorLogs", {
+	Text = `Show {wax.shared.ExecutorName} Logs`,
 	Default = true,
 	Section = FilterSection,
+	Callback = function()
+		PaginationHelper:Update(#CurrentLog)
+		PaginationHelper:SetPage(1)
+		CurrentPage[CurrentLog] = 1
+
+		ShowLog(CurrentLog)
+	end,
 })
 CreateSettingsButton("Reset Filtering to Default", function()
-	wax.shared.Settings.IgnoreExecutorOrigin:SetValue(true)
+	wax.shared.Settings.ShowExecutorLogs:SetValue(true)
 	wax.shared.Sonner.success("Successfully reset remote filtering to default")
 end, FilterSection)
 
@@ -1040,8 +1044,6 @@ for Order, Data in pairs(Credits) do
 end
 
 -- Info
-local CurrentInfo, CurrentTab, CurrentLog
-
 local InfoFrame = wax.shared.Interface.New("TextButton", {
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	BackgroundColor3 = Color3.fromRGB(10, 10, 10),
@@ -1545,11 +1547,7 @@ local NetworkButton = CreateInfoDropdownButton("network", "Event", {
 			PaginationHelper:SetPage(1)
 			CurrentPage[CurrentLog] = 1
 
-			for _, Object in pairs(LogsList:GetChildren()) do
-				if Object.ClassName == "TextButton" then
-					Object:Destroy()
-				end
-			end
+			CleanLogsList()
 
 			CurrentLog.Button.Calls.Text = "x" .. #CurrentLog.Calls
 
@@ -2179,27 +2177,33 @@ function ShowTab(Tab)
 	end
 end
 
-function ShowLog(Log)
+function CleanLogsList()
 	for _, Object in pairs(LogsList:GetChildren()) do
 		if Object.ClassName == "TextButton" then
 			Object:Destroy()
 		end
 	end
+end
 
-	if CurrentLog then
+function ShowLog(Log)
+	CleanLogsList()
+
+	if CurrentLog ~= Log then
+		if CurrentLog then
+			wax.shared.TweenService
+				:Create(CurrentLog.Button.Instance, DefaultTweenInfo, {
+					BackgroundTransparency = 1,
+				})
+				:Play()
+		end
+
+		CurrentLog = Log
 		wax.shared.TweenService
 			:Create(CurrentLog.Button.Instance, DefaultTweenInfo, {
-				BackgroundTransparency = 1,
+				BackgroundTransparency = 0,
 			})
 			:Play()
 	end
-
-	CurrentLog = Log
-	wax.shared.TweenService
-		:Create(CurrentLog.Button.Instance, DefaultTweenInfo, {
-			BackgroundTransparency = 0,
-		})
-		:Play()
 
 	local Page = CurrentPage[Log]
 	if not Page then
@@ -2219,7 +2223,13 @@ ShowCalls = function(Log, Page)
 	local Start, End = PaginationHelper:GetIndexRanges(Page)
 
 	for Index = Start, End do
-		local Call = Log.Calls[Index]
+		local Call
+		if wax.shared.Settings.ShowExecutorLogs.Value then
+			Call = Log.Calls[Index]
+		else
+			Call = Log.Calls[Log.GameCalls[Index]]
+		end
+
 		if not Call then
 			break
 		end
@@ -2483,11 +2493,7 @@ function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 					PaginationHelper:Update(#Log.Calls)
 					PaginationHelper:SetPage(1)
 
-					for _, Object in pairs(LogsList:GetChildren()) do
-						if Object.ClassName == "TextButton" then
-							Object:Destroy()
-						end
-					end
+					CleanLogsList()
 
 					ShowPagination(Log)
 					ShowCalls(Log, 1)
@@ -2566,6 +2572,10 @@ function CreateArgHolder(Index: number, Value: any, Parent: GuiObject)
 end
 
 function CreateCallFrame(CallInfo)
+	if not wax.shared.Settings.ShowExecutorLogs.Value and not CallInfo.Origin then
+		return
+	end
+
 	local CallFrame = wax.shared.Interface.New("TextButton", {
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
@@ -2956,6 +2966,10 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 		PaginationHelper:Update(#Log.Calls)
 
 		local Start, End = PaginationHelper:GetIndexRanges(Page)
+		if not wax.shared.Settings.ShowExecutorLogs.Value then
+			CallIndex = Log.GameCalls[CallIndex]
+		end
+
 		if CallIndex < Start or CallIndex > End then
 			ShowPagination(Log)
 			return

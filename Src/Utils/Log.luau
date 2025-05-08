@@ -10,6 +10,7 @@ function Log.new(Instance, Method, Index, CallingScript)
 		Method = Method,
 		Index = Index,
 		Calls = {},
+		GameCalls = {},
 		Ignored = ShouldIgnore,
 		Blocked = false,
 		Button = nil,
@@ -39,7 +40,11 @@ function Log:Call(Info)
 		Data.OriginalInvokeArgs = Info[7]
 	end
 
-	table.insert(self.Calls, Data)
+	local Index = #self.Calls + 1
+	self.Calls[Index] = Data
+	if not Data.IsExecutor then
+		table.insert(self.GameCalls, Index)
+	end
 end
 
 function Log:Ignore()

@@ -1,6 +1,7 @@
 local FileLogger = require(script.Utils.FileLog)
-local FileLog =
-	FileLogger.new(`Cobalt/Logs/{DateTime.now():ToIsoDate():gsub(":", "_")}.log`, FileLogger.LOG_LEVELS.INFO, true)
+
+wax.shared.LogFileName = `Cobalt/Logs/{DateTime.now():ToIsoDate():gsub(":", "_")}.log`
+local FileLog = FileLogger.new(wax.shared.LogFileName, FileLogger.LOG_LEVELS.INFO, true)
 
 -- Environment
 for _, Service in pairs({

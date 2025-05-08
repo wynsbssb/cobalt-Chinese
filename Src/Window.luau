@@ -465,7 +465,7 @@ local SettingsScrollingFrame = wax.shared.Interface.New("ScrollingFrame", {
 	Position = UDim2.fromScale(0, 1),
 	Size = UDim2.new(1, 0, 1, -37),
 	ClipsDescendants = true,
-	ScrollBarThickness = 0,
+	ScrollBarThickness = 2,
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
 	CanvasSize = UDim2.fromScale(0, 0),
 	Parent = SettingsFrame,
@@ -1058,6 +1058,42 @@ CreateSettingsRemoteList("BlockedRemotes", {
 		Remote.Blocked = false
 	end,
 })
+
+local LoggingSection = CreateSettingsSection("Logging")
+
+wax.shared.Interface.New("TextLabel", {
+	Text = `Current Session Log: <b>{wax.shared.LogFileName:gsub("Cobalt/Logs/", "")}</b>`,
+	TextSize = 14,
+	Size = UDim2.fromScale(1, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	BackgroundTransparency = 1,
+	Parent = LoggingSection,
+	TextWrapped = true,
+})
+
+wax.shared.Interface.New("TextLabel", {
+	Text = `Logs Path: <b>Cobalt/Logs</b>`,
+	TextSize = 14,
+	Size = UDim2.fromScale(1, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	BackgroundTransparency = 1,
+	Parent = LoggingSection,
+	TextWrapped = true,
+})
+
+CreateSettingsButton("Copy current session file path", function()
+	local Success, Error = pcall(setclipboard, wax.shared.LogFileName)
+
+	if not Success then
+		warn(Error)
+		wax.shared.Sonner.error("Failed to copy log path")
+		return
+	end
+
+	wax.shared.Sonner.success("Successfully copied log path to clipboard")
+end, LoggingSection)
 
 local CreditsSection = CreateSettingsSection("Credits")
 

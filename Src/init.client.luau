@@ -217,7 +217,6 @@ wax.shared.Connect(
 				DataFromHook = CallDataFromHook,
 			}
 
-			print("comprehensiveDataToSerialize", comprehensiveDataToSerialize)
 			local serializedEventData = wax.shared.LuaEncode(
 				comprehensiveDataToSerialize,
 				{ Prettify = true, InsertCycles = true, UseInstancePaths = true }

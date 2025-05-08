@@ -937,11 +937,6 @@ CreateSettingsCheckbox("UseActors", {
 })
 
 CreateSettingsButton("Clear All Logs", function()
-	for _, Logs in wax.shared.Logs do
-		for _, Log in Logs do
-		end
-	end
-
 	for _, Logs in pairs(wax.shared.Logs) do
 		for _, Log in pairs(Logs) do
 			if Log.Button then

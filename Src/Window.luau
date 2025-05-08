@@ -272,6 +272,10 @@ local function CreateContextMenu(Parent: GuiObject, Options: {}, MouseOnCursorPo
 	end
 
 	function ContextData:Close()
+		if CurrentContext ~= ContextData then
+			return
+		end
+
 		ContextMenu.Visible = false
 		for Object, _ in pairs(ContextData.Options) do
 			Object.Parent = nil
@@ -552,6 +556,7 @@ local function CreateSettingsCheckbox(
 	}
 )
 	local Checkbox = {
+		Default = Options.Default or false,
 		Value = Options.Default or false,
 	}
 
@@ -601,6 +606,10 @@ local function CreateSettingsCheckbox(
 		Checkbox:SetValue(not Checkbox.Value)
 	end)
 
+	function Checkbox:Reset()
+		Checkbox:SetValue(Checkbox.Default)
+	end
+
 	function Checkbox:SetValue(NewValue)
 		Checkbox.Value = NewValue
 
@@ -644,6 +653,9 @@ local function CreateSettingsDropdown(
 
 	local Dropdown = {
 		Values = Options.Values or {},
+		Default = Options.Default and CreateLookupTable(Options.Default)
+			or Options.AllowNull and (Options.Multi and {} or Options.Values[1])
+			or {},
 		Value = Options.Default and CreateLookupTable(Options.Default)
 			or Options.AllowNull and (Options.Multi and {} or Options.Values[1])
 			or {},
@@ -671,14 +683,14 @@ local function CreateSettingsDropdown(
 
 	local function BuildDropdownContext()
 		local Options = {}
-		for Image, Object in Dropdown.Values do
-			local IsArray = typeof(Image) == "number"
+		for Index, Object in Dropdown.Values do
+			local IsArray = typeof(Index) == "number"
 
 			local ContextOption = {
 				Text = tostring(Object),
 				CloseOnClick = not Dropdown.Multi,
 				Callback = function()
-					local Value = IsArray and Object or Image
+					local Value = IsArray and Object or Index
 
 					if Dropdown.Multi then
 						Dropdown.Value[Value] = not (Dropdown.Value[Value] or false)
@@ -687,7 +699,7 @@ local function CreateSettingsDropdown(
 					end
 				end,
 				TextProperties = function()
-					local Value = IsArray and Object or Image
+					local Value = IsArray and Object or Index
 
 					if Dropdown.Multi and Dropdown.Value[Value] then
 						return {
@@ -706,7 +718,7 @@ local function CreateSettingsDropdown(
 			}
 
 			if not IsArray then
-				ContextOption.Text = Image
+				ContextOption.Text = Index
 				ContextOption.Icon = Object
 			end
 
@@ -718,6 +730,28 @@ local function CreateSettingsDropdown(
 	local ContextMenu = CreateContextMenu(DropdownIcon, BuildDropdownContext())
 
 	DropdownUI.MouseButton1Click:Connect(ContextMenu.Toggle)
+
+	function Dropdown:Reset()
+		for k, v in pairs(Dropdown.Default) do
+			warn(k, v)
+		end
+		Dropdown:SetValue(Dropdown.Default)
+	end
+
+	function Dropdown:SetValue(NewValue)
+		ContextMenu:Close()
+
+		for Image, Object in pairs(Dropdown.Values) do
+			local IsArray = typeof(Image) == "number"
+			local Value = IsArray and Object or Image
+
+			if Dropdown.Multi then
+				Dropdown.Value[Value] = NewValue[Value]
+			else
+				Dropdown.Value = NewValue
+			end
+		end
+	end
 
 	wax.shared.Settings[Idx] = Dropdown
 	return Dropdown
@@ -983,6 +1017,10 @@ CreateSettingsCheckbox("ShowExecutorLogs", {
 	Default = true,
 	Section = FilterSection,
 	Callback = function()
+		if not CurrentLog then
+			return
+		end
+
 		PaginationHelper:Update(#CurrentLog.Calls)
 		PaginationHelper:SetPage(1)
 		CurrentPage[CurrentLog] = 1
@@ -991,7 +1029,11 @@ CreateSettingsCheckbox("ShowExecutorLogs", {
 	end,
 })
 CreateSettingsButton("Reset Filtering to Default", function()
-	wax.shared.Settings.ShowExecutorLogs:SetValue(true)
+	wax.shared.Settings.IgnoredRemotesDropdown:Reset()
+	wax.shared.Settings.IgnoreSpammyRemotes:Reset()
+	wax.shared.Settings.IgnorePlayerModule:Reset()
+	wax.shared.Settings.ShowExecutorLogs:Reset()
+
 	wax.shared.Sonner.success("Successfully reset remote filtering to default")
 end, FilterSection)
 
@@ -3016,6 +3058,9 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 		local Start, End = PaginationHelper:GetIndexRanges(Page)
 		if not wax.shared.Settings.ShowExecutorLogs.Value then
 			CallIndex = Log.GameCalls[CallIndex]
+			if not CallIndex then
+				return
+			end
 		end
 
 		if CallIndex < Start or CallIndex > End then

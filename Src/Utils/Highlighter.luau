@@ -132,7 +132,7 @@ local function GetHighlightColor(tokens, index)
 		if tokens[index - 1] == ":" then
 			return Highlighter.Colors.LocalMethod
 		end
-		return Highlighter.Colors.Function
+		return Highlighter.Colors.LocalMethod
 	end
 
 	if tokens[index - 1] == "." then

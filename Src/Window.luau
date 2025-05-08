@@ -944,6 +944,7 @@ CreateSettingsButton("Clear All Logs", function()
 				Log.Button = nil
 			end
 
+			CurrentPage[Log] = nil
 			Log = nil
 		end
 
@@ -951,6 +952,8 @@ CreateSettingsButton("Clear All Logs", function()
 	end
 
 	CleanLogsList()
+	CleanPagination()
+	CurrentLog = nil
 
 	wax.shared.Sonner.success("Successfully Cleared All Logs")
 end, MainSection)
@@ -975,7 +978,7 @@ CreateSettingsCheckbox("ShowExecutorLogs", {
 	Default = true,
 	Section = FilterSection,
 	Callback = function()
-		PaginationHelper:Update(#CurrentLog)
+		PaginationHelper:Update(#CurrentLog.Calls)
 		PaginationHelper:SetPage(1)
 		CurrentPage[CurrentLog] = 1
 
@@ -1577,7 +1580,7 @@ local NetworkButton = CreateInfoDropdownButton("network", "Event", {
 			end
 
 			CurrentLog.Calls = {}
-			PaginationHelper:Update(#CurrentLog)
+			PaginationHelper:Update(#CurrentLog.Calls)
 			PaginationHelper:SetPage(1)
 			CurrentPage[CurrentLog] = 1
 
@@ -2221,6 +2224,9 @@ end
 
 function ShowLog(Log)
 	CleanLogsList()
+	if not Log then
+		return
+	end
 
 	if CurrentLog ~= Log then
 		if CurrentLog then
@@ -2282,12 +2288,16 @@ ShowCalls = function(Log, Page)
 	end
 end
 
-ShowPagination = function(Log)
+function CleanPagination()
 	for _, Object in pairs(LogsPagination:GetChildren()) do
 		if Object.ClassName == "TextButton" or Object.ClassName == "TextBox" then
 			Object:Destroy()
 		end
 	end
+end
+
+ShowPagination = function(Log)
+	CleanPagination()
 
 	local Pages = PaginationHelper:GetVisualInfo()
 	for Order, Info in pairs(Pages) do

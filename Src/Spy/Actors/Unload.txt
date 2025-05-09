@@ -1,0 +1,16 @@
+local RelayChannel = get_comm_channel(...)
+
+local getrawmetatable = getrawmetatable or debug.getmetatable
+
+RelayChannel.Event:Connect(function(Type, ...)
+	if Type ~= "Unload" then
+		return
+	end
+
+	local gameMetatable = getrawmetatable(game)
+
+	if restorefunction then
+		pcall(restorefunction, gameMetatable.__namecall)
+		pcall(restorefunction, gameMetatable.__newindex)
+	end
+end)

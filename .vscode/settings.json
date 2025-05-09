@@ -30,4 +30,9 @@
     "[luau]": {
         "editor.defaultFormatter": "JohnnyMorganz.stylua"
     },
+
+    "files.associations": {
+        "**/Src/Spy/Hooks/Actors/*": "luau",
+        "**/Src/Spy/Actors/*": "luau",
+    }
 }

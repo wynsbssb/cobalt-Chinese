@@ -38,11 +38,19 @@ function Log:Call(Info)
 	end
 end
 
-function Log:Ignore()
+function Log:Ignore(FromActor: boolean?)
+	if wax.shared.ActorCommunicator and not FromActor then
+		wax.shared.ActorCommunicator:Fire("MainIgnore", self.Instance, self.Type)
+	end
+
 	self.Ignored = not self.Ignored
 end
 
-function Log:Block()
+function Log:Block(FromActor: boolean?)
+	if wax.shared.ActorCommunicator and not FromActor then
+		wax.shared.ActorCommunicator:Fire("MainBlock", self.Instance, self.Type)
+	end
+
 	self.Blocked = not self.Blocked
 end
 

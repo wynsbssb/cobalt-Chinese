@@ -3,8 +3,6 @@ local PaginationHelper = wax.shared.Pagination.new({
 	TotalItems = 0,
 })
 
-wax.shared.Settings = {}
-
 local Tabs = {}
 local CurrentPage = {}
 local CurrentInfo, CurrentTab, CurrentLog
@@ -611,6 +609,10 @@ local function CreateSettingsCheckbox(
 	end
 
 	function Checkbox:SetValue(NewValue)
+		if wax.shared.ActorCommunicator then
+			wax.shared.ActorCommunicator:Fire("MainSettingsSync", Idx, NewValue)
+		end
+
 		Checkbox.Value = NewValue
 
 		wax.shared.TweenService
@@ -624,6 +626,9 @@ local function CreateSettingsCheckbox(
 		end
 	end
 
+	if wax.shared.ActorCommunicator then
+		wax.shared.ActorCommunicator:Fire("MainSettingsSync", Idx, Checkbox.Value)
+	end
 	wax.shared.Settings[Idx] = Checkbox
 	return Checkbox
 end
@@ -697,6 +702,10 @@ local function CreateSettingsDropdown(
 					else
 						Dropdown.Value = Value
 					end
+
+					if wax.shared.ActorCommunicator then
+						wax.shared.ActorCommunicator:Fire("MainSettingsSync", Idx, Dropdown.Value)
+					end
 				end,
 				TextProperties = function()
 					local Value = IsArray and Object or Index
@@ -739,6 +748,10 @@ local function CreateSettingsDropdown(
 	end
 
 	function Dropdown:SetValue(NewValue)
+		if wax.shared.ActorCommunicator then
+			wax.shared.ActorCommunicator:Fire("MainSettingsSync", Idx, NewValue)
+		end
+
 		ContextMenu:Close()
 
 		for Image, Object in pairs(Dropdown.Values) do
@@ -751,6 +764,10 @@ local function CreateSettingsDropdown(
 				Dropdown.Value = NewValue
 			end
 		end
+	end
+
+	if wax.shared.ActorCommunicator then
+		wax.shared.ActorCommunicator:Fire("MainSettingsSync", Idx, Dropdown.Default)
 	end
 
 	wax.shared.Settings[Idx] = Dropdown
@@ -965,10 +982,6 @@ local function CreateSettingsRemoteList(
 end
 
 local MainSection = CreateSettingsSection("Main")
-CreateSettingsCheckbox("UseActors", {
-	Text = `Multithreaded Remote Logging`,
-	Section = MainSection,
-})
 
 CreateSettingsButton("Clear All Logs", function()
 	for _, Logs in pairs(wax.shared.Logs) do
@@ -1129,6 +1142,14 @@ CopyFullSessionPath.Size = UDim2.new(0.5, -4, 0, 24)
 local CreditsSection = CreateSettingsSection("Credits")
 
 local Credits = {
+	{
+		Credit = "upio",
+		Description = "Cobalt Developer",
+	},
+	{
+		Credit = "deivid",
+		Description = "Cobalt Developer",
+	},
 	{
 		Credit = "shadcn",
 		Description = 'UI Design Insipration (<font color="#3798ff">https://ui.shadcn.com/</font>)',
@@ -3258,3 +3279,16 @@ wax.shared.Connect(wax.shared.UserInputService.InputBegan:Connect(function(Input
 		end
 	end
 end))
+
+-- Saved Settings
+if not isfile("Cobalt/Settings.json") then
+	writefile("Cobalt/Settings.json", "{}")
+else
+	for Idx, Value in pairs(wax.shared.SavedSettings) do
+		if not wax.shared.Settings[Idx] then
+			continue
+		end
+
+		wax.shared.Settings[Idx]:SetValue(Value)
+	end
+end

@@ -10,11 +10,19 @@ for _, Service in pairs({
 	"TweenService",
 	"Players",
 	"RunService",
+	"HttpService",
 	"UserInputService",
 	"TextService",
 }) do
 	wax.shared[Service] = cloneref(game:GetService(Service))
 end
+
+if not isfile("Cobalt/Settings.json") then
+	writefile("Cobalt/Settings.json", "{}")
+end
+
+wax.shared.SavedSettings = wax.shared.HttpService:JSONDecode(readfile("Cobalt/Settings.json"))
+wax.shared.Settings = {}
 
 -- UI
 require("Utils/Connect")
@@ -163,7 +171,7 @@ wax.shared.Unload = function()
 		wax.shared.Disconnect(Connection)
 	end
 
-	local gameMetatable = getrawmetatable(game)
+	local gameMetatable = wax.shared.getrawmetatable(game)
 
 	if restorefunction then
 		restorefunction(gameMetatable.__namecall)
@@ -176,6 +184,8 @@ wax.shared.Unload = function()
 	for Function, Original in pairs(wax.shared.Hooks) do
 		task.spawn(pcall, wax.shared.restorefunction, Function, true)
 	end
+
+	wax.shared.ActorCommunicator:Fire("Unload")
 
 	wax.shared.Communicator:Destroy()
 	wax.shared.ScreenGui:Destroy()

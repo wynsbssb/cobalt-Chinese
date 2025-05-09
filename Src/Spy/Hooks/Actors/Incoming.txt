@@ -1,0 +1,228 @@
+local ClassesToHook = {
+	RemoteEvent = "OnClientEvent",
+	RemoteFunction = "OnClientInvoke",
+	UnreliableRemoteEvent = "OnClientEvent",
+	BindableEvent = "Event",
+	BindableFunction = "OnInvoke",
+}
+
+local SignalMapping = {}
+local HookedFunctions = {}
+
+OnUnload = function()
+	for Function, Original in pairs(wax.shared.Hooks) do
+		task.spawn(pcall, wax.shared.restorefunction, Function, true)
+	end
+
+	if not restorefunction then
+		hookmetamethod(game, "__newindex", wax.shared.NewIndexHook)
+	end
+end
+
+local function getcallingfunction()
+	for i = 4, 10 do
+		local Function, Source = debug.info(i, "fs")
+		if not Function or not Source then
+			break
+		end
+
+		if Source == "[C]" then
+			continue
+		end
+
+		return Function
+	end
+
+	return debug.info(4, "f")
+end
+local function getcallingline()
+	for i = 4, 10 do
+		local Source, Line = debug.info(i, "sl")
+		if not Source then
+			break
+		end
+
+		if Source == "[C]" then
+			continue
+		end
+
+		return Line
+	end
+
+	return debug.info(4, "l")
+end
+
+local function ListenToFunction(Instance, Function, Method)
+	if HookedFunctions[Function] then
+		return
+	end
+	HookedFunctions[Function] = true
+
+	wax.shared.Hooks[Function] = hookfunction(
+		Function,
+		wax.shared.newcclosure(function(...)
+			if not wax.shared.ShouldIgnore(Instance, getcallingscript()) then
+				local Log = wax.shared.Logs.Incoming[Instance]
+				if not Log then
+					Log = wax.shared.NewLog(Instance, "Incoming", Method, getcallingscript())
+				end
+
+				if Log.Blocked then
+					return
+				elseif not Log.Ignored then
+					local Info = {
+						{ ... },
+						os.date("%X"),
+						getcallingscript(),
+						getcallingfunction(),
+						getcallingline(),
+					}
+					Log:Call(Info)
+				end
+			end
+
+			return wax.shared.Hooks[Function](...)
+		end)
+	)
+end
+
+local function HandleInstance(Instance: any)
+	if not ClassesToHook[Instance.ClassName] or Instance == wax.shared.Communicator then
+		return
+	end
+
+	local Method = ClassesToHook[Instance.ClassName]
+
+	if Instance.ClassName == "RemoteEvent" or Instance.ClassName == "UnreliableRemoteEvent" then
+		for _, Connection in pairs(getconnections(Instance.OnClientEvent)) do
+			local Function = Connection.Function
+			if not Function then
+				continue
+			end
+
+			ListenToFunction(Instance, Function, Method)
+		end
+
+		SignalMapping[Instance.OnClientEvent] = Instance
+	elseif Instance.ClassName == "BindableEvent" then
+		for _, Connection in pairs(getconnections(Instance.Event)) do
+			local Function = Connection.Function
+			if not Function then
+				continue
+			end
+
+			ListenToFunction(Instance, Function, Method)
+		end
+
+		SignalMapping[Instance.Event] = Instance
+	elseif Instance.ClassName == "RemoteFunction" or Instance.ClassName == "BindableFunction" then
+		local Success, Callback = pcall(getcallbackvalue, Instance, Method)
+		if not Success or typeof(Callback) ~= "function" then
+			return
+		end
+
+		Instance[Method] = function(...)
+			if wax.shared.Unloaded or wax.shared.ShouldIgnore(Instance, getcallingscript()) then
+				return Callback(...)
+			end
+
+			local Log = wax.shared.Logs.Incoming[Instance]
+			if not Log then
+				Log = wax.shared.NewLog(Instance, "Incoming", Method, getcallingscript())
+			end
+
+			if Log.Blocked then
+				return
+			elseif not Log.Ignored then
+				local Info = {
+					{ ... },
+					os.date("%X"),
+					getcallingscript(),
+					getcallingfunction(),
+					getcallingline(),
+				}
+				Log:Call(Info)
+			end
+
+			return Callback(...)
+		end
+	end
+end
+
+wax.shared.Connect(game.DescendantAdded:Connect(HandleInstance))
+
+-- getinstances() was unreliable and failed to find some instances... ts pmo bro..
+for _, Category in pairs({ getnilinstances(), game:GetDescendants() }) do
+	for _, Instance in pairs(Category) do
+		HandleInstance(Instance)
+	end
+end
+
+wax.shared.NewIndexHook = hookmetamethod(
+	game,
+	"__newindex",
+	wax.shared.newcclosure(function(self, key, value)
+		if not ClassesToHook[self.ClassName] then
+			return wax.shared.NewIndexHook(self, key, value)
+		end
+
+		if self.ClassName == "RemoteFunction" or self.ClassName == "BindableFunction" then
+			local Method = ClassesToHook[self.ClassName]
+
+			if key == Method and typeof(value) == "function" then
+				return wax.shared.NewIndexHook(self, key, function(...)
+					if wax.shared.Unloaded or wax.shared.ShouldIgnore(self, getcallingscript()) then
+						return value(...)
+					end
+
+					local Log = wax.shared.Logs.Incoming[self]
+					if not Log then
+						Log = wax.shared.NewLog(self, "Incoming", Method, getcallingscript())
+					end
+
+					if Log.Blocked then
+						return
+					elseif not Log.Ignored then
+						local Info = {
+							{ ... },
+							os.date("%X"),
+							getcallingscript(),
+							getcallingfunction(),
+							getcallingline(),
+						}
+						Log:Call(Info)
+					end
+
+					return value(...)
+				end)
+			end
+		end
+
+		return wax.shared.NewIndexHook(self, key, value)
+	end)
+)
+
+local SignalMetatable = wax.shared.getrawmetatable(Instance.new("Part").Touched)
+wax.shared.Hooks[SignalMetatable.__index] = hookfunction(SignalMetatable.__index, function(self, key)
+	if key == "Connect" or key == "ConnectParallel" then
+		local Instance = SignalMapping[self]
+		local Connect = wax.shared.Hooks[SignalMetatable.__index](self, key)
+
+		if not Instance then
+			return Connect
+		end
+
+		local Method = ClassesToHook[Instance.ClassName]
+		wax.shared.Hooks[Connect] = hookfunction(
+			Connect,
+			wax.shared.newcclosure(function(self, callback)
+				ListenToFunction(Instance, callback, Method)
+				return wax.shared.Hooks[Connect](self, callback)
+			end)
+		)
+
+		return Connect
+	end
+
+	return wax.shared.Hooks[SignalMetatable.__index](self, key)
+end)

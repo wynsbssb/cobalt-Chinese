@@ -174,8 +174,8 @@ wax.shared.Unload = function()
 	local gameMetatable = wax.shared.getrawmetatable(game)
 
 	if restorefunction then
-		restorefunction(gameMetatable.__namecall)
-		restorefunction(gameMetatable.__newindex)
+		pcall(restorefunction, gameMetatable.__namecall)
+		pcall(restorefunction, gameMetatable.__newindex)
 	else
 		hookmetamethod(game, "__namecall", wax.shared.NamecallHook)
 		hookmetamethod(game, "__newindex", wax.shared.NewIndexHook)
@@ -185,7 +185,9 @@ wax.shared.Unload = function()
 		task.spawn(pcall, wax.shared.restorefunction, Function, true)
 	end
 
-	wax.shared.ActorCommunicator:Fire("Unload")
+	if wax.shared.ActorCommunicator then
+		wax.shared.ActorCommunicator:Fire("Unload")
+	end
 
 	wax.shared.Communicator:Destroy()
 	wax.shared.ScreenGui:Destroy()

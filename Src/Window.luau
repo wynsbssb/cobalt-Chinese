@@ -2447,7 +2447,7 @@ function CreatePaginationEllipsis(Order: number, Visible: boolean)
 			return
 		end
 
-		if math.abs(Page) ~= Page then
+		if math.abs(Page) ~= Page or Page == 0 then
 			wax.shared.Sonner.error("Invalid page number provided!")
 			Ellipsis.Ellipsis.Text = ""
 			return

@@ -986,7 +986,6 @@ CreateSettingsButton("Clear All Logs", function()
 	end
 
 	CleanLogsList()
-	CleanPagination()
 	CurrentLog = nil
 
 	wax.shared.Sonner.success("Successfully Cleared All Logs")
@@ -3073,6 +3072,11 @@ function SelectResult(NewResult, UpdateCanvasPosition)
 end
 function EnterResult(ResultIndex)
 	local Info = ResultInfo[CurrentResults[SelectedResult]]
+	if not Info then
+		CloseModal()
+		return
+	end
+
 	pcall(ShowTab, Tabs[Info.Type])
 	pcall(Info.Callback)
 

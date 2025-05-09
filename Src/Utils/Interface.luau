@@ -36,7 +36,7 @@ local DefaultProperties = {
 	["TextBox"] = {
 		BorderSizePixel = 0,
 		FontFace = DefaultFont,
-		ClipDescendants = true,
+		ClipsDescendants = true,
 		RichText = false,
 		TextColor3 = Color3.new(1, 1, 1),
 	},

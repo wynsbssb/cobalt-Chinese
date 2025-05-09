@@ -129,27 +129,30 @@ function Pagination:GetVisualInfo(Page: number?)
 		return Result
 	elseif FakeLeft and not FakeRight then
 		--local RightRange = CreateArray(TotalPages - ItemCount + 1, TotalPages)
+		Result[1] = 1
+		Result[2] = "ellipsis"
+
 		local Index = 3
 		for i = TotalPages - ItemCount + 1, TotalPages do
 			Result[Index] = i
 			Index += 1
 		end
-		Result[2] = "ellipsis"
-		Result[1] = 1
-		--return MergeTables(1, "ellipsis", RightRange)
+
 		return Result
 	elseif FakeLeft and FakeRight then
 		--local MiddleRange = CreateArray(LeftSibling, RightSibling)
 		Result[1] = 1
 		Result[2] = "ellipsis"
 		local Index = 3
+
 		for i = LeftSibling, RightSibling do
 			Result[Index] = i
 			Index += 1
 		end
+
 		Result[Index] = "ellipsis"
 		Result[Index + 1] = TotalPages
-		--return MergeTables(1, "ellipsis", MiddleRange, "ellipsis", TotalPages)
+
 		return Result
 		--return MergeTables(1, "ellipsis", MiddleRange, "ellipsis", TotalPages)
 	end

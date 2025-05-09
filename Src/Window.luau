@@ -2539,6 +2539,11 @@ ShowPagination = function(Log)
 			continue
 		end
 
+		local Ellipsis = PaginationElements.Ellipsis[Order]
+		if Ellipsis and Ellipsis.Parent ~= nil then
+			Ellipsis:SetVisible(false)
+		end
+
 		local Button = PaginationElements.Buttons[Order]
 		if Button then
 			Button:SetVisible(true)

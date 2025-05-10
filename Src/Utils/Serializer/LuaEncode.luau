@@ -496,7 +496,7 @@ local function LuaEncode(inputTable, options)
 		-- nil or some DataModel not under `game`, it'll just return nil
 		TypeCases["Instance"] = function(value)
 			if UseInstancePaths then
-				local InstancePath = wax.shared.CodeGen.GetFullPath(value, true)
+				local InstancePath = wax.shared.CodeGen.GetFullPath(value, false, nil, true)
 				if InstancePath then
 					return InstancePath
 				end

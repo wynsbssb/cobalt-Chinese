@@ -149,7 +149,7 @@ function CodeGen:BuildCallCode(CallInfo: CallInfo, Type: "Incoming" | "Outgoing"
 ]]
 
 	local StringlessArgs = SerializedArgs:gsub("%[%[.-%]%]", ""):gsub('".-"', "")
-	if StringlessArgs:match('GetNil%(".-", ".-"%s*%)') then
+	if StringlessArgs:match("GetNil%(, %)") then
 		CodeGenHeader = CodeGenHeader .. GetNilCode .. "\n\n"
 	end
 

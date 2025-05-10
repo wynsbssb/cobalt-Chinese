@@ -1,8 +1,5 @@
 local FileLogger = require(script.Utils.FileLog)
 
-wax.shared.LogFileName = `Cobalt/Logs/{DateTime.now():ToIsoDate():gsub(":", "_")}.log`
-local FileLog = FileLogger.new(wax.shared.LogFileName, FileLogger.LOG_LEVELS.INFO, true)
-
 -- Environment
 for _, Service in pairs({
 	"ContentProvider",
@@ -17,11 +14,7 @@ for _, Service in pairs({
 	wax.shared[Service] = cloneref(game:GetService(Service))
 end
 
-if not isfile("Cobalt/Settings.json") then
-	writefile("Cobalt/Settings.json", "{}")
-end
-
-wax.shared.SavedSettings = wax.shared.HttpService:JSONDecode(readfile("Cobalt/Settings.json"))
+wax.shared.SaveManager = require("Utils/SaveManager")
 wax.shared.Settings = {}
 
 -- UI
@@ -198,8 +191,15 @@ end
 -- Load Script
 wax.shared.Communicator = Instance.new("BindableEvent")
 
-wax.shared.Connect(
-	wax.shared.Communicator.Event:Connect(function(RemoteInstance, Type, CallDataFromHook, CallOrderInLog)
+wax.shared.SetupLoggingConnection = function()
+	if wax.shared.LogConnection then
+		wax.shared.LogConnection:Disconnect()
+	end
+
+	wax.shared.LogFileName = `Cobalt/Logs/{DateTime.now():ToIsoDate():gsub(":", "_")}.log`
+	local FileLog = FileLogger.new(wax.shared.LogFileName, FileLogger.LOG_LEVELS.INFO, true)
+
+	return function(RemoteInstance, Type, CallDataFromHook, CallOrderInLog)
 		local LogEntry = wax.shared.Logs[Type][RemoteInstance]
 		if not LogEntry then
 			return
@@ -274,8 +274,13 @@ wax.shared.Connect(
 				)
 			)
 		end
-	end)
-)
+	end
+end
+
+if wax.shared.SaveManager:GetState("EnableLogging") then
+	local LogConnection = wax.shared.SetupLoggingConnection()
+	wax.shared.LogConnection = wax.shared.Connect(wax.shared.Communicator.Event:Connect(LogConnection))
+end
 
 wax.shared.Log = require("Utils/Log")
 wax.shared.Logs = {

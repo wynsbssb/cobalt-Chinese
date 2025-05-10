@@ -555,7 +555,7 @@ local function CreateSettingsCheckbox(
 )
 	local Checkbox = {
 		Default = Options.Default or false,
-		Value = Options.Default or false,
+		Value = wax.shared.SaveManager:GetState(Idx) or Options.Default or false,
 	}
 
 	local CheckboxUI = wax.shared.Interface.New("TextButton", {
@@ -613,6 +613,8 @@ local function CreateSettingsCheckbox(
 			wax.shared.ActorCommunicator:Fire("MainSettingsSync", Idx, NewValue)
 		end
 
+		wax.shared.SaveManager:SetState(Idx, NewValue)
+
 		Checkbox.Value = NewValue
 
 		wax.shared.TweenService
@@ -661,7 +663,8 @@ local function CreateSettingsDropdown(
 		Default = Options.Default and CreateLookupTable(Options.Default)
 			or Options.AllowNull and (Options.Multi and {} or Options.Values[1])
 			or {},
-		Value = Options.Default and CreateLookupTable(Options.Default)
+		Value = wax.shared.SaveManager:GetState(Idx)
+			or Options.Default and CreateLookupTable(Options.Default)
 			or Options.AllowNull and (Options.Multi and {} or Options.Values[1])
 			or {},
 		Multi = Options.Multi or false,
@@ -706,6 +709,8 @@ local function CreateSettingsDropdown(
 					if wax.shared.ActorCommunicator then
 						wax.shared.ActorCommunicator:Fire("MainSettingsSync", Idx, Dropdown.Value)
 					end
+
+					wax.shared.SaveManager:SetState(Idx, Dropdown.Value)
 				end,
 				TextProperties = function()
 					local Value = IsArray and Object or Index
@@ -751,6 +756,8 @@ local function CreateSettingsDropdown(
 		if wax.shared.ActorCommunicator then
 			wax.shared.ActorCommunicator:Fire("MainSettingsSync", Idx, NewValue)
 		end
+
+		wax.shared.SaveManager:SetState(Idx, NewValue)
 
 		ContextMenu:Close()
 
@@ -1084,10 +1091,36 @@ CreateSettingsRemoteList("BlockedRemotes", {
 })
 
 local LoggingSection = CreateSettingsSection("Logging")
+local SessionLog
 
-wax.shared.Interface.New("TextLabel", {
-	Text = `Current Session Log: <b>{wax.shared.LogFileName:gsub("Cobalt/Logs/", "")}</b>`,
-	TextSize = 14,
+CreateSettingsCheckbox("EnableLogging", {
+	Text = `Enable File Logs`,
+	Default = false,
+	Section = LoggingSection,
+	Callback = function(value)
+		if not value then
+			wax.shared.LogConnection:Disconnect()
+			wax.shared.LogConnection = nil
+			wax.shared.LogFileName = nil
+			SessionLog.Text = `Current Session Log: <b>Not Logging</b>`
+			wax.shared.Sonner.success("Successfully disabled file logging")
+			return
+		end
+
+		local LogConnection = wax.shared.SetupLoggingConnection()
+		SessionLog.Text = `Current Session Log: <b>{wax.shared.LogFileName:gsub("Cobalt/Logs/", "")}</b>`
+		wax.shared.LogConnection = wax.shared.Connect(wax.shared.Communicator.Event:Connect(LogConnection))
+
+		wax.shared.Sonner.success("Successfully enabled file logging")
+	end,
+})
+
+SessionLog = wax.shared.Interface.New("TextLabel", {
+	Text = `Current Session Log: <b>{wax.shared.Settings.EnableLogging.Value and wax.shared.LogFileName:gsub(
+		"Cobalt/Logs/",
+		""
+	) or "Not Logging"}</b>`,
+	TextSize = 16,
 	Size = UDim2.fromScale(1, 0),
 	AutomaticSize = Enum.AutomaticSize.Y,
 	TextXAlignment = Enum.TextXAlignment.Left,
@@ -1098,7 +1131,7 @@ wax.shared.Interface.New("TextLabel", {
 
 wax.shared.Interface.New("TextLabel", {
 	Text = `Logs Path: <b>Cobalt/Logs</b>`,
-	TextSize = 14,
+	TextSize = 16,
 	Size = UDim2.fromScale(1, 0),
 	AutomaticSize = Enum.AutomaticSize.Y,
 	TextXAlignment = Enum.TextXAlignment.Left,
@@ -1125,6 +1158,11 @@ local SessionButtons = wax.shared.Interface.New("Frame", {
 	},
 })
 local CopySessionName = CreateSettingsButton("Copy Session Name", function()
+	if not wax.shared.Settings.EnableLogging.Value then
+		wax.shared.Sonner.error("File logging is not enabled")
+		return
+	end
+
 	local ActualLogFileName = wax.shared.LogFileName:gsub("Cobalt/Logs/", "")
 	local Success, Error = pcall(setclipboard, ActualLogFileName)
 
@@ -1139,6 +1177,11 @@ end, SessionButtons, 14)
 CopySessionName.Size = UDim2.new(0.5, -4, 0, 24)
 
 local CopyFullSessionPath = CreateSettingsButton("Copy Full Path", function()
+	if not wax.shared.Settings.EnableLogging.Value then
+		wax.shared.Sonner.error("File logging is not enabled")
+		return
+	end
+
 	local Success, Error = pcall(setclipboard, wax.shared.LogFileName)
 
 	if not Success then
@@ -3295,16 +3338,3 @@ wax.shared.Connect(wax.shared.UserInputService.InputBegan:Connect(function(Input
 		end
 	end
 end))
-
--- Saved Settings
-if not isfile("Cobalt/Settings.json") then
-	writefile("Cobalt/Settings.json", "{}")
-else
-	for Idx, Value in pairs(wax.shared.SavedSettings) do
-		if not wax.shared.Settings[Idx] then
-			continue
-		end
-
-		wax.shared.Settings[Idx]:SetValue(Value)
-	end
-end

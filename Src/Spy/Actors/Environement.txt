@@ -140,12 +140,10 @@ do
 	end
 
 	function Log:Ignore()
-		wax.shared.Communicator.Fire(wax.shared.Communicator, "ActorIgnore", self.Instance, self.Type)
 		self.Ignored = not self.Ignored
 	end
 
 	function Log:Block()
-		wax.shared.Communicator.Fire(wax.shared.Communicator, "ActorBlock", self.Instance, self.Type)
 		self.Blocked = not self.Blocked
 	end
 end

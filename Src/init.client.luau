@@ -32,6 +32,9 @@ wax.shared.CodeGen = require("Utils/CodeGen")
 wax.shared.Resize = require("Utils/Resize")
 
 -- Variables
+repeat
+	task.wait()
+until wax.shared.Players.LocalPlayer
 wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer
 wax.shared.PlayerScripts = wax.shared.LocalPlayer:WaitForChild("PlayerScripts")
 wax.shared.ExecutorName = string.split(identifyexecutor(), " ")[1]

@@ -10,7 +10,6 @@ end
 -- Actors use a different lua vm
 -- This means that our main thread metatable hooks dont apply in the actor's vm
 -- So we need to set up the hooks again in the actor lua vm in order to log everything
---[[ disabled for now when ill fix the args breaking when i want to
 local TargetActor = getactors and getactors()[1] or nil
 wax.shared.ActorsEnabled = (create_comm_channel and run_on_actor and TargetActor) ~= nil
 
@@ -91,4 +90,3 @@ if wax.shared.ActorsEnabled then
 
 	run_on_actor(TargetActor, ActorsUtils.Unload.Value, CommunicationChannelID)
 end
-]]

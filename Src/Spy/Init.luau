@@ -10,82 +10,94 @@ end
 -- Actors use a different lua vm
 -- This means that our main thread metatable hooks dont apply in the actor's vm
 -- So we need to set up the hooks again in the actor lua vm in order to log everything
+local ActorsUtils = script.Parent.Actors
+
 local TargetActor = getactors and getactors()[1] or nil
 wax.shared.ActorsEnabled = (create_comm_channel and run_on_actor and TargetActor) ~= nil
 
 if wax.shared.ActorsEnabled then
-	local ActorsUtils = script.Parent.Actors
 	local ActorEnvironementCode = ActorsUtils.Environement.Value
 
-	ActorEnvironementCode = ActorEnvironementCode:gsub(
-		"CobaltDynamicValue_IgnorePlayerModule",
-		tostring(wax.shared.SavedSettings.IgnorePlayerModule or true)
-	)
+	local CommunicationChannelID, Channel = create_comm_channel()
+	wax.shared.ActorCommunicator = get_comm_channel(CommunicationChannelID)
 
 	ActorEnvironementCode = ActorEnvironementCode:gsub(
-		"CobaltDynamicValue_IgnoredRemotesDropdown",
-		wax.shared.LuaEncode(wax.shared.SavedSettings.IgnoredRemotesDropdown or {
-			"BindableEvent",
-			"BindableFunction",
+		"COBALT_ACTOR_DATA",
+		wax.shared.LuaEncode({
+			Channel = CommunicationChannelID,
+			Token = wax.shared.CobaltVerificationToken,
+
+			IgnorePlayerModule = wax.shared.SaveManager:GetState("IgnorePlayerModule") or true,
+			IgnoredRemotesDropdown = wax.shared.SaveManager:GetState("IgnoredRemotesDropdown") or {
+				["BindableEvent"] = true,
+				["BindableFunction"] = true,
+			},
 		})
 	)
 
-	local CommunicationChannelID, Channel = create_comm_channel()
-	local RawBindableEvent = Channel
+	local function ReconstructTable(Info, CyclicRefs)
+		local Reconstructed = {}
 
-	-- RawBindableEvent is a table in some executors
-	if typeof(RawBindableEvent) == "table" then
-		for _, v in pairs(RawBindableEvent) do
-			if typeof(v) ~= "Instance" then
+		for Key, Value in Info do
+			if type(Value) == "table" then
+				-- Check for Cobalt Created Object
+				if not Value["__CyclicRef"] then
+					Reconstructed[Key] = ReconstructTable(Value, CyclicRefs)
+					continue
+				end
+
+				local CyclicId = Value["__Id"]
+
+				if not CyclicRefs[CyclicId] then
+					warn("CyclicRef not found: " .. CyclicId)
+					continue
+				end
+
+				Reconstructed[Key] = CyclicRefs[CyclicId]
 				continue
 			end
 
-			RawBindableEvent = v
-			break
+			Reconstructed[Key] = Value
 		end
+
+		return Reconstructed
 	end
 
-	wax.shared.ActorCommunicator = RawBindableEvent
-
 	wax.shared.Connect(Channel.Event:Connect(function(EventType, ...)
-		if EventType == "ActorCall" then
-			local Instance, Type, Info = ...
-			local Log = wax.shared.Logs[Type][Instance]
+		if EventType ~= "ActorCall" then
+			return
+		end
 
-			if not Log then
-				Log = wax.shared.NewLog(
-					Instance,
-					Type,
-					wax.shared.FunctionForClasses[Type][Instance.ClassName],
-					Info.Origin
-				)
-			end
+		local Instance, Type, RawInfo, CyclicRefs = ...
+		local Method = wax.shared.FunctionForClasses[Type][Instance.ClassName]
+		local Log = wax.shared.Logs[Type][Instance]
 
-			if Log.Blocked then
-				return
-			elseif not Log.Ignored then
-				Log:Call(Info)
-				wax.shared.Communicator:Fire(Log.Instance, Type, Info, #Log.Calls)
-			end
-		elseif EventType == "ActorIgnore" then
-			local Instance, Type = ...
-			local Log = wax.shared.Logs[Type][Instance]
+		if not Log then
+			Log = wax.shared.NewLog(Instance, Type, Method, RawInfo.Origin)
+		end
 
-			if Log then
-				Log:Ignore(true)
-			end
-		elseif EventType == "ActorBlock" then
-			local Instance, Type = ...
-			local Log = wax.shared.Logs[Type][Instance]
+		if Log.Blocked then
+			return
+		elseif not Log.Ignored then
+			local ReconstructedInfo = ReconstructTable(RawInfo, CyclicRefs)
 
-			if Log then
-				Log:Block(true)
-			end
+			local Info = {
+				ReconstructedInfo.Arguments,
+				ReconstructedInfo.Time,
+				ReconstructedInfo.Origin,
+				ReconstructedInfo.Function,
+				ReconstructedInfo.Line,
+				ReconstructedInfo.IsExecutor,
+				ReconstructedInfo.OriginalInvokeArgs,
+			}
+
+			Log:Call(Info)
+			wax.shared.Communicator:Fire(Log.Instance, Type, Info, #Log.Calls)
 		end
 	end))
 
 	for _, ActorHook in ipairs(Hooks.Actors:GetChildren()) do
-		run_on_actor(TargetActor, ActorEnvironementCode .. ActorHook.Value, CommunicationChannelID)
+		run_on_actor(TargetActor, ActorEnvironementCode .. ActorHook.Value)
 	end
 
 	run_on_actor(TargetActor, ActorsUtils.Unload.Value, CommunicationChannelID)

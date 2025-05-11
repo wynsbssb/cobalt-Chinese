@@ -205,6 +205,29 @@ Event:%s(%s)]],
 end
 
 function CodeGen:BuildFunctionInfo(CallInfo: CallInfo)
+	if typeof(CallInfo.Function) == "table" then
+		return string.format(
+			[[<b>Function Address:</b> %s
+<b>Name:</b> %s
+<b>Source:</b> %s
+<b>Calling Line:</b> %s
+<b>From Actor:</b> true
+%s]],
+			CallInfo.Function.Address:match("0x%x+") or tostring(CallInfo.Function),
+			CallInfo.Function.Name ~= "" and CallInfo.Function.Name or "Anonymous",
+			CallInfo.Origin and self.GetFullPath(CallInfo.Origin, true) or wax.shared.ExecutorName,
+			tostring(CallInfo.Line),
+
+			CallInfo.Function.IsC and "<b>Closure Type</b>: C closure"
+				or string.format(
+					"<b>Closure Type</b>: Luau closure\n<b>Constants:</b> %s\n<b>Upvalues:</b> %s\n<b>Protos:</b> %s",
+					debug.getconstants and tostring(#CallInfo.Function.Constants) or "N/A",
+					debug.getupvalues and tostring(#CallInfo.Function.Upvalues) or "N/A",
+					debug.getprotos and tostring(#CallInfo.Function.Protos) or "N/A"
+				)
+		)
+	end
+
 	local FunctionName = debug.info(CallInfo.Function, "n")
 
 	return string.format(

@@ -14,6 +14,7 @@ for _, Service in pairs({
 	wax.shared[Service] = cloneref(game:GetService(Service))
 end
 
+wax.shared.CobaltVerificationToken = wax.shared.HttpService:GenerateGUID()
 wax.shared.SaveManager = require("Utils/SaveManager")
 wax.shared.Settings = {}
 

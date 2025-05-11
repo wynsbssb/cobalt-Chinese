@@ -64,6 +64,10 @@ if wax.shared.ActorsEnabled then
 	end
 
 	wax.shared.Connect(Channel.Event:Connect(function(EventType, ...)
+		if (wax.shared.SaveManager:GetState("LogActors") or true) == false then
+			return
+		end
+
 		if EventType ~= "ActorCall" then
 			return
 		end

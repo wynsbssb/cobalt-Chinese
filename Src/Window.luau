@@ -1034,10 +1034,14 @@ CreateSettingsDropdown("IgnoredRemotesDropdown", {
 	Section = FilterSection,
 })
 
-CreateSettingsCheckbox("IgnoreSpammyRemotes", {
-	Text = "Auto Ignore Spammy Remotes",
-	Section = FilterSection,
-})
+if wax.shared.ActorsEnabled then
+	CreateSettingsCheckbox("LogActors", {
+		Text = "Log Events from Actors",
+		Default = true,
+		Section = FilterSection,
+	})
+end
+
 CreateSettingsCheckbox("IgnorePlayerModule", {
 	Text = "Ignore Player Module Remotes",
 	Default = true,

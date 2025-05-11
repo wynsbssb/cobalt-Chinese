@@ -80,6 +80,24 @@ wax.shared.ShouldIgnore = function(Instance, Origin)
 		or (wax.shared.Settings.IgnorePlayerModule.Value and wax.shared.IsPlayerModule(Origin))
 end
 
+wax.shared.Connections = {}
+
+wax.shared.Connect = function(Connection)
+	table.insert(wax.shared.Connections, Connection)
+	return Connection
+end
+
+wax.shared.Disconnect = function(Connection)
+	Connection:Disconnect()
+
+	local Index = table.find(wax.shared.Connections, Connection)
+	if Index then
+		table.remove(wax.shared.Connections, Index)
+	end
+
+	return true
+end
+
 local OnUnload
 
 local RelayConnection
@@ -87,6 +105,9 @@ RelayConnection = RelayChannel.Event:Connect(function(Type, ...)
 	if Type == "Unload" then
 		RelayConnection:Disconnect()
 		wax.shared.Unloaded = true
+		for _, Connection in pairs(wax.shared.Connections) do
+			wax.shared.Disconnect(Connection)
+		end
 
 		if OnUnload then
 			OnUnload()

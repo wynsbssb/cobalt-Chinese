@@ -51,6 +51,36 @@ local MainFrame = wax.shared.Interface.New("Frame", {
 	Parent = ScreenGui,
 })
 
+local ShowButton = wax.shared.Interface.New("TextButton", {
+	BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+	Position = UDim2.new(0.5, 0, 0, 36),
+	Size = UDim2.fromOffset(36, 36),
+	Text = "",
+	Visible = false,
+
+	["ImageLabel"] = {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundTransparency = 1,
+		Image = "rbxassetid://91685317120520",
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.new(1, -10, 1, -10),
+	},
+
+	["UIStroke"] = {
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		Color = Color3.new(1, 1, 1),
+	},
+
+	MainUICorner,
+	Parent = ScreenGui,
+})
+do
+	ShowButton.MouseButton1Click:Connect(function()
+		ShowButton.Visible = false
+		MainFrame.Visible = true
+	end)
+end
+
 -- Resizing
 wax.shared.Resize.new({
 	MainFrame = MainFrame,
@@ -2200,16 +2230,20 @@ local function CreateTopSeperator(Order: number)
 end
 
 CreateTopButton("x", 4, wax.shared.Unload)
-local HideButton = CreateTopButton("minus", 3)
+CreateTopButton("minus", 3, function()
+	MainFrame.Visible = false
+	ShowButton.Visible = true
+end)
 CreateTopSeperator(2)
-local SettingsButton = CreateTopButton("settings", 1, function()
+CreateTopButton("settings", 1, function()
 	OpenModal(SettingsFrame)
 end)
-local SearchButton = CreateTopButton("search", 0, function()
+CreateTopButton("search", 0, function()
 	OpenSearch()
 end)
 
 wax.shared.Drag.Setup(MainFrame, TopBar)
+wax.shared.Drag.Setup(ShowButton, ShowButton)
 
 -- Remote List
 local LeftList = wax.shared.Interface.New("Frame", {

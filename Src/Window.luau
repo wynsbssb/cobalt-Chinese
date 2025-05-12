@@ -52,6 +52,7 @@ local MainFrame = wax.shared.Interface.New("Frame", {
 })
 
 local ShowButton = wax.shared.Interface.New("TextButton", {
+	AnchorPoint = Vector2.new(0.5, 0),
 	BackgroundColor3 = Color3.fromRGB(15, 15, 15),
 	Position = UDim2.new(0.5, 0, 0, 36),
 	Size = UDim2.fromOffset(36, 36),

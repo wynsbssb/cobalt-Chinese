@@ -1644,19 +1644,19 @@ CreateInfoDropdownButton("copy", "Copy", {
 			end
 
 			local Info = {
-				Function = {
+				Function = typeof(CurrentInfo.Function) == "function" and {
 					Name = CurrentInfo.Function and debug.info(CurrentInfo.Function, "n") or "Unknown",
 					Type = CurrentInfo.Function
 							and (iscclosure(CurrentInfo.Function) and "C Closure" or "Luau function")
 						or "N/A",
 					Address = tostring(CurrentInfo.Function),
 					Arguments = CurrentInfo.Arguments,
-				},
+				} or CurrentInfo.Function,
 				Script = CurrentInfo.Origin,
 				Line = CurrentInfo.Line,
 			}
 
-			if CurrentInfo.Function and islclosure(CurrentInfo.Function) then
+			if typeof(CurrentInfo.Function) == "function" and islclosure(CurrentInfo.Function) then
 				local FunctionInfo = {
 					Constants = debug.getconstants,
 					Upvalues = debug.getupvalues,

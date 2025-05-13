@@ -1581,7 +1581,7 @@ end
 
 CreateInfoDropdownButton("copy", "Copy", {
 	{
-		Text = "Code",
+		Text = "Calling Code",
 		Icon = "code",
 		Callback = function()
 			if not CurrentInfo then
@@ -1600,38 +1600,21 @@ CreateInfoDropdownButton("copy", "Copy", {
 		end,
 	},
 	{
-		Text = "Remote Path",
-		Icon = "package-search",
+		Text = "Intercept Code",
+		Icon = "code",
 		Callback = function()
 			if not CurrentInfo then
 				return
 			end
-			local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Instance))
-			if Success then
-				wax.shared.Sonner.success("Copied remote path to clipboard")
-			else
-				wax.shared.Sonner.error("Failed to copy remote path to clipboard")
-				warn("Failed to copy remote path to clipboard", Error)
-			end
-		end,
-	},
-	{
-		Text = "Script Path",
-		Icon = "file-search",
-		Condition = function()
-			return CurrentInfo and typeof(CurrentInfo.Origin) == "Instance"
-		end,
-		Callback = function()
-			if not (CurrentInfo and typeof(CurrentInfo.Origin) == "Instance") then
-				return
-			end
 
-			local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Origin))
+			local Code = wax.shared.CodeGen:BuildHookCode(CurrentInfo, CurrentTab.Name)
+			local Success, Error = pcall(setclipboard, Code)
+
 			if Success then
-				wax.shared.Sonner.success("Copied script path to clipboard")
+				wax.shared.Sonner.success("Copied code to clipboard")
 			else
-				wax.shared.Sonner.error("Failed to copy script path to clipboard")
-				warn("Failed to copy script path to clipboard", Error)
+				wax.shared.Sonner.error("Failed to copy code to clipboard")
+				warn("Failed to copy code to clipboard", Error)
 			end
 		end,
 	},
@@ -1678,6 +1661,45 @@ CreateInfoDropdownButton("copy", "Copy", {
 			else
 				wax.shared.Sonner.error("Failed to copy function info to clipboard")
 				warn("Failed to copy function info to clipboard", Error)
+			end
+		end,
+	},
+})
+
+CreateInfoDropdownButton("scroll-text", "Origin", {
+	{
+		Text = "Remote Path",
+		Icon = "package-search",
+		Callback = function()
+			if not CurrentInfo then
+				return
+			end
+			local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Instance))
+			if Success then
+				wax.shared.Sonner.success("Copied remote path to clipboard")
+			else
+				wax.shared.Sonner.error("Failed to copy remote path to clipboard")
+				warn("Failed to copy remote path to clipboard", Error)
+			end
+		end,
+	},
+	{
+		Text = "Script Path",
+		Icon = "file-search",
+		Condition = function()
+			return CurrentInfo and typeof(CurrentInfo.Origin) == "Instance"
+		end,
+		Callback = function()
+			if not (CurrentInfo and typeof(CurrentInfo.Origin) == "Instance") then
+				return
+			end
+
+			local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Origin))
+			if Success then
+				wax.shared.Sonner.success("Copied script path to clipboard")
+			else
+				wax.shared.Sonner.error("Failed to copy script path to clipboard")
+				warn("Failed to copy script path to clipboard", Error)
 			end
 		end,
 	},
@@ -2964,10 +2986,25 @@ function CreateCallFrame(CallInfo)
 	do
 		local CallFrameContextMenu = CreateContextMenu(CallFrame, {
 			{
-				Text = "Copy Code",
+				Text = "Copy Calling Code",
 				Icon = "code",
 				Callback = function()
 					local Code = wax.shared.CodeGen:BuildCallCode(CallInfo, CurrentTab.Name)
+					local Success, Error = pcall(setclipboard, Code)
+
+					if Success then
+						wax.shared.Sonner.success("Copied code to clipboard")
+					else
+						wax.shared.Sonner.error("Failed to copy code to clipboard")
+						warn("Failed to copy code to clipboard", Error)
+					end
+				end,
+			},
+			{
+				Text = "Copy Intercept Code",
+				Icon = "code",
+				Callback = function()
+					local Code = wax.shared.CodeGen:BuildHookCode(CallInfo, CurrentTab.Name)
 					local Success, Error = pcall(setclipboard, Code)
 
 					if Success then

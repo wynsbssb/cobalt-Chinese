@@ -99,7 +99,7 @@ end
 
 function Interface.GetScreenParent(): Instance
 	local ScreenGui = wax.shared.Interface.New("ScreenGui")
-	local HiddenUI = wax.shared.CoreGui
+	local HiddenUI = wax.shared.gethui()
 
 	if pcall(function()
 		ScreenGui.Parent = HiddenUI

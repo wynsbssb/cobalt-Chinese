@@ -52,8 +52,6 @@ local GetNilCode = [[local function GetNil(Name, DebugId)
 	end
 end]]
 
-wax.shared.CodeGen.GetNilCode = GetNilCode
-
 --// Pasted from Dex (maximum detection)
 for i = 0, 31 do
 	CodeGen.CleanTable[string.char(i)] = "\\" .. string.format("%03d", i)

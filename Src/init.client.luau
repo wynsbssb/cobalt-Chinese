@@ -10,6 +10,7 @@ for _, Service in pairs({
 	"HttpService",
 	"UserInputService",
 	"TextService",
+	"StarterGui",
 }) do
 	wax.shared[Service] = cloneref(game:GetService(Service))
 end
@@ -17,6 +18,8 @@ end
 wax.shared.CobaltVerificationToken = wax.shared.HttpService:GenerateGUID()
 wax.shared.SaveManager = require("Utils/SaveManager")
 wax.shared.Settings = {}
+
+require("ExecutorSupport")
 
 -- UI
 require("Utils/Connect")

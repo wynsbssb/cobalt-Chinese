@@ -61,11 +61,12 @@ local function ListenToFunction(Instance, Function, Method)
 					return
 				elseif not Log.Ignored then
 					local Info = {
-						{ ... },
-						os.date("%X"),
-						getcallingscript(),
-						getcallingfunction(),
-						getcallingline(),
+						Arguments = { ... },
+						Time = os.date("%X"),
+						Origin = getcallingscript(),
+						Function = getcallingfunction(),
+						Line = getcallingline(),
+						IsExecutor = checkcaller(),
 					}
 					Log:Call(Info)
 					wax.shared.Communicator:Fire(Log.Instance, "Incoming", Info, #Log.Calls)
@@ -126,11 +127,12 @@ local function HandleInstance(Instance: any)
 				return
 			elseif not Log.Ignored then
 				local Info = {
-					{ ... },
-					os.date("%X"),
-					getcallingscript(),
-					getcallingfunction(),
-					getcallingline(),
+					Arguments = { ... },
+					Time = os.date("%X"),
+					Origin = getcallingscript(),
+					Function = getcallingfunction(),
+					Line = getcallingline(),
+					IsExecutor = checkcaller(),
 				}
 				Log:Call(Info)
 				wax.shared.Communicator:Fire(Log.Instance, "Incoming", Info, #Log.Calls)
@@ -176,11 +178,12 @@ wax.shared.NewIndexHook = hookmetamethod(
 						return
 					elseif not Log.Ignored then
 						local Info = {
-							{ ... },
-							os.date("%X"),
-							getcallingscript(),
-							getcallingfunction(),
-							getcallingline(),
+							Arguments = { ... },
+							Time = os.date("%X"),
+							Origin = getcallingscript(),
+							Function = getcallingfunction(),
+							Line = getcallingline(),
+							IsExecutor = checkcaller(),
 						}
 						Log:Call(Info)
 						wax.shared.Communicator:Fire(Log.Instance, "Incoming", Info, #Log.Calls)

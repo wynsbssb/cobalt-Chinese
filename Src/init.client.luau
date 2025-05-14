@@ -210,18 +210,12 @@ wax.shared.SetupLoggingConnection = function()
 		end
 
 		local success, err = pcall(function()
-			local callInfoForProcessing = {
+			local generatedCode = wax.shared.CodeGen:BuildCallCode(setmetatable({
 				Instance = RemoteInstance,
-				Arguments = CallDataFromHook[1],
-				Time = CallDataFromHook[2],
-				Origin = CallDataFromHook[3],
-				Function = CallDataFromHook[4],
-				Line = CallDataFromHook[5],
-				Order = CallOrderInLog,
-				IsExecutorCaller = CallDataFromHook[6],
-				OriginalInvokeArgs = CallDataFromHook[7],
-			}
-			local generatedCode = wax.shared.CodeGen:BuildCallCode(callInfoForProcessing, Type)
+				Type = Type,
+			}, {
+				__index = CallDataFromHook,
+			}))
 
 			local comprehensiveDataToSerialize = {
 				RemoteInstanceInfo = {

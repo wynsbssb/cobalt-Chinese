@@ -57,12 +57,12 @@ wax.shared.NamecallHook = hookmetamethod(
 				return
 			elseif not Log.Ignored then
 				local Info = {
-					{ ... },
-					os.date("%X"),
-					getcallingscript(),
-					getcallingfunction(),
-					getcallingline(),
-					checkcaller(),
+					Arguments = { ... },
+					Time = os.date("%X"),
+					Origin = getcallingscript(),
+					Function = getcallingfunction(),
+					Line = getcallingline(),
+					IsExecutor = checkcaller(),
 				}
 				Log:Call(Info)
 				wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, "Outgoing", Info, #Log.Calls)
@@ -81,13 +81,13 @@ wax.shared.NamecallHook = hookmetamethod(
 					local Result = { wax.shared.NamecallHook(self, ...) }
 					if not Log.Ignored then
 						local RFResultInfo = {
-							Result,
-							os.date("%X"),
-							getcallingscript(),
-							getcallingfunction(),
-							getcallingline(),
-							checkcaller(),
-							{ ... },
+							Arguments = Result,
+							Time = os.date("%X"),
+							Origin = getcallingscript(),
+							Function = getcallingfunction(),
+							Line = getcallingline(),
+							IsExecutor = checkcaller(),
+							OriginalInvokeArgs = { ... },
 						}
 						Log:Call(RFResultInfo)
 						wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
@@ -127,12 +127,12 @@ for _, Function in pairs(FunctionsToHook) do
 					return
 				elseif not Log.Ignored then
 					local Info = {
-						{ ... },
-						os.date("%X"),
-						getcallingscript(),
-						getcallingfunction(),
-						getcallingline(),
-						checkcaller(),
+						Arguments = { ... },
+						Time = os.date("%X"),
+						Origin = getcallingscript(),
+						Function = getcallingfunction(),
+						Line = getcallingline(),
+						IsExecutor = checkcaller(),
 					}
 					Log:Call(Info)
 					wax.shared.Communicator:Fire(Log.Instance, "Outgoing", Info, #Log.Calls)
@@ -151,13 +151,13 @@ for _, Function in pairs(FunctionsToHook) do
 						local Result = { wax.shared.Hooks[Function](self, ...) }
 						if not Log.Ignored then
 							local RFResultInfo = {
-								Result,
-								os.date("%X"),
-								getcallingscript(),
-								getcallingfunction(),
-								getcallingline(),
-								checkcaller(),
-								{ ... },
+								Arguments = Result,
+								Time = os.date("%X"),
+								Origin = getcallingscript(),
+								Function = getcallingfunction(),
+								Line = getcallingline(),
+								IsExecutor = checkcaller(),
+								OriginalInvokeArgs = { ... },
 							}
 							Log:Call(RFResultInfo)
 							wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)

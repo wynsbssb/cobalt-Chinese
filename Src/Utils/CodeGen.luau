@@ -8,11 +8,22 @@ type CallInfo = {
 	Arguments: { any },
 	Time: string,
 	Origin: BaseScript?,
-	Function: (...any) -> any,
+	Function: (
+		...any
+	) -> any | {
+		Address: string,
+		Name: string,
+		IsC: boolean,
+		Constants: { any }?,
+		Upvalues: { any }?,
+		Protos: { any }?,
+	},
 	Line: number?,
 	Instance: SupportedRemoteTypes,
 	Order: number,
+	Type: "Incoming" | "Outgoing",
 	OriginalInvokeArgs: { any }?,
+	IsActor: boolean?,
 }
 
 wax.shared.FunctionForClasses = {
@@ -159,9 +170,10 @@ end)]],
 	)
 end
 
-function CodeGen:BuildHookCode(CallInfo: CallInfo, Type: "Incoming" | "Outgoing")
+function CodeGen:BuildHookCode(CallInfo: CallInfo)
+	local Type = CallInfo.Type
 	local Path = self.GetFullPath(CallInfo.Instance, false, "Event")
-	local IsFromActor = typeof(CallInfo.Function) == "table"
+	local IsFromActor = CallInfo.IsActor or false
 	local Method = wax.shared.FunctionForClasses[Type][CallInfo.Instance.ClassName]
 
 	local CodeGenHeader = CodeGenHeaderTemplate
@@ -270,7 +282,7 @@ local old%s; old%s = hookfunction(Event.%s, function(self, ...)
 	end
 
 	return old%s(self, ...)
-end]],
+end)]],
 				Path,
 				Method,
 				Method,
@@ -285,7 +297,8 @@ end]],
 		)
 end
 
-function CodeGen:BuildCallCode(CallInfo: CallInfo, Type: "Incoming" | "Outgoing")
+function CodeGen:BuildCallCode(CallInfo: CallInfo)
+	local Type = CallInfo.Type
 	local Path = self.GetFullPath(CallInfo.Instance, false, "Event")
 	local Method = wax.shared.FunctionForClasses[Type][CallInfo.Instance.ClassName]
 	local SerializedArgs =
@@ -355,7 +368,7 @@ Event:%s(%s)]],
 end
 
 function CodeGen:BuildFunctionInfo(CallInfo: CallInfo)
-	if typeof(CallInfo.Function) == "table" then
+	if CallInfo.IsActor and typeof(CallInfo.Function) == "table" then
 		return string.format(
 			[[<b>Function Address:</b> %s
 <b>Name:</b> %s
@@ -401,7 +414,8 @@ function CodeGen:BuildFunctionInfo(CallInfo: CallInfo)
 	)
 end
 
-wax.shared.ReplayCallInfo = function(CallInfo: CallInfo, Type: "Incoming" | "Outgoing")
+wax.shared.ReplayCallInfo = function(CallInfo: CallInfo)
+	local Type = CallInfo.Type
 	local Method = wax.shared.FunctionForClasses[Type][CallInfo.Instance.ClassName]
 
 	if Type == "Incoming" then

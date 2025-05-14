@@ -18,36 +18,23 @@ function Log.new(Instance, Type, Method, Index, CallingScript)
 end
 
 function Log:Call(Info)
-	local Data = {
-		Arguments = Info[1],
-		Time = Info[2],
-		Origin = Info[3],
-		Function = Info[4],
-		Line = Info[5],
-		IsExecutor = Info[6],
-	}
-
-	if Info[7] then
-		Data.OriginalInvokeArgs = Info[7]
-	end
-
 	local Index = #self.Calls + 1
-	self.Calls[Index] = Data
-	if not Data.IsExecutor then
+	self.Calls[Index] = Info
+	if not Info.IsExecutor then
 		table.insert(self.GameCalls, Index)
 	end
 end
 
-function Log:Ignore(FromActor: boolean?)
-	if wax.shared.ActorCommunicator and not FromActor then
+function Log:Ignore()
+	if wax.shared.ActorCommunicator then
 		wax.shared.ActorCommunicator:Fire("MainIgnore", self.Instance, self.Type)
 	end
 
 	self.Ignored = not self.Ignored
 end
 
-function Log:Block(FromActor: boolean?)
-	if wax.shared.ActorCommunicator and not FromActor then
+function Log:Block()
+	if wax.shared.ActorCommunicator then
 		wax.shared.ActorCommunicator:Fire("MainBlock", self.Instance, self.Type)
 	end
 

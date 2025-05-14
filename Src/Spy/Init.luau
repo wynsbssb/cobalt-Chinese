@@ -85,18 +85,8 @@ if wax.shared.ActorsEnabled then
 		elseif not Log.Ignored then
 			local ReconstructedInfo = ReconstructTable(RawInfo, CyclicRefs)
 
-			local Info = {
-				ReconstructedInfo.Arguments,
-				ReconstructedInfo.Time,
-				ReconstructedInfo.Origin,
-				ReconstructedInfo.Function,
-				ReconstructedInfo.Line,
-				ReconstructedInfo.IsExecutor,
-				ReconstructedInfo.OriginalInvokeArgs,
-			}
-
-			Log:Call(Info)
-			wax.shared.Communicator:Fire(Log.Instance, Type, Info, #Log.Calls)
+			Log:Call(ReconstructedInfo)
+			wax.shared.Communicator:Fire(Log.Instance, Type, ReconstructedInfo, #Log.Calls)
 		end
 	end))
 

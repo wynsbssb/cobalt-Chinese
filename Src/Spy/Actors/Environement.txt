@@ -249,21 +249,8 @@ do
 	end
 
 	function Log:Call(Info)
-		local Data = {
-			Arguments = Info[1],
-			Time = Info[2],
-			Origin = Info[3],
-			Function = Info[4],
-			Line = Info[5],
-			IsExecutor = Info[6],
-			IsActor = true,
-		}
-
-		if Info[7] then
-			Data.OriginalInvokeArgs = Info[7]
-		end
-
-		wax.shared.Communicator.Fire(wax.shared.Communicator, "ActorCall", self.Instance, self.Type, FixTable(Data))
+		Info["IsActor"] = true
+		wax.shared.Communicator.Fire(wax.shared.Communicator, "ActorCall", self.Instance, self.Type, FixTable(Info))
 	end
 
 	function Log:Ignore()

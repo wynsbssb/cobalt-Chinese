@@ -1579,16 +1579,16 @@ local function CreateInfoDropdownButton(Icon: string, Title: string, Options: {}
 	return Menu
 end
 
-CreateInfoDropdownButton("copy", "Copy", {
+CreateInfoDropdownButton("code", "Code", {
 	{
 		Text = "Calling Code",
-		Icon = "code",
+		Icon = "forward",
 		Callback = function()
 			if not CurrentInfo then
 				return
 			end
 
-			local Code = wax.shared.CodeGen:BuildCallCode(CurrentInfo, CurrentTab.Name)
+			local Code = wax.shared.CodeGen:BuildCallCode(CurrentInfo)
 			local Success, Error = pcall(setclipboard, Code)
 
 			if Success then
@@ -1601,13 +1601,13 @@ CreateInfoDropdownButton("copy", "Copy", {
 	},
 	{
 		Text = "Intercept Code",
-		Icon = "code",
+		Icon = "shield-alert",
 		Callback = function()
 			if not CurrentInfo then
 				return
 			end
 
-			local Code = wax.shared.CodeGen:BuildHookCode(CurrentInfo, CurrentTab.Name)
+			local Code = wax.shared.CodeGen:BuildHookCode(CurrentInfo)
 			local Success, Error = pcall(setclipboard, Code)
 
 			if Success then
@@ -1731,7 +1731,7 @@ CreateInfoDropdownButton("scroll-text", "Origin", {
 	},
 })
 
-local NetworkButton = CreateInfoDropdownButton("network", "Event", {
+CreateInfoDropdownButton("network", "Event", {
 	{
 		Text = "Replay",
 		Icon = "play",
@@ -2527,17 +2527,15 @@ ShowCalls = function(Log, Page)
 
 		local UIOrder = wax.shared.Settings.NewestToOldestSorting.Value and End - Index + 1 or Index
 
-		CreateCallFrame({
+		local Data = setmetatable({
 			Instance = Log.Instance,
-			Arguments = Call.Arguments,
-			Time = Call.Time,
-			Origin = Call.Origin,
-			Function = Call.Function,
-			Line = Call.Line,
-			IsExecutor = Call.IsExecutor,
-			OriginalInvokeArgs = Call.OriginalInvokeArgs,
+			Type = Log.Type,
 			Order = UIOrder,
+		}, {
+			__index = Call,
 		})
+
+		CreateCallFrame(Data)
 	end
 end
 
@@ -2987,9 +2985,9 @@ function CreateCallFrame(CallInfo)
 		local CallFrameContextMenu = CreateContextMenu(CallFrame, {
 			{
 				Text = "Copy Calling Code",
-				Icon = "code",
+				Icon = "forward",
 				Callback = function()
-					local Code = wax.shared.CodeGen:BuildCallCode(CallInfo, CurrentTab.Name)
+					local Code = wax.shared.CodeGen:BuildCallCode(CallInfo)
 					local Success, Error = pcall(setclipboard, Code)
 
 					if Success then
@@ -3002,7 +3000,7 @@ function CreateCallFrame(CallInfo)
 			},
 			{
 				Text = "Copy Intercept Code",
-				Icon = "code",
+				Icon = "shield-alert",
 				Callback = function()
 					local Code = wax.shared.CodeGen:BuildHookCode(CallInfo, CurrentTab.Name)
 					local Success, Error = pcall(setclipboard, Code)
@@ -3267,7 +3265,7 @@ function OpenInfo(CallInfo)
 
 	CurrentInfo = CallInfo
 
-	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo, CurrentTab.Name))
+	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo))
 
 	local FuncInfoSuccess, GeneratedFuncInfo = pcall(function()
 		return wax.shared.CodeGen:BuildFunctionInfo(CallInfo)
@@ -3377,17 +3375,15 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 
 		local UIOrder = wax.shared.Settings.NewestToOldestSorting.Value and End - CallIndex + 1 or CallIndex
 
-		CreateCallFrame({
+		local Data = setmetatable({
 			Instance = Instance,
-			Arguments = CallInfo[1],
-			Time = CallInfo[2],
-			Origin = CallInfo[3],
-			Function = CallInfo[4],
-			Line = CallInfo[5],
-			IsExecutor = CallInfo[6],
-			OriginalInvokeArgs = CallInfo[7],
+			Type = Type,
 			Order = UIOrder,
+		}, {
+			__index = CallInfo,
 		})
+
+		CreateCallFrame(Data)
 	end
 end))
 

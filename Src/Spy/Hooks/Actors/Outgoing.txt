@@ -67,12 +67,12 @@ wax.shared.NamecallHook = hookmetamethod(
 				return
 			elseif not Log.Ignored then
 				local Info = {
-					{ ... },
-					os.date("%X"),
-					getcallingscript(),
-					getcallingfunction(),
-					getcallingline(),
-					checkcaller(),
+					Arguments = { ... },
+					Time = os.date("%X"),
+					Origin = getcallingscript(),
+					Function = getcallingfunction(),
+					Line = getcallingline(),
+					IsExecutor = checkcaller(),
 				}
 				Log:Call(Info)
 
@@ -90,13 +90,13 @@ wax.shared.NamecallHook = hookmetamethod(
 					local Result = { wax.shared.NamecallHook(self, ...) }
 					if not Log.Ignored then
 						local RFResultInfo = {
-							Result,
-							os.date("%X"),
-							getcallingscript(),
-							getcallingfunction(),
-							getcallingline(),
-							checkcaller(),
-							{ ... },
+							Arguments = Result,
+							Time = os.date("%X"),
+							Origin = getcallingscript(),
+							Function = getcallingfunction(),
+							Line = getcallingline(),
+							IsExecutor = checkcaller(),
+							OriginalInvokeArgs = { ... },
 						}
 						Log:Call(RFResultInfo)
 					end
@@ -135,12 +135,12 @@ for _, Function in pairs(FunctionsToHook) do
 					return
 				elseif not Log.Ignored then
 					local Info = {
-						{ ... },
-						os.date("%X"),
-						getcallingscript(),
-						getcallingfunction(),
-						getcallingline(),
-						checkcaller(),
+						Arguments = { ... },
+						Time = os.date("%X"),
+						Origin = getcallingscript(),
+						Function = getcallingfunction(),
+						Line = getcallingline(),
+						IsExecutor = checkcaller(),
 					}
 					Log:Call(Info)
 
@@ -158,13 +158,13 @@ for _, Function in pairs(FunctionsToHook) do
 						local Result = { wax.shared.Hooks[Function](self, ...) }
 						if not Log.Ignored then
 							local RFResultInfo = {
-								Result,
-								os.date("%X"),
-								getcallingscript(),
-								getcallingfunction(),
-								getcallingline(),
-								checkcaller(),
-								{ ... },
+								Arguments = Result,
+								Time = os.date("%X"),
+								Origin = getcallingscript(),
+								Function = getcallingfunction(),
+								Line = getcallingline(),
+								IsExecutor = checkcaller(),
+								OriginalInvokeArgs = { ... },
 							}
 							Log:Call(RFResultInfo)
 						end

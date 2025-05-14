@@ -332,7 +332,7 @@ function CodeGen:BuildCallCode(CallInfo: CallInfo)
 					.. string.format(
 						[[%s%s
 local Result = Event:%s(%s)]],
-						(InsertedNilFunction or DidInsertNilFunction and GetNilCode or "") .. "\n\n",
+						(InsertedNilFunction or DidInsertNilFunction and GetNilCode .. "\n\n" or ""),
 						Path,
 						Method,
 						CreateArgsString(PrettifiedOutput, CallInfo.OriginalInvokeArgs)
@@ -346,7 +346,7 @@ local Result = Event:%s(%s)]],
 local Callback = getcallbackvalue(Event, "%s")
 
 Callback(%s)]],
-						(DidInsertNilFunction and GetNilCode or "") .. "\n\n",
+						(DidInsertNilFunction and GetNilCode .. "\n\n" or ""),
 						Path,
 						Method,
 						CreateArgsString(SerializedArgs, CallInfo.Arguments)
@@ -360,7 +360,7 @@ Callback(%s)]],
 				string.format(
 					[[%s%s
 firesignal(Event.%s%s)]],
-					(DidInsertNilFunction and GetNilCode or "") .. "\n\n",
+					(DidInsertNilFunction and GetNilCode .. "\n\n" or ""),
 					Path,
 					Method,
 					CreateArgsString(SerializedArgs, CallInfo.Arguments, ", ")
@@ -374,7 +374,7 @@ firesignal(Event.%s%s)]],
 			string.format(
 				[[%s%s
 Event:%s(%s)]],
-				(DidInsertNilFunction and GetNilCode or "") .. "\n\n",
+				(DidInsertNilFunction and GetNilCode .. "\n\n" or ""),
 				Path,
 				Method,
 				CreateArgsString(SerializedArgs, CallInfo.Arguments)

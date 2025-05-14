@@ -208,7 +208,7 @@ function Highlighter.Run(source)
 				table.insert(tokens, currentToken)
 				currentToken = character
 				inString = character
-			elseif character:match("[%p]") then
+			elseif character:match("[%p]") and character ~= "_" then
 				table.insert(tokens, currentToken)
 				table.insert(tokens, character)
 				currentToken = ""

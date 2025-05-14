@@ -1020,18 +1020,6 @@ local function CreateSettingsRemoteList(
 end
 
 local MainSection = CreateSettingsSection("Main")
-CreateSettingsCheckbox("NewestToOldestSorting", {
-	Text = "Newest to Oldest Sorting",
-	Default = false,
-	Section = MainSection,
-	Callback = function()
-		if not CurrentLog then
-			return
-		end
-
-		ShowLog(CurrentLog)
-	end,
-})
 
 CreateSettingsButton("Clear All Logs", function()
 	for _, Logs in pairs(wax.shared.Logs) do
@@ -2525,12 +2513,10 @@ ShowCalls = function(Log, Page)
 			break
 		end
 
-		local UIOrder = wax.shared.Settings.NewestToOldestSorting.Value and End - Index + 1 or Index
-
 		local Data = setmetatable({
 			Instance = Log.Instance,
 			Type = Log.Type,
-			Order = UIOrder,
+			Order = Index,
 		}, {
 			__index = Call,
 		})
@@ -3373,12 +3359,10 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 			return
 		end
 
-		local UIOrder = wax.shared.Settings.NewestToOldestSorting.Value and End - CallIndex + 1 or CallIndex
-
 		local Data = setmetatable({
 			Instance = Instance,
 			Type = Type,
-			Order = UIOrder,
+			Order = CallIndex,
 		}, {
 			__index = CallInfo,
 		})

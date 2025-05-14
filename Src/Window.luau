@@ -1662,7 +1662,14 @@ CreateInfoDropdownButton("scroll-text", "Origin", {
 			if not CurrentInfo then
 				return
 			end
-			local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Instance))
+
+			local Path, ShouldInsertNilCode = wax.shared.CodeGen.GetFullPath(CurrentInfo.Instance, false, "Event")
+
+			if ShouldInsertNilCode then
+				Path = wax.shared.CodeGen.GetNilCode .. "\n" .. Path
+			end
+
+			local Success, Error = pcall(setclipboard, Path)
 			if Success then
 				wax.shared.Sonner.success("Copied remote path to clipboard")
 			else
@@ -3006,7 +3013,15 @@ function CreateCallFrame(CallInfo)
 					if not CallInfo then
 						return
 					end
-					local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CallInfo.Instance))
+
+					local Path, ShouldInsertNilCode = wax.shared.CodeGen.GetFullPath(CallInfo.Instance, false, "Event")
+
+					if ShouldInsertNilCode then
+						Path = wax.shared.CodeGen.GetNilCode .. "\n" .. Path
+					end
+
+					local Success, Error = pcall(setclipboard, Path)
+
 					if Success then
 						wax.shared.Sonner.success("Copied remote path to clipboard")
 					else

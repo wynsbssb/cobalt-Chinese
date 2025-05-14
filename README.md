@@ -1,3 +1,5 @@
+# This remote spy is so mid (Oogway)
+
 # Cobalt
 
 A runtime developer tool for the Roblox Game Engine to monitor and intercept incoming and outgoing network traffic with beautiful opinionated UI

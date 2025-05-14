@@ -47,6 +47,8 @@ wax.shared.newcclosure = wax.shared.ExecutorName == "AWP"
 		end
 	or newcclosure
 
+wax.shared.getrawmetatable = getrawmetatable or debug.getmetatable
+
 wax.shared.restorefunction = function(Function: (...any) -> ...any, Silent: boolean?)
 	local Original = wax.shared.Hooks[Function]
 

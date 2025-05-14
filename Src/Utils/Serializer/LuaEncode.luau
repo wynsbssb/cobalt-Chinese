@@ -198,6 +198,7 @@ local function LuaEncode(inputTable, options)
 	CheckType(options.OutputWarnings, "options.OutputWarnings", "boolean", "nil")
 	CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
 	CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
+	CheckType(options.GetNilFunctionInsert, "options.GetNilFunctionInsert", "boolean", "nil")
 	CheckType(options.SerializeMathHuge, "options.SerializeMathHuge", "boolean", "nil")
 
 	CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
@@ -209,12 +210,14 @@ local function LuaEncode(inputTable, options)
 	local IndentCount = options.IndentCount or (Prettify and 4) or 0
 	local InsertCycles = (options.InsertCycles == nil and false) or options.InsertCycles
 	local OutputWarnings = (options.OutputWarnings == nil and true) or options.OutputWarnings
+	local GetNilFunctionInsert = (options.GetNilFunctionInsert == nil and false) or options.GetNilFunctionInsert
 	local UseInstancePaths = (options.UseInstancePaths == nil and true) or options.UseInstancePaths
 	local SerializeMathHuge = (options.SerializeMathHuge == nil and true) or options.SerializeMathHuge
 
 	local StackLevel = options._StackLevel or 1
 	local EntryStackLevel = options._StackLevel or 1
 	local VisitedTables = options._VisitedTables or {} -- [Ref: table] = true
+	local DidInsertNilFunction = options._DidInsertNilFunction or false
 
 	-- Lazy serialization reference values
 	local PositiveInf = (SerializeMathHuge and "math.huge") or "1/0"
@@ -314,9 +317,16 @@ local function LuaEncode(inputTable, options)
 				NewOptions.IndentCount = (isKey and ((not Prettify and IndentCount) or 1)) or IndentCount
 				NewOptions._StackLevel = (isKey and 1) or StackLevel + 1
 				NewOptions._VisitedTables = VisitedTables
+				NewOptions._DidInsertNilFunction = DidInsertNilFunction
 			end
 
-			return LuaEncode(value, NewOptions)
+			local Result, InsertedNilFunction = LuaEncode(value, NewOptions)
+
+			if InsertedNilFunction then
+				DidInsertNilFunction = true
+			end
+
+			return Result
 		end
 
 		TypeCases["boolean"] = function(value)
@@ -496,7 +506,13 @@ local function LuaEncode(inputTable, options)
 		-- nil or some DataModel not under `game`, it'll just return nil
 		TypeCases["Instance"] = function(value)
 			if UseInstancePaths then
-				local InstancePath = wax.shared.CodeGen.GetFullPath(value, false, nil, true)
+				local InstancePath, NilFunctionInserted =
+					wax.shared.CodeGen.GetFullPath(value, false, nil, GetNilFunctionInsert)
+
+				if NilFunctionInserted then
+					DidInsertNilFunction = true
+				end
+
 				if InstancePath then
 					return InstancePath
 				end
@@ -504,9 +520,10 @@ local function LuaEncode(inputTable, options)
 				-- ^^ Now, if the path isn't accessable, falls back to the return below anyway
 			end
 
-			return "nil"
-				.. BlankSeperator
-				.. CommentBlock("Instance.new(" .. TypeCase("string", value.ClassName) .. ")")
+			return "nil" .. BlankSeperator .. CommentBlock(
+				"Instance.new(" .. TypeCase("string", value.ClassName) .. ")"
+			),
+				false
 		end
 
 		TypeCases["NumberRange"] = function(value)
@@ -722,15 +739,21 @@ local function LuaEncode(inputTable, options)
 
 				if ValueType == "table" then
 					-- Create a new options table for the recursive call
-					local Encoded = LuaEncode(
+					local Encoded, InsertedNilFunction = LuaEncode(
 						Value,
 						setmetatable({
 							Prettify = Prettify,
 							IndentCount = IndentCount,
 							_StackLevel = StackLevel + 1,
 							_VisitedTables = VisitedTables,
+							_DidInsertNilFunction = DidInsertNilFunction,
 						}, { __index = options })
 					)
+
+					if InsertedNilFunction then
+						DidInsertNilFunction = true
+					end
+
 					Output[#Output + 1] = Encoded
 				elseif TypeCases[ValueType] then
 					local ValueEncodedSuccess, EncodedValueOrError = pcall(TypeCases[ValueType], Value, false)
@@ -916,11 +939,12 @@ local function LuaEncode(inputTable, options)
 				"end)(",
 				table_concat(Output),
 				")",
-			})
+			}),
+				DidInsertNilFunction
 		end
 	end
 
-	return table_concat(Output)
+	return table_concat(Output), DidInsertNilFunction
 end
 
 return LuaEncode

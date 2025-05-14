@@ -40,6 +40,15 @@ if wax.shared.ActorsEnabled then
 
 		for Key, Value in Info do
 			if type(Value) == "table" then
+				if Value["__Function"] and Value["Validation"] == wax.shared.CobaltVerificationToken then
+					local FunctionData = table.clone(Value)
+					FunctionData["__Function"] = nil
+					FunctionData["Validation"] = nil
+
+					Reconstructed[Key] = FunctionData
+					continue
+				end
+
 				-- Check for Cobalt Created Object
 				if not Value["__CyclicRef"] then
 					Reconstructed[Key] = ReconstructTable(Value, CyclicRefs)

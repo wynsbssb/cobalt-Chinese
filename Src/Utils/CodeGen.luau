@@ -66,6 +66,7 @@ end
 
 function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
 	local CurrentObject = Object
+	local DidInsertNilFunction = false
 	local IsNil = false
 	local Path = ""
 
@@ -113,6 +114,7 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
 					local Base = `GetNil("{CodeGen.FormatLuaString(CurrentObject.Name)}", "{CodeGen.FormatLuaString(
 						CurrentObject:GetDebugId()
 					)}")`
+					DidInsertNilFunction = true
 					if IsInTable then
 						Path = Base
 						break
@@ -134,10 +136,10 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
 	until CurrentObject == nil
 
 	if IsNil then
-		return Path
+		return Path, DidInsertNilFunction
 	end
 
-	return `{VariableName and `local {VariableName} = ` or ""}{Path}`
+	return `{VariableName and `local {VariableName} = ` or ""}{Path}`, DidInsertNilFunction
 end
 
 local function DoesUseCallbackValue(Instance: Instance)
@@ -299,28 +301,34 @@ function CodeGen:BuildCallCode(CallInfo: CallInfo)
 	local Type = CallInfo.Type
 	local Path = self.GetFullPath(CallInfo.Instance, false, "Event")
 	local Method = wax.shared.FunctionForClasses[Type][CallInfo.Instance.ClassName]
-	local SerializedArgs =
-		`table.unpack({wax.shared.LuaEncode(CallInfo.Arguments, { Prettify = true, InsertCycles = true })})`
+	local SerializedArgs, DidInsertNilFunction =
+		wax.shared.LuaEncode(CallInfo.Arguments, { Prettify = true, InsertCycles = true, GetNilFunctionInsert = true })
+
 	local IsArgsEmpty = wax.shared.GetTableLength(CallInfo.Arguments) == 0
 
 	if IsArgsEmpty then
 		SerializedArgs = ""
+	else
+		SerializedArgs = `table.unpack({SerializedArgs})`
 	end
 
 	local CodeGenHeader = CodeGenHeaderTemplate
 
-	local StringlessArgs = SerializedArgs:gsub("%[%[.-%]%]", ""):gsub('".-"', "")
-	if StringlessArgs:match("GetNil%(, %)") then
+	if DidInsertNilFunction then
 		CodeGenHeader = CodeGenHeader .. GetNilCode .. "\n\n"
 	end
 
 	if Type == "Incoming" then
 		if DoesUseCallbackValue(CallInfo.Instance) then
 			if CallInfo.OriginalInvokeArgs then
-				SerializedArgs = `table.unpack({wax.shared.LuaEncode(
-					CallInfo.OriginalInvokeArgs,
-					{ Prettify = true, InsertCycles = true }
-				)})`
+				local PrettifiedOutput, InsertedNilFunction =
+					wax.shared.LuaEncode(CallInfo.OriginalInvokeArgs, { Prettify = true, InsertCycles = true })
+
+				if not DidInsertNilFunction and InsertedNilFunction then
+					CodeGenHeader = CodeGenHeader .. GetNilCode .. "\n\n"
+				end
+
+				SerializedArgs = `table.unpack({PrettifiedOutput})`
 				Method = wax.shared.FunctionForClasses.Outgoing[CallInfo.Instance.ClassName]
 
 				return string.format(

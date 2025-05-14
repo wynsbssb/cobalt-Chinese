@@ -161,11 +161,7 @@ local function WrapCodeInActor(Code: string, ShouldWrap: boolean)
 	end
 
 	return string.format(
-		[[
--- Event originated from an Actor environement
-run_on_actor(getactors()[1], function()
-%s
-end)]],
+		"-- Event originated from an Actor environement\nrun_on_actor(getactors()[1], [[\n%s\n]])",
 		IndentCode(Code, 1)
 	)
 end

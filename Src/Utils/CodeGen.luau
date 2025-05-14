@@ -199,15 +199,15 @@ local mtHook; mtHook = hookmetamethod(game, "__namecall", function(self, ...)
 	return mtHook(self, ...)
 end)
 
-local old%s; old%s = hookfunction(Event.%s, function(self, ...)
+local Old%s; Old%s = hookfunction(Event.%s, function(self, ...)
 	if self == Event then
-		local Result = { old%s(self, ...) }
+		local Result = { Old%s(self, ...) }
 
 		print(`Intercepted (__index) {Event.Name}:%s()`, self, table.unpack(Result))
 		return table.unpack(Result)
 	end
 
-	return old%s(self, ...)
+	return Old%s(self, ...)
 end)]],
 							Path,
 							Method,
@@ -265,23 +265,25 @@ end]],
 			string.format(
 				[[%s
 local mtHook; mtHook = hookmetamethod(game, "__namecall", function(self, ...)
+	local Args = {...}
+
 	if self == Event and getnamecallmethod() == "%s" then
-		print(`Intercepted (__namecall) {Event.Name}:%s()`, self, getnamecallmethod(), table.unpack(Result))
-		return table.unpack(Result)
+		print(`Intercepted (__namecall) {Event.Name}:%s()`, ...)
+		return mtHook(self, table.unpack(Args))
 	end
 
 	return mtHook(self, ...)
 end)
 
-local old%s; old%s = hookfunction(Event.%s, function(self, ...)
+local Old%s; Old%s = hookfunction(Event.%s, function(self, ...)
 	if self == Event then
-		local Result = { old%s(self, ...) }
+		local Result = { Old%s(self, ...) }
 
 		print(`Intercepted (__index) {Event.Name}:%s()`, self, table.unpack(Result))
 		return table.unpack(Result)
 	end
 
-	return old%s(self, ...)
+	return Old%s(self, ...)
 end)]],
 				Path,
 				Method,

@@ -520,10 +520,9 @@ local function LuaEncode(inputTable, options)
 				-- ^^ Now, if the path isn't accessable, falls back to the return below anyway
 			end
 
-			return "nil" .. BlankSeperator .. CommentBlock(
-				"Instance.new(" .. TypeCase("string", value.ClassName) .. ")"
-			),
-				false
+			return "nil"
+				.. BlankSeperator
+				.. CommentBlock("Instance.new(" .. TypeCase("string", value.ClassName) .. ")")
 		end
 
 		TypeCases["NumberRange"] = function(value)

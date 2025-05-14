@@ -21,19 +21,18 @@ if wax.shared.ActorsEnabled then
 	local CommunicationChannelID, Channel = create_comm_channel()
 	wax.shared.ActorCommunicator = get_comm_channel(CommunicationChannelID)
 
-	ActorEnvironementCode = ActorEnvironementCode:gsub(
-		"COBALT_ACTOR_DATA",
-		wax.shared.LuaEncode({
-			Channel = CommunicationChannelID,
-			Token = wax.shared.CobaltVerificationToken,
+	local ActorData = wax.shared.LuaEncode({
+		Channel = CommunicationChannelID,
+		Token = wax.shared.CobaltVerificationToken,
 
-			IgnorePlayerModule = wax.shared.SaveManager:GetState("IgnorePlayerModule") or true,
-			IgnoredRemotesDropdown = wax.shared.SaveManager:GetState("IgnoredRemotesDropdown") or {
-				["BindableEvent"] = true,
-				["BindableFunction"] = true,
-			},
-		})
-	)
+		IgnorePlayerModule = wax.shared.SaveManager:GetState("IgnorePlayerModule") or true,
+		IgnoredRemotesDropdown = wax.shared.SaveManager:GetState("IgnoredRemotesDropdown") or {
+			["BindableEvent"] = true,
+			["BindableFunction"] = true,
+		},
+	})
+
+	ActorEnvironementCode = ActorEnvironementCode:gsub("COBALT_ACTOR_DATA", ActorData)
 
 	local function ReconstructTable(Info, CyclicRefs)
 		local Reconstructed = {}

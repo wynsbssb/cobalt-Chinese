@@ -13,10 +13,11 @@ loadstring(game:HttpGet("https://github.com/notpoiu/cobalt/releases/latest/downl
 </div>
 
 ## Features
+
 - Beautiful opinionated ui
 - Incoming & Outgoing Event **monitoring**
-  - Actors support*
-  - __index hooking
+  - Actors support\*
+  - \_\_index hooking
   - UnreliableRemoteEvent Support
 - Incoming & Outgoing Event **interception**
   - Block events
@@ -25,7 +26,7 @@ loadstring(game:HttpGet("https://github.com/notpoiu/cobalt/releases/latest/downl
 - Copy Calling and Intercept code
 - File Logs
 
-> *Actors are supported even on executors that lack the `run_on_actor` function. As long as the `setfflag` and `getfflag` functions are available in the executor's environement
+> \*Actors are supported even on executors that lack the `run_on_actor` function. As long as the `setfflag` and `getfflag` functions are available in the executor's environement
 
 ## Video Demo
 
@@ -38,10 +39,6 @@ loadstring(game:HttpGet("https://github.com/notpoiu/cobalt/releases/latest/downl
 To enhance your work environment, I recommend installing all the recommended [extensions](.vscode/extensions.json).
 
 ## Bundling everything
-
-> [!IMPORTANT]
-> Bundling should only be used for testing.
-> If you want to make a new Release, please head to the GitHub "Actions" tab and run the "Release" action.
 
 To bundle all the scripts, you have to follow these steps:
 

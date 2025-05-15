@@ -1465,16 +1465,63 @@ CreateInfoTab("code", "Code", CodeInfoUI)
 CodeScrollingFrame.ScrollBarThickness = 3
 CodeScrollingFrame.VerticalScrollBarInset = Enum.ScrollBarInset.None
 
-local CodeText = wax.shared.Interface.New("TextLabel", {
-	AutomaticSize = Enum.AutomaticSize.XY,
-	TextSize = 16,
-	TextColor3 = Color3.fromRGB(255, 255, 255),
-	FontFace = Font.fromId(16658246179),
-	TextXAlignment = Enum.TextXAlignment.Left,
-	BackgroundTransparency = 1,
-	Text = wax.shared.Highlighter.Run("-- Loading..."),
-	Parent = CodeScrollingFrame,
-})
+local CodeTextLabels = {}
+for i = 1, 5 do
+	CodeTextLabels[i] = wax.shared.Interface.New("TextLabel", {
+		AutomaticSize = Enum.AutomaticSize.XY,
+		TextSize = 16,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		FontFace = Font.fromId(16658246179),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		BackgroundTransparency = 1,
+		Text = "",
+		Parent = CodeScrollingFrame,
+	})
+end
+
+function SetCodeText(Code: string)
+	for _, Label in CodeTextLabels do
+		Label.Text = ""
+	end
+
+	local HighlightedCode = wax.shared.Highlighter.Run(Code)
+	local Lines = HighlightedCode:split("\n")
+	local CurrentCharacterCount = 0
+	local TextContents = {}
+	local CurrentLabel = 1
+
+	for _, Line in Lines do
+		if CurrentCharacterCount + #Line > 200000 then
+			CurrentLabel += 1
+			CurrentCharacterCount = 0
+			continue
+		end
+
+		CurrentCharacterCount += #Line
+		if not TextContents[CurrentLabel] then
+			TextContents[CurrentLabel] = {}
+		end
+
+		table.insert(TextContents[CurrentLabel], Line)
+	end
+
+	for Idx, Content in TextContents do
+		if not CodeTextLabels[Idx] then
+			CodeTextLabels[Idx] = wax.shared.Interface.New("TextLabel", {
+				AutomaticSize = Enum.AutomaticSize.XY,
+				TextSize = 16,
+				TextColor3 = Color3.fromRGB(255, 255, 255),
+				FontFace = Font.fromId(16658246179),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				BackgroundTransparency = 1,
+				Text = wax.shared.Highlighter.Run("-- Loading..."),
+				Parent = CodeScrollingFrame,
+			})
+		end
+
+		CodeTextLabels[Idx].Text = table.concat(Content, "\n")
+	end
+end
 
 local FunctionInfoUI, FunctionScrollingFrame = CreateTabContent()
 CreateInfoTab("parentheses", "Function Info", FunctionInfoUI)
@@ -3256,13 +3303,16 @@ function OpenInfo(CallInfo)
 
 	CurrentInfo = CallInfo
 
-	CodeText.Text = wax.shared.Highlighter.Run(wax.shared.CodeGen:BuildCallCode(CallInfo))
+	SetCodeText(wax.shared.CodeGen:BuildCallCode(CallInfo))
 
-	local FuncInfoSuccess, GeneratedFuncInfo = pcall(function()
-		return wax.shared.CodeGen:BuildFunctionInfo(CallInfo)
+	xpcall(function()
+		FunctionInfoText.Text = wax.shared.CodeGen:BuildFunctionInfo(CallInfo)
+	end, function(Error)
+		FunctionInfoText.Text =
+			`Error while fetching function data.\nCalling Function: {CallInfo.Function} (type: {typeof(
+				CallInfo.Function
+			)})\n\nError: {Error}`
 	end)
-	FunctionInfoText.Text = FuncInfoSuccess and GeneratedFuncInfo
-		or `Error while fetching function data.\nCalling Function: {CallInfo.Function} (type: {typeof(CallInfo.Function)})\n\nError: {GeneratedFuncInfo}`
 	do
 		for _, Object in pairs(ArgumentsInfoFrame:GetChildren()) do
 			if Object.ClassName ~= "Frame" then

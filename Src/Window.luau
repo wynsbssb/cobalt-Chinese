@@ -1021,6 +1021,12 @@ end
 
 local MainSection = CreateSettingsSection("Main")
 
+CreateSettingsCheckbox("UseAlternativeHooks", {
+	Text = "Use alternative metamethod hook",
+	Default = false,
+	Section = MainSection,
+})
+
 CreateSettingsButton("Clear All Logs", function()
 	for _, Logs in pairs(wax.shared.Logs) do
 		for Index, Log in pairs(Logs) do
@@ -1041,12 +1047,6 @@ CreateSettingsButton("Clear All Logs", function()
 
 	wax.shared.Sonner.success("Successfully Cleared All Logs")
 end, MainSection)
-
-CreateSettingsCheckbox("UseAlternativeHooks", {
-	Text = "Use alternative metamethod hook",
-	Default = false,
-	Section = MainSection,
-})
 
 local FilterSection = CreateSettingsSection("Filter")
 

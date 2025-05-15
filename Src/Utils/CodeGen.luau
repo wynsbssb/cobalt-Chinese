@@ -87,7 +87,8 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
 		if CurrentObject == wax.shared.LocalPlayer then
 			IndexName = ".LocalPlayer"
 		elseif wax.shared.LocalPlayer.Character and CurrentObject == wax.shared.LocalPlayer.Character then
-			IndexName = 'game:GetService("Players").LocalPlayer.Character'
+			Path = 'game:GetService("Players").LocalPlayer.Character' .. Path
+			break
 		elseif CurrentObject.Name and CurrentObject.Name == wax.shared.LocalPlayer.Name then
 			IndexName = '[game:GetService("Players").LocalPlayer.Name]'
 		elseif CurrentObject.Name and CurrentObject.Name == tostring(wax.shared.LocalPlayer.UserId) then
@@ -132,10 +133,6 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
 		end
 
 		Path = IndexName .. Path
-
-		if wax.shared.LocalPlayer.Character and CurrentObject == wax.shared.LocalPlayer.Character then
-			break
-		end
 
 		CurrentObject = CurrentObject.Parent
 	until CurrentObject == nil

@@ -67,27 +67,6 @@ function Pagination:Update(TotalItems: number?, ItemsPerPage: number?)
 	self.ItemsPerPage = ItemsPerPage or self.ItemsPerPage
 end
 
-local function CreateArray(Start, End)
-	local Array = {}
-	for Number = Start, End do
-		table.insert(Array, Number)
-	end
-	return Array
-end
-local function MergeTables(...)
-	local Result = {}
-	for _, Value in pairs({ ... }) do
-		if typeof(Value) == "table" then
-			for _, SubValue in pairs(Value) do
-				table.insert(Result, SubValue)
-			end
-		else
-			table.insert(Result, Value)
-		end
-	end
-	return Result
-end
-
 function Pagination:GetVisualInfo(Page: number?)
 	Page = Page or self.CurrentPage
 

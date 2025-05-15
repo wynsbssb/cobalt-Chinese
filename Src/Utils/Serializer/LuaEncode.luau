@@ -110,7 +110,7 @@ end
 local SerializeString
 do
 	-- These are control characters to be encoded in a certain way in Lua rather than just a byte escape
-	local SpecialCharacters = {
+	local EscapeCharacters = {
 		['"'] = '\\"',
 		["\\"] = "\\\\",
 		-- Special ASCII control char codes
@@ -122,6 +122,18 @@ do
 		["\f"] = "\\f",
 		["\r"] = "\\r",
 	}
+
+	function EscapeString(inputString)
+		local EscapedString = inputString
+
+		for Character, Escape in next, EscapeCharacters do
+			EscapedString = string_gsub(EscapedString, Character, Escape)
+		end
+
+		return EscapedString
+	end
+
+	local SpecialCharacters = table.clone(EscapeCharacters)
 
 	-- We need to assign all extra normal byte escapes for runtime optimization
 	for Index = 0, 255 do
@@ -681,7 +693,49 @@ local function LuaEncode(inputTable, options)
 		end
 
 		TypeCases["buffer"] = function(value)
-			return "buffer.fromstring(" .. SerializeString(buffer.tostring(value)) .. ")"
+			local BufferLength = buffer.len(value)
+			local Bytes = ""
+
+			for i = 1, BufferLength do
+				Bytes ..= buffer.readu8(value, i - 1)
+
+				if i == BufferLength then
+					break
+				end
+
+				Bytes ..= ", "
+			end
+
+			return table_concat({
+				"(function(bytes) ",
+				CommentBlock("LuaEncode: Serialized buffer"),
+				NewEntryString,
+				IndentString,
+				IndentStringBase,
+				"local b = buffer.create(#bytes)",
+				NewEntryString,
+				IndentString,
+				IndentStringBase,
+				"for i = 1, #bytes do",
+				NewEntryString,
+				IndentString,
+				IndentStringBase,
+				IndentStringBase,
+				"buffer.writeu8(b, i - 1, bytes[i])",
+				NewEntryString,
+				IndentString,
+				IndentStringBase,
+				"end",
+				NewEntryString,
+				IndentStringBase,
+				IndentString,
+				"return b",
+				NewEntryString,
+				IndentString,
+				"end)({ ",
+				Bytes,
+				" })",
+			})
 		end
 
 		-- With userdata, just encode directly

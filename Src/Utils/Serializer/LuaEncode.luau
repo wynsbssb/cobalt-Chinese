@@ -681,22 +681,14 @@ local function LuaEncode(inputTable, options)
 		end
 
 		TypeCases["buffer"] = function(value)
-			local BufferLength = buffer.len(value)
-			local Bytes = ""
-
-			for i = 1, BufferLength do
-				Bytes ..= buffer.readu8(value, i - 1)
-
-				if i == BufferLength then
-					break
-				end
-
-				Bytes ..= ", "
+			local Bytes = {}
+			for i = 1, buffer.len(value) do
+				table.insert(Bytes, buffer.readu8(value, i - 1))
 			end
 
 			return table_concat({
 				"(function(bytes) ",
-				CommentBlock("LuaEncode: Serialized buffer"),
+				CommentBlock("Type: buffer"),
 				NewEntryString,
 				IndentString,
 				IndentStringBase,
@@ -721,7 +713,7 @@ local function LuaEncode(inputTable, options)
 				NewEntryString,
 				IndentString,
 				"end)({ ",
-				Bytes,
+				table_concat(Bytes, ", "),
 				" })",
 			})
 		end

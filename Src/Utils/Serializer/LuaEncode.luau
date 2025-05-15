@@ -110,7 +110,7 @@ end
 local SerializeString
 do
 	-- These are control characters to be encoded in a certain way in Lua rather than just a byte escape
-	local EscapeCharacters = {
+	local SpecialCharacters = {
 		['"'] = '\\"',
 		["\\"] = "\\\\",
 		-- Special ASCII control char codes
@@ -122,18 +122,6 @@ do
 		["\f"] = "\\f",
 		["\r"] = "\\r",
 	}
-
-	function EscapeString(inputString)
-		local EscapedString = inputString
-
-		for Character, Escape in next, EscapeCharacters do
-			EscapedString = string_gsub(EscapedString, Character, Escape)
-		end
-
-		return EscapedString
-	end
-
-	local SpecialCharacters = table.clone(EscapeCharacters)
 
 	-- We need to assign all extra normal byte escapes for runtime optimization
 	for Index = 0, 255 do

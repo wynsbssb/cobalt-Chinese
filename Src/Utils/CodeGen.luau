@@ -70,6 +70,8 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
 	local IsNil = false
 	local Path = ""
 
+	warn("GetFullPath", CurrentObject, ExcludeCode, VariableName, IsInTable)
+
 	repeat
 		if typeof(CurrentObject) ~= "Instance" then
 			break
@@ -90,6 +92,9 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
 			IndexName = '[game:GetService("Players").LocalPlayer.Name]'
 		elseif CurrentObject.Name and CurrentObject.Name == tostring(wax.shared.LocalPlayer.UserId) then
 			IndexName = '[game:GetService("Players").LocalPlayer.UserId]'
+		elseif CurrentObject == workspace then
+			Path = "workspace" .. Path
+			break
 		elseif CurrentObject.ClassName then
 			if string.match(CurrentObject.Name, "^[%a_][%w_]*$") then
 				IndexName = "." .. CurrentObject.Name
@@ -99,11 +104,11 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
 
 			local Parent = CurrentObject.Parent
 			if Parent then
-				if Parent == workspace then
-					Path = "workspace" .. Path
-					break
-				elseif Parent == game and game.FindService(game, CurrentObject.ClassName) == CurrentObject then
+				if Parent == game and game.FindService(game, CurrentObject.ClassName) == CurrentObject then
 					IndexName = ':GetService("' .. CurrentObject.ClassName .. '")'
+				elseif Parent.FindFirstChild(Parent, CurrentObject.Name) ~= CurrentObject then
+					local Children = Parent.GetChildren(Parent)
+					IndexName = ":GetChildren()[" .. tostring(table.find(Children, CurrentObject)) .. "]"
 				end
 			elseif Parent == nil then
 				IsNil = true

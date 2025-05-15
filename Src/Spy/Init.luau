@@ -72,7 +72,10 @@ if wax.shared.ActorsEnabled then
 	end
 
 	wax.shared.Connect(Channel.Event:Connect(function(EventType, ...)
-		if (wax.shared.SaveManager:GetState("LogActors") or true) == false then
+		local LogActors = wax.shared.SaveManager:GetState("LogActors")
+		local ShouldLogActors = typeof(LogActors) ~= "boolean" and true or LogActors
+		
+		if not ShouldLogActors then
 			return
 		end
 

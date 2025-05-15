@@ -174,7 +174,7 @@ wax.shared.Unload = function()
 
 	local gameMetatable = wax.shared.getrawmetatable(game)
 
-	if restorefunction then
+	if restorefunction and not wax.shared.AlternativeEnabled then
 		pcall(restorefunction, gameMetatable.__namecall)
 		pcall(restorefunction, gameMetatable.__newindex)
 	else

@@ -14,7 +14,7 @@ OnUnload = function()
 		task.spawn(pcall, wax.shared.restorefunction, Function, true)
 	end
 
-	if not restorefunction then
+	if not restorefunction or wax.shared.AlternativeEnabled then
 		wax.shared.Hooking.HookMetaMethod(game, "__newindex", wax.shared.NewIndexHook)
 	end
 end

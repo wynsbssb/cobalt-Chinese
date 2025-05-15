@@ -9,6 +9,7 @@ type ActorData = {
 	Token: string,
 
 	IgnorePlayerModule: boolean,
+	UseAlternativeHooks: boolean,
 	IgnoredRemotesDropdown: { [string]: boolean },
 }
 
@@ -67,26 +68,25 @@ wax.shared.restorefunction = function(Function: (...any) -> ...any, Silent: bool
 	wax.shared.Hooks[Function] = nil
 end
 
-
 local Hooking = {}
 
 Hooking.HookFunction = hookfunction
 
+wax.shared.AlternativeEnabled = Data.UseAlternativeHooks
+
 Hooking.HookMetaMethod = function(object, method, hook)
-	local UseAltHooks = wax.shared.SaveManager:GetState("UseAlternativeHooks")
-	local alternativeEnabled = type(UseAltHooks) ~= "Boolean" and false or UseAltHooks
-    if alternativeEnabled then
-        local Metatable = wax.shared.getrawmetatable(object)
-	    local originalMethod = rawget(Metatable, method)
+	if Data.UseAlternativeHooks then
+		local Metatable = wax.shared.getrawmetatable(object)
+		local originalMethod = rawget(Metatable, method)
 
-	    setreadonly(Metatable, false)
-	    rawset(Metatable, method, wax.shared.newcclosure(hook))
-	    setreadonly(Metatable, true)
+		setreadonly(Metatable, false)
+		rawset(Metatable, method, wax.shared.newcclosure(hook))
+		setreadonly(Metatable, true)
 
-	    return originalMethod;
-    end
+		return originalMethod
+	end
 
-	return hookmetamethod(object, method, hook);
+	return hookmetamethod(object, method, hook)
 end
 
 wax.shared.Hooking = Hooking

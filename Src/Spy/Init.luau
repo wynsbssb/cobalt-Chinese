@@ -21,6 +21,9 @@ if wax.shared.ActorsEnabled then
 	local CommunicationChannelID, Channel = create_comm_channel()
 	wax.shared.ActorCommunicator = get_comm_channel(CommunicationChannelID)
 
+	local UseAltHooks = wax.shared.SaveManager:GetState("UseAlternativeHooks")
+	local AlternativeEnabled = typeof(UseAltHooks) == "boolean" and UseAltHooks or false
+
 	local ActorData = wax.shared.LuaEncode({
 		Channel = CommunicationChannelID,
 		Token = wax.shared.CobaltVerificationToken,
@@ -30,6 +33,7 @@ if wax.shared.ActorsEnabled then
 			["BindableEvent"] = true,
 			["BindableFunction"] = true,
 		},
+		UseAlternativeHooks = AlternativeEnabled,
 	})
 
 	ActorEnvironementCode = ActorEnvironementCode:gsub("COBALT_ACTOR_DATA", ActorData)
@@ -74,7 +78,7 @@ if wax.shared.ActorsEnabled then
 	wax.shared.Connect(Channel.Event:Connect(function(EventType, ...)
 		local LogActors = wax.shared.SaveManager:GetState("LogActors")
 		local ShouldLogActors = typeof(LogActors) ~= "boolean" and true or LogActors
-		
+
 		if not ShouldLogActors then
 			return
 		end

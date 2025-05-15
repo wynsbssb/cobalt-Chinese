@@ -1,22 +1,23 @@
 local Hooking = {}
 
+local UseAltHooks = wax.shared.SaveManager:GetState("UseAlternativeHooks")
+local AlternativeEnabled = typeof(UseAltHooks) == "boolean" and UseAltHooks or false
+wax.shared.AlternativeEnabled = AlternativeEnabled
+
 Hooking.HookFunction = hookfunction
-
 Hooking.HookMetaMethod = function(object, method, hook)
-	local UseAltHooks = wax.shared.SaveManager:GetState("UseAlternativeHooks")
-	local alternativeEnabled = type(UseAltHooks) ~= "Boolean" and false or UseAltHooks
-    if alternativeEnabled then
-        local Metatable = wax.shared.getrawmetatable(object)
-	    local originalMethod = rawget(Metatable, method)
-	
-	    setreadonly(Metatable, false)
-	    rawset(Metatable, method, wax.shared.newcclosure(hook))
-	    setreadonly(Metatable, true)
+	if AlternativeEnabled then
+		local Metatable = wax.shared.getrawmetatable(object)
+		local originalMethod = rawget(Metatable, method)
 
-	    return originalMethod;
-    end
+		setreadonly(Metatable, false)
+		rawset(Metatable, method, wax.shared.newcclosure(hook))
+		setreadonly(Metatable, true)
 
-	return hookmetamethod(object, method, hook);
+		return originalMethod
+	end
+
+	return hookmetamethod(object, method, hook)
 end
 
 return Hooking

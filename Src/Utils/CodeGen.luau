@@ -70,8 +70,6 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
 	local IsNil = false
 	local Path = ""
 
-	warn("GetFullPath", CurrentObject, ExcludeCode, VariableName, IsInTable)
-
 	repeat
 		if typeof(CurrentObject) ~= "Instance" then
 			break

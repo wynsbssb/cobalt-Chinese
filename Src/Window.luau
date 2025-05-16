@@ -486,6 +486,18 @@ local SettingsFrame = wax.shared.Interface.New("TextButton", {
 	},
 })
 
+wax.shared.Resize.new({
+	MainFrame = SettingsFrame,
+
+	MaximumSize = UDim2.new(1, -2, 1, -2),
+	MinimumSize = UDim2.fromScale(0.65, 0.712),
+	Mirrored = true,
+	LockedPosition = true,
+
+	CornerHandleSize = 20,
+	HandleSize = 6,
+})
+
 CreateModalTop("Settings", "settings", SettingsFrame)
 
 local SettingsScrollingFrame = wax.shared.Interface.New("ScrollingFrame", {
@@ -1292,6 +1304,18 @@ local InfoFrame = wax.shared.Interface.New("TextButton", {
 		Color = Color3.fromRGB(25, 25, 25),
 		Thickness = 1,
 	},
+})
+
+wax.shared.Resize.new({
+	MainFrame = InfoFrame,
+
+	MaximumSize = UDim2.new(1, -2, 1, -2),
+	MinimumSize = UDim2.fromScale(0.65, 0.712),
+	Mirrored = true,
+	LockedPosition = true,
+
+	CornerHandleSize = 20,
+	HandleSize = 6,
 })
 
 local InfoTitle, InfoIcon = CreateModalTop("...", Images["RemoteEvent"], InfoFrame)
@@ -2700,7 +2724,7 @@ for i = 1, MaxButtons do
 end
 
 ShowPagination = function(Log)
-	local Pages = PaginationHelper:GetVisualInfo()
+	local Pages = PaginationHelper:GetVisualInfo(nil, LogsList.AbsoluteSize.X)
 	for Order, Info in pairs(Pages) do
 		if Info == "none" then
 			local Ellipsis = PaginationElements.Ellipsis[Order]

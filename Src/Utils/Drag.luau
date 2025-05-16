@@ -53,7 +53,7 @@ function Drag.Setup(Frame: GuiObject, DragFrame: GuiObject, Callback: (Info: {},
 end
 
 wax.shared.Connect(wax.shared.UserInputService.InputChanged:Connect(function(Input: InputObject)
-	if Drag.Dragging and wax.shared.IsMoveInput(Input) then
+	if Drag.Dragging and Drag.Callback and wax.shared.IsMoveInput(Input) then
 		Drag.Callback(Drag, Input)
 	end
 end))

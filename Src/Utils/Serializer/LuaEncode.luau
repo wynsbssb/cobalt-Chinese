@@ -13,7 +13,8 @@ local string_char = string.char
 local string_gsub = string.gsub
 local string_match = string.match
 local string_rep = string.rep
-local string_sub = string.sub
+local string_pack = string.pack
+local string_byte = string.byte
 local string_gmatch = string.gmatch
 
 local table_concat = table.concat
@@ -28,6 +29,14 @@ local function LookupTable(array)
 
 	return Out
 end
+
+-- Used to properly serialize NaN values
+local NumberCorrection = {
+	[string_pack(">n", 0 / 0)] = "0/0",
+	[string_pack(">n", -(0 / 0))] = "-(0/0)",
+	[string_pack(">n", tonumber("nan"))] = 'tonumber("nan")',
+	[string_pack(">n", tonumber("-nan"))] = 'tonumber("-nan")',
+}
 
 -- Used for checking direct getfield syntax; Lua keywords can't be used as keys without being a str
 -- FYI; `continue` is Luau only (in Lua it's actually a global function)
@@ -284,10 +293,22 @@ local function LuaEncode(inputTable, options)
 				return PositiveInf
 			elseif value == -1 / 0 then
 				return NegativeInf
-			elseif value ~= value then
-				return "0/0"
 			elseif value == math.pi then
 				return "math.pi"
+			end
+
+			-- Provided by felixdm
+			local NumberPacked = string_pack(">n", value) -- gameguy is a boss
+			local CorrectedNumber = NumberCorrection[NumberPacked]
+			if CorrectedNumber then
+				return CorrectedNumber
+			end
+
+			if value ~= value then
+				return string_format(
+					'(string.unpack(">n", "\\%*\\%*\\%*\\%*\\%*\\%*\\%*\\%*"))',
+					string_byte(NumberPacked, 1, 8)
+				)
 			end
 
 			-- Return fixed-formatted precision num

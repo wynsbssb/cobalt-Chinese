@@ -86,7 +86,7 @@ end
 wax.shared.Resize.new({
 	MainFrame = MainFrame,
 
-	MinimumSize = Vector2.new(320, 210),
+	MinimumSize = Vector2.new(585, 220),
 
 	CornerHandleSize = 20,
 	HandleSize = 6,

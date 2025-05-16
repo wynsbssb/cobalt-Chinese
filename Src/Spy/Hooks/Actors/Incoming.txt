@@ -118,7 +118,13 @@ local function HandleInstance(Instance: any)
 		SignalMapping[Instance.Event] = Instance
 	elseif Instance.ClassName == "RemoteFunction" or Instance.ClassName == "BindableFunction" then
 		local Success, Callback = pcall(getcallbackvalue, Instance, Method)
-		if not Success or typeof(Callback) ~= "function" then
+		local IsCallable = (
+			typeof(Callback) == "function"
+			or wax.shared.getrawmetatable(Callback) ~= nil and typeof(wax.shared.getrawmetatable(Callback)["__call"]) == "function"
+			or false
+		)
+
+		if not Success or not IsCallable then
 			return
 		end
 
@@ -171,7 +177,13 @@ wax.shared.NewIndexHook = wax.shared.Hooking.HookMetaMethod(
 		if self.ClassName == "RemoteFunction" or self.ClassName == "BindableFunction" then
 			local Method = ClassesToHook[self.ClassName]
 
-			if key == Method and typeof(value) == "function" then
+			local IsCallable = (
+				typeof(value) == "function"
+				or wax.shared.getrawmetatable(value) ~= nil and typeof(wax.shared.getrawmetatable(value)["__call"]) == "function"
+				or false
+			)
+
+			if key == Method and IsCallable then
 				return wax.shared.NewIndexHook(self, key, function(...)
 					if wax.shared.Unloaded or wax.shared.ShouldIgnore(self, getcallingscript()) then
 						return value(...)

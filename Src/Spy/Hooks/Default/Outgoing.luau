@@ -93,7 +93,8 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 						wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
 					end
 
-					return table.unpack(Result)
+					local PackedResult = table.pack(Result)
+					return table.unpack(PackedResult, 1, PackedResult.n)
 				end
 			end
 		end

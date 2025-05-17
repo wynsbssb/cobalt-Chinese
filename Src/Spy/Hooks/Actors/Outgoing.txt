@@ -101,7 +101,8 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 						Log:Call(RFResultInfo)
 					end
 
-					return table.unpack(Result)
+					local PackedResult = table.pack(Result)
+					return table.unpack(PackedResult, 1, PackedResult.n)
 				end
 			end
 		end

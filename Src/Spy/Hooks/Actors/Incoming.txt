@@ -97,7 +97,7 @@ local function HandleInstance(Instance: any)
 	if Instance.ClassName == "RemoteEvent" or Instance.ClassName == "UnreliableRemoteEvent" then
 		for _, Connection in pairs(getconnections(Instance.OnClientEvent)) do
 			local Function = Connection.Function
-			if not Function then
+			if not Function or typeof(Function) ~= "function" then
 				continue
 			end
 
@@ -108,7 +108,7 @@ local function HandleInstance(Instance: any)
 	elseif Instance.ClassName == "BindableEvent" then
 		for _, Connection in pairs(getconnections(Instance.Event)) do
 			local Function = Connection.Function
-			if not Function then
+			if not Function or typeof(Function) ~= "function" then
 				continue
 			end
 

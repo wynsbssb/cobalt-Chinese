@@ -129,7 +129,12 @@ end
 wax.shared.DisplayNumber = function(Number: number)
 	if Number % 1 ~= 0 then
 		return string.format("%.3f", Number)
+	elseif Number == 1 / 0 then
+		return "math.huge"
+	elseif Number == -1 / 0 then
+		return "-math.huge"
 	end
+
 	return Number
 end
 wax.shared.DisplayArgument = function(Argument)
@@ -156,6 +161,8 @@ wax.shared.DisplayArgument = function(Argument)
 		return "{...}"
 	elseif typeof(Argument) == "Instance" then
 		return wax.shared.CodeGen.GetFullPath(Argument, true)
+	elseif typeof(Argument) == "userdata" then
+		return "newproxy(" .. getmetatable(Argument) and "true" or "false" .. ")"
 	end
 
 	return tostring(Argument)

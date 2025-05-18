@@ -6,8 +6,8 @@ wax.shared.AnticheatDisabled = false
 wax.shared.AnticheatName = "N/A"
 
 local BypassState = wax.shared.SaveManager:GetState("AnticheatBypass")
-local ShouldntBypass = typeof(BypassState) == "boolean" and BypassState or false
-if ShouldntBypass then
+local BypassEnabled = typeof(BypassState) == "boolean" and BypassState or false
+if not BypassEnabled then
 	return
 end
 

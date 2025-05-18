@@ -8,6 +8,14 @@ if not isfolder("Cobalt/Assets") then
 	makefolder("Cobalt/Assets")
 end
 
+function SafeFetch(Path: string)
+	local Success, Result = pcall(function()
+		return getcustomasset(Path)
+	end)
+
+	return Success and Result or nil
+end
+
 function ImageFetcher.GetRemoteImages(Images: { [string]: string })
 	if not getcustomasset then
 		return Images
@@ -16,7 +24,7 @@ function ImageFetcher.GetRemoteImages(Images: { [string]: string })
 	local NewImages = {}
 	for ClassName, _ in Images do
 		if isfile(`Cobalt/Assets/{ClassName}.png`) then
-			NewImages[ClassName] = getcustomasset(`Cobalt/Assets/{ClassName}.png`)
+			NewImages[ClassName] = SafeFetch(`Cobalt/Assets/{ClassName}.png`) or Images[ClassName]
 			continue
 		end
 
@@ -25,7 +33,7 @@ function ImageFetcher.GetRemoteImages(Images: { [string]: string })
 			game:HttpGet(`https://robloxapi.github.io/ref/icons/dark/{ClassName}.png`)
 		)
 
-		NewImages[ClassName] = getcustomasset(`Cobalt/Assets/{ClassName}.png`)
+		NewImages[ClassName] = SafeFetch(`Cobalt/Assets/{ClassName}.png`) or Images[ClassName]
 	end
 
 	return NewImages
@@ -37,7 +45,7 @@ function ImageFetcher.GetImage(Image: string)
 	end
 
 	if isfile(`Cobalt/Assets/{Image}.png`) then
-		return getcustomasset(`Cobalt/Assets/{Image}.png`)
+		return SafeFetch(`Cobalt/Assets/{Image}.png`) or ImageFetcher.FallbackMapping[Image] or Image
 	end
 
 	local Response = request({
@@ -50,7 +58,7 @@ function ImageFetcher.GetImage(Image: string)
 	end
 
 	writefile(`Cobalt/Assets/{Image}.png`, Response.Body)
-	return getcustomasset(`Cobalt/Assets/{Image}.png`)
+	return SafeFetch(`Cobalt/Assets/{Image}.png`) or ImageFetcher.FallbackMapping[Image] or Image
 end
 
 return ImageFetcher

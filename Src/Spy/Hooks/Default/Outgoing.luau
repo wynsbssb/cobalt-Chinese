@@ -129,6 +129,7 @@ for _, Function in pairs(FunctionsToHook) do
 		wax.shared.newcclosure(function(self, ...)
 			if
 				typeof(self) == "Instance"
+				and table.find(AllowedClassNames, self.ClassName)
 				and self ~= wax.shared.Communicator
 				and not wax.shared.ShouldIgnore(self, getcallingscript())
 			then

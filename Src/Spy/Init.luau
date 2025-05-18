@@ -1,5 +1,3 @@
-wax.shared.Hooks = {}
-
 local Hooks = script.Parent.Hooks
 
 -- Main Thread Hooks

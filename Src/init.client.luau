@@ -19,7 +19,7 @@ wax.shared.CobaltVerificationToken = wax.shared.HttpService:GenerateGUID()
 wax.shared.SaveManager = require("Utils/SaveManager")
 wax.shared.Settings = {}
 
-require("ExecutorSupport")
+wax.shared.Hooks = {}
 
 -- UI
 require("Utils/Connect")
@@ -210,6 +210,9 @@ wax.shared.Unload = function()
 	wax.shared.Unloaded = true
 end
 
+require("ExecutorSupport")
+require("Bypass")
+
 -- Load Script
 wax.shared.Communicator = Instance.new("BindableEvent")
 
@@ -313,3 +316,8 @@ end
 
 require("Window")
 require("Spy/Init")
+
+task.wait(1)
+if wax.shared.AnticheatDisabled then
+	wax.shared.Sonner.success(`Cobalt has bypassed {wax.shared.AnticheatName} (anticheat detected)`)
+end

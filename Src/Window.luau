@@ -1045,6 +1045,25 @@ CreateSettingsCheckbox("UseAlternativeHooks", {
 	Section = MainSection,
 })
 
+CreateSettingsCheckbox("AnticheatBypass", {
+	Text = "Built-in Anticheat Bypass",
+	Default = true,
+	Section = MainSection,
+})
+
+if wax.shared.AnticheatDisabled then
+	wax.shared.Interface.New("TextLabel", {
+		Text = `Anticheat Detected: <b>{wax.shared.AnticheatName}</b>`,
+		TextSize = 16,
+		Size = UDim2.fromScale(1, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		BackgroundTransparency = 1,
+		Parent = MainSection,
+		TextWrapped = true,
+	})
+end
+
 CreateSettingsButton("Clear All Logs", function()
 	for _, Logs in pairs(wax.shared.Logs) do
 		for Index, Log in pairs(Logs) do

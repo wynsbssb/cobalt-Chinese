@@ -193,10 +193,10 @@ function CodeGen:BuildHookCode(CallInfo: CallInfo)
 							[[%s
 local mtHook; mtHook = hookmetamethod(game, "__namecall", function(self, ...)
 	if self == Event and getnamecallmethod() == "%s" then
-		local Result = { mtHook(self, ...) }
+		local Result = table.pack(mtHook(self, ...))
 
-		print(`Intercepted (__namecall) {Event.Name}:%s()`, self, getnamecallmethod(), table.unpack(Result))
-		return table.unpack(Result)
+		print(`Intercepted (__namecall) {Event.Name}:%s()`, self, getnamecallmethod(), table.unpack(Result, 1, Result.n))
+		return table.unpack(Result, 1, Result.n)
 	end
 
 	return mtHook(self, ...)
@@ -204,10 +204,10 @@ end)
 
 local Old%s; Old%s = hookfunction(Event.%s, function(self, ...)
 	if self == Event then
-		local Result = { Old%s(self, ...) }
+		local Result = table.pack(Old%s(self, ...))
 
-		print(`Intercepted (__index) {Event.Name}:%s()`, self, table.unpack(Result))
-		return table.unpack(Result)
+		print(`Intercepted (__index) {Event.Name}:%s()`, self, table.unpack(Result, 1, Result.n))
+		return table.unpack(Result, 1, Result.n)
 	end
 
 	return Old%s(self, ...)
@@ -251,7 +251,7 @@ end]],
 					[[%s
 for _, Connection in getconnections(Event.%s) do
 	local old; old = hookfunction(Connection.Function, function(...)
-		print(`Intercepted (Connection) {Event.Name}:%s`, ...)
+		print(`Intercepted (Connection) {Event.Name}.%s`, ...)
 		return old(...)
 	end)
 end]],
@@ -280,10 +280,10 @@ end)
 
 local Old%s; Old%s = hookfunction(Event.%s, function(self, ...)
 	if self == Event then
-		local Result = { Old%s(self, ...) }
+		local Result = table.pack(Old%s(self, ...))
 
-		print(`Intercepted (__index) {Event.Name}:%s()`, self, table.unpack(Result))
-		return table.unpack(Result)
+		print(`Intercepted (__index) {Event.Name}:%s()`, self, table.unpack(Result, 1, Result.n))
+		return table.unpack(Result, 1, Result.n)
 	end
 
 	return Old%s(self, ...)

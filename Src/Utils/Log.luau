@@ -17,7 +17,24 @@ function Log.new(Instance, Type, Method, Index, CallingScript)
 	return NewLog
 end
 
-function Log:Call(Info)
+function DeepClone(orig, copies)
+	copies = copies or {}
+	if type(orig) ~= "table" then
+		return orig
+	elseif copies[orig] then
+		return copies[orig]
+	end
+
+	local copy = {}
+	copies[orig] = copy
+	for k, v in pairs(orig) do
+		copy[DeepClone(k, copies)] = DeepClone(v, copies)
+	end
+	return copy
+end
+
+function Log:Call(RawInfo)
+	local Info = DeepClone(RawInfo)
 	local Index = #self.Calls + 1
 	self.Calls[Index] = Info
 	if not Info.IsExecutor then

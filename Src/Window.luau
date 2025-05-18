@@ -20,6 +20,7 @@ local ClassOrder = {
 	"BindableEvent",
 	"BindableFunction",
 }
+
 local Images = {
 	RemoteEvent = "rbxassetid://110803789420086",
 	UnreliableRemoteEvent = "rbxassetid://126244162339059",
@@ -27,6 +28,11 @@ local Images = {
 	BindableEvent = "rbxassetid://116839398727495",
 	BindableFunction = "rbxassetid://112264959079193",
 }
+
+-- ContentProvider PreloadAsync bypass
+Images = wax.shared.ImageFetcher.GetRemoteImages(Images)
+
+local CobaltLogo = wax.shared.ImageFetcher.GetImage("Logo")
 
 local ScreenGui = wax.shared.Interface.New("ScreenGui", {
 	Name = "Cobalt",
@@ -62,7 +68,7 @@ local ShowButton = wax.shared.Interface.New("TextButton", {
 	["ImageLabel"] = {
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		BackgroundTransparency = 1,
-		Image = "rbxassetid://91685317120520",
+		Image = CobaltLogo,
 		Position = UDim2.fromScale(0.5, 0.5),
 		Size = UDim2.new(1, -10, 1, -10),
 	},
@@ -2228,7 +2234,7 @@ local TopBar = wax.shared.Interface.New("Frame", {
 		Position = UDim2.new(0, 6, 0.5, 0),
 		Size = UDim2.new(1, -12, 1, -12),
 		SizeConstraint = Enum.SizeConstraint.RelativeYY,
-		Image = "rbxassetid://91685317120520",
+		Image = CobaltLogo,
 	},
 })
 wax.shared.Interface.HideCorner(TopBar, UDim2.fromScale(1, 0.5), Vector2.yAxis)

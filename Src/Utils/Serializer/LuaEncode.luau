@@ -223,6 +223,9 @@ local function LuaEncode(inputTable, options)
 	local UseInstancePaths = (options.UseInstancePaths == nil and true) or options.UseInstancePaths
 	local SerializeMathHuge = (options.SerializeMathHuge == nil and true) or options.SerializeMathHuge
 
+	local RefMaps = options._RefMaps or { [inputTable] = "" } -- [Ref: table] = ".example["ref path"]'
+	local CycleMaps = options._CycleMaps or {} -- ['.example["ref path"]'] = '.another["ref path"]'
+
 	local StackLevel = options._StackLevel or 1
 	local EntryStackLevel = options._StackLevel or 1
 	local VisitedTables = options._VisitedTables or {} -- [Ref: table] = true
@@ -339,6 +342,9 @@ local function LuaEncode(inputTable, options)
 				NewOptions._StackLevel = (isKey and 1) or StackLevel + 1
 				NewOptions._VisitedTables = VisitedTables
 				NewOptions._DidInsertNilFunction = DidInsertNilFunction
+				NewOptions._RefMaps = RefMaps
+				NewOptions._CycleMaps = CycleMaps
+				NewOptions.InsertCycles = InsertCycles
 			end
 
 			local Result, InsertedNilFunction = LuaEncode(value, NewOptions)
@@ -758,8 +764,6 @@ local function LuaEncode(inputTable, options)
 
 	-- Stack array for table depth
 	local TableStack = {} -- [Depth: number] = {TablePointer: table, NextKey: any, KeyNumIndex: number}
-	local RefMaps = { [TablePointer] = "" } -- [Ref: table] = ".example["ref path"]'
-	local CycleMaps = {} -- ['.example["ref path"]'] = '.another["ref path"]'
 
 	while TablePointer do
 		-- Update StackLevel for formatting
@@ -792,6 +796,34 @@ local function LuaEncode(inputTable, options)
 				local ValueType = Type(Value)
 
 				if ValueType == "table" then
+					local RootIndexPath
+					if InsertCycles and RefMaps[TablePointer] then
+						local EncodedKeyAsValue = TypeCases["number"](i, false)
+						RootIndexPath = table_concat({ "[", EncodedKeyAsValue, "]" })
+					end
+
+					if VisitedTables[Value] then
+						local IndexPath
+						if InsertCycles and RefMaps[TablePointer] and RootIndexPath then
+							IndexPath = RefMaps[TablePointer] .. RootIndexPath
+						end
+
+						local EncodedValueOrError =
+							string_format("{%s}", (OutputWarnings and "--[[LuaEncode: Duplicate reference]]") or "")
+
+						if IndexPath and RefMaps[Value] then
+							CycleMaps[IndexPath] = RefMaps[Value]
+						end
+
+						Output[#Output + 1] = EncodedValueOrError
+
+						continue
+					end
+
+					if InsertCycles and RefMaps[TablePointer] and RootIndexPath then
+						RefMaps[Value] = RefMaps[TablePointer] .. RootIndexPath
+					end
+
 					-- Create a new options table for the recursive call
 					local Encoded, InsertedNilFunction = LuaEncode(
 						Value,
@@ -801,6 +833,9 @@ local function LuaEncode(inputTable, options)
 							_StackLevel = StackLevel + 1,
 							_VisitedTables = VisitedTables,
 							_DidInsertNilFunction = DidInsertNilFunction,
+							_RefMaps = RefMaps,
+							_CycleMaps = CycleMaps,
+							InsertCycles = InsertCycles,
 						}, { __index = options })
 					)
 
@@ -969,7 +1004,7 @@ local function LuaEncode(inputTable, options)
 		end
 	end
 
-	if InsertCycles then
+	if InsertCycles and StackLevel == 1 then
 		local CycleMapsOut = {}
 		for CycleIndex, CycleMap in next, CycleMaps do
 			CycleMapsOut[#CycleMapsOut + 1] = IndentString

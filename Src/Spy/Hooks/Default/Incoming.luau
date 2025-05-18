@@ -88,7 +88,7 @@ local function HandleInstance(Instance: any)
 	if Instance.ClassName == "RemoteEvent" or Instance.ClassName == "UnreliableRemoteEvent" then
 		for _, Connection in pairs(getconnections(Instance.OnClientEvent)) do
 			local Function = Connection.Function
-			if not Function or typeof(Function) ~= "function" then
+			if typeof(Function) ~= "function" then
 				continue
 			end
 
@@ -99,7 +99,7 @@ local function HandleInstance(Instance: any)
 	elseif Instance.ClassName == "BindableEvent" then
 		for _, Connection in pairs(getconnections(Instance.Event)) do
 			local Function = Connection.Function
-			if not Function or typeof(Function) ~= "function" then
+			if typeof(Function) ~= "function" then
 				continue
 			end
 
@@ -162,7 +162,7 @@ wax.shared.NewIndexHook = wax.shared.Hooking.HookMetaMethod(
 	game,
 	"__newindex",
 	wax.shared.newcclosure(function(self, key, value)
-		if not ClassesToHook[self.ClassName] then
+		if typeof(self) ~= "Instance" or not ClassesToHook[self.ClassName] then
 			return wax.shared.NewIndexHook(self, key, value)
 		end
 

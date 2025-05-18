@@ -24,6 +24,8 @@ require("ExecutorSupport")
 -- UI
 require("Utils/Connect")
 
+wax.shared.ImageFetcher = require("Utils/ImageFetch")
+
 wax.shared.LuaEncode = require("Utils/Serializer/LuaEncode")
 wax.shared.Drag = require("Utils/Drag")
 wax.shared.Interface = require("Utils/Interface")
@@ -41,7 +43,7 @@ if not wax.shared.Players.LocalPlayer then
 	wax.shared.Players.PlayerAdded:Wait()
 end
 wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer
-wax.shared.PlayerScripts = wax.shared.LocalPlayer:WaitForChild("PlayerScripts")
+wax.shared.PlayerScripts = cloneref(wax.shared.LocalPlayer:WaitForChild("PlayerScripts"))
 wax.shared.ExecutorName = string.split(identifyexecutor(), " ")[1]
 
 -- Functions
@@ -103,13 +105,25 @@ wax.shared.IsMouseOverFrame = function(Frame: GuiObject, Position: Vector2): boo
 		and Position.Y <= AbsPos.Y + AbsSize.Y
 end
 
-wax.shared.IsPlayerModule = function(Origin: LocalScript | ModuleScript)
+wax.shared.IsPlayerModule = function(Origin: LocalScript | ModuleScript, Instance: Instance): boolean
+	if Instance and Instance.ClassName ~= "BindableEvent" then
+		return false
+	end
+
 	local PlayerModule = Origin and Origin.FindFirstAncestor(Origin, "PlayerModule") or nil
-	return PlayerModule and PlayerModule.Parent == wax.shared.PlayerScripts
+	if not PlayerModule then
+		return false
+	end
+
+	if PlayerModule.Parent == nil then
+		return true
+	end
+
+	return compareinstances(PlayerModule.Parent, wax.shared.PlayerScripts)
 end
 wax.shared.ShouldIgnore = function(Instance, Origin)
 	return wax.shared.Settings.IgnoredRemotesDropdown.Value[Instance.ClassName] == true
-		or (wax.shared.Settings.IgnorePlayerModule.Value and wax.shared.IsPlayerModule(Origin))
+		or (wax.shared.Settings.IgnorePlayerModule.Value and wax.shared.IsPlayerModule(Origin, Instance))
 end
 
 wax.shared.DisplayNumber = function(Number: number)

@@ -27,7 +27,7 @@ for _, Service in pairs({
 end
 
 wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer
-wax.shared.PlayerScripts = wax.shared.LocalPlayer:WaitForChild("PlayerScripts")
+wax.shared.PlayerScripts = cloneref(wax.shared.LocalPlayer:WaitForChild("PlayerScripts"))
 wax.shared.ExecutorName = string.split(identifyexecutor(), " ")[1]
 
 wax.shared.newcclosure = wax.shared.ExecutorName == "AWP"
@@ -97,13 +97,25 @@ wax.shared.Settings = {
 	IgnoredRemotesDropdown = { Value = Data.IgnoredRemotesDropdown },
 }
 
-wax.shared.IsPlayerModule = function(Origin: LocalScript | ModuleScript)
+wax.shared.IsPlayerModule = function(Origin: LocalScript | ModuleScript, Instance: Instance): boolean
+	if Instance and Instance.ClassName ~= "BindableEvent" then
+		return false
+	end
+
 	local PlayerModule = Origin and Origin.FindFirstAncestor(Origin, "PlayerModule") or nil
-	return PlayerModule and PlayerModule.Parent == wax.shared.PlayerScripts
+	if not PlayerModule then
+		return false
+	end
+
+	if PlayerModule.Parent == nil then
+		return true
+	end
+
+	return compareinstances(PlayerModule.Parent, wax.shared.PlayerScripts)
 end
 wax.shared.ShouldIgnore = function(Instance, Origin)
 	return wax.shared.Settings.IgnoredRemotesDropdown.Value[Instance.ClassName] == true
-		or (wax.shared.Settings.IgnorePlayerModule.Value and wax.shared.IsPlayerModule(Origin))
+		or (wax.shared.Settings.IgnorePlayerModule.Value and wax.shared.IsPlayerModule(Origin, Instance))
 end
 
 wax.shared.Connections = {}
@@ -274,8 +286,25 @@ do
 		return Metadata
 	end
 
-	function Log:Call(Info)
-		Info["IsActor"] = true
+	function DeepClone(orig, copies)
+		copies = copies or {}
+		if type(orig) ~= "table" then
+			return orig
+		elseif copies[orig] then
+			return copies[orig]
+		end
+
+		local copy = {}
+		copies[orig] = copy
+		for k, v in pairs(orig) do
+			copy[DeepClone(k, copies)] = DeepClone(v, copies)
+		end
+		return copy
+	end
+
+	function Log:Call(RawInfo)
+		RawInfo["IsActor"] = true
+		local Info = DeepClone(RawInfo)
 		wax.shared.Communicator.Fire(wax.shared.Communicator, "ActorCall", self.Instance, self.Type, FixTable(Info))
 	end
 

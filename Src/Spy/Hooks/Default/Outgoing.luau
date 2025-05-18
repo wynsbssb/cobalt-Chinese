@@ -1,4 +1,13 @@
-local NamecallMethods = { "fireserver", "invokeserver", "fire", "invoke" }
+local NamecallMethods = {
+	"FireServer",
+	"InvokeServer",
+	"Fire",
+	"Invoke",
+	"fireServer",
+	"invokeServer",
+	"fire",
+	"invoke",
+}
 local AllowedClassNames =
 	{ "RemoteEvent", "RemoteFunction", "UnreliableRemoteEvent", "BindableEvent", "BindableFunction" }
 
@@ -43,9 +52,10 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 		local Method = getnamecallmethod()
 
 		if
-			table.find(AllowedClassNames, self.ClassName)
+			typeof(self) == "Instance"
+			and table.find(AllowedClassNames, self.ClassName)
 			and self ~= wax.shared.Communicator
-			and table.find(NamecallMethods, string.lower(Method))
+			and table.find(NamecallMethods, Method)
 			and not wax.shared.ShouldIgnore(self, getcallingscript())
 		then
 			local Log = wax.shared.Logs.Outgoing[self]
@@ -68,7 +78,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 				wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, "Outgoing", Info, #Log.Calls)
 
 				-- For RemoteFunction return value (ex: local result = RemoteFunction:InvokeServer())
-				if self.ClassName == "RemoteFunction" and Method == "InvokeServer" then
+				if self.ClassName == "RemoteFunction" and (Method == "InvokeServer" or Method == "invokeServer") then
 					Log = wax.shared.Logs.Incoming[self]
 					if not Log then
 						Log = wax.shared.NewLog(self, "Incoming", Method, getcallingscript())
@@ -78,10 +88,10 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 						return
 					end
 
-					local Result = { wax.shared.NamecallHook(self, ...) }
+					local Result = table.pack(wax.shared.NamecallHook(self, ...))
 					if not Log.Ignored then
 						local RFResultInfo = {
-							Arguments = Result,
+							Arguments = { table.unpack(Result, 1, Result.n) },
 							Time = os.date("%X"),
 							Origin = getcallingscript(),
 							Function = getcallingfunction(),
@@ -93,8 +103,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 						wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
 					end
 
-					local PackedResult = table.pack(Result)
-					return table.unpack(PackedResult, 1, PackedResult.n)
+					return table.unpack(Result, 1, Result.n)
 				end
 			end
 		end
@@ -118,7 +127,11 @@ for _, Function in pairs(FunctionsToHook) do
 	wax.shared.Hooks[Function] = wax.shared.Hooking.HookFunction(
 		Function,
 		wax.shared.newcclosure(function(self, ...)
-			if self ~= wax.shared.Communicator and not wax.shared.ShouldIgnore(self, getcallingscript()) then
+			if
+				typeof(self) == "Instance"
+				and self ~= wax.shared.Communicator
+				and not wax.shared.ShouldIgnore(self, getcallingscript())
+			then
 				local Log = wax.shared.Logs.Outgoing[self]
 				if not Log then
 					Log = wax.shared.NewLog(self, "Outgoing", Method, getcallingscript())
@@ -139,7 +152,10 @@ for _, Function in pairs(FunctionsToHook) do
 					wax.shared.Communicator:Fire(Log.Instance, "Outgoing", Info, #Log.Calls)
 
 					-- For RemoteFunction return value (ex: local result = RemoteFunction:InvokeServer())
-					if self.ClassName == "RemoteFunction" and Method == "InvokeServer" then
+					if
+						self.ClassName == "RemoteFunction"
+						and (Method == "InvokeServer" or Method == "invokeServer")
+					then
 						Log = wax.shared.Logs.Incoming[self]
 						if not Log then
 							Log = wax.shared.NewLog(self, "Incoming", Method, getcallingscript())
@@ -149,10 +165,10 @@ for _, Function in pairs(FunctionsToHook) do
 							return
 						end
 
-						local Result = { wax.shared.Hooks[Function](self, ...) }
+						local Result = table.pack(wax.shared.Hooks[Function](self, ...))
 						if not Log.Ignored then
 							local RFResultInfo = {
-								Arguments = Result,
+								Arguments = { table.unpack(Result, 1, Result.n) },
 								Time = os.date("%X"),
 								Origin = getcallingscript(),
 								Function = getcallingfunction(),
@@ -164,7 +180,7 @@ for _, Function in pairs(FunctionsToHook) do
 							wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
 						end
 
-						return table.unpack(Result)
+						return table.unpack(Result, 1, Result.n)
 					end
 				end
 			end

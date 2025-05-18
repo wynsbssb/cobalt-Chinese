@@ -33,12 +33,15 @@ if AdonisDetected then
 
 		local DetectedFunction = rawget(value, "Detected")
 		if typeof(DetectedFunction) == "function" and debug.info(DetectedFunction, "s") == ".Core.Anti" then
-			wax.shared.Hooks[DetectedFunction] = wax.shared.Hooking.HookFunction(
-				DetectedFunction,
-				function(action, info, nocrash)
-					return task.wait(9e9)
-				end
-			)
+			-- Just in case they already loaded a custom anticheat bypass for adonis
+			if not isfunctionhooked(DetectedFunction) then
+				wax.shared.Hooks[DetectedFunction] = wax.shared.Hooking.HookFunction(
+					DetectedFunction,
+					function(action, info, nocrash)
+						return task.wait(9e9)
+					end
+				)
+			end
 
 			wax.shared.AnticheatDisabled = true
 			wax.shared.AnticheatName = "Adonis"

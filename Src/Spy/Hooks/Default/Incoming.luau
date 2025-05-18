@@ -9,22 +9,6 @@ local ClassesToHook = {
 local SignalMapping = {}
 local HookedFunctions = {}
 
-local function getcallingfunction()
-	for i = 4, 10 do
-		local Function, Source = debug.info(i, "fs")
-		if not Function or not Source then
-			break
-		end
-
-		if Source == "[C]" then
-			continue
-		end
-
-		return Function
-	end
-
-	return debug.info(4, "f")
-end
 local function getcallingline()
 	for i = 4, 10 do
 		local Source, Line = debug.info(i, "sl")
@@ -64,7 +48,7 @@ local function ListenToFunction(Instance, Function, Method)
 						Arguments = { ... },
 						Time = os.date("%X"),
 						Origin = getcallingscript(),
-						Function = getcallingfunction(),
+						Function = Function,
 						Line = getcallingline(),
 						IsExecutor = checkcaller(),
 					}
@@ -136,7 +120,7 @@ local function HandleInstance(Instance: any)
 					Arguments = { ... },
 					Time = os.date("%X"),
 					Origin = getcallingscript(),
-					Function = getcallingfunction(),
+					Function = Callback,
 					Line = getcallingline(),
 					IsExecutor = checkcaller(),
 				}
@@ -193,7 +177,7 @@ wax.shared.NewIndexHook = wax.shared.Hooking.HookMetaMethod(
 							Arguments = { ... },
 							Time = os.date("%X"),
 							Origin = getcallingscript(),
-							Function = getcallingfunction(),
+							Function = value,
 							Line = getcallingline(),
 							IsExecutor = checkcaller(),
 						}

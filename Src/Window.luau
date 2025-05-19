@@ -604,7 +604,7 @@ local function CreateSettingsCheckbox(
 )
 	local Checkbox = {
 		Default = Options.Default or false,
-		Value = wax.shared.SaveManager:GetState(Idx) or Options.Default or false,
+		Value = if typeof(wax.shared.SaveManager:GetState(Idx)) == "boolean" then wax.shared.SaveManager:GetState(Idx) else (Options.Default or false),
 	}
 
 	local CheckboxUI = wax.shared.Interface.New("TextButton", {

@@ -22,9 +22,9 @@ function ImageFetcher.GetRemoteImages(Images: { [string]: string })
 	end
 
 	local NewImages = {}
-	for ClassName, _ in Images do
+	for ClassName, Image in Images do
 		if isfile(`Cobalt/Assets/{ClassName}.png`) then
-			NewImages[ClassName] = SafeFetch(`Cobalt/Assets/{ClassName}.png`) or Images[ClassName]
+			NewImages[ClassName] = SafeFetch(`Cobalt/Assets/{ClassName}.png`) or Image
 			continue
 		end
 
@@ -33,7 +33,7 @@ function ImageFetcher.GetRemoteImages(Images: { [string]: string })
 			game:HttpGet(`https://robloxapi.github.io/ref/icons/dark/{ClassName}.png`)
 		)
 
-		NewImages[ClassName] = SafeFetch(`Cobalt/Assets/{ClassName}.png`) or Images[ClassName]
+		NewImages[ClassName] = SafeFetch(`Cobalt/Assets/{ClassName}.png`) or Image
 	end
 
 	return NewImages

@@ -6,7 +6,7 @@ wax.shared.AnticheatDisabled = false
 wax.shared.AnticheatName = "N/A"
 
 local BypassState = wax.shared.SaveManager:GetState("AnticheatBypass")
-local BypassEnabled = if typeof(BypassState) == "boolean" then BypassState else true 
+local BypassEnabled = if typeof(BypassState) == "boolean" then BypassState else true
 if not BypassEnabled then
 	return
 end
@@ -47,4 +47,153 @@ if AdonisDetected then
 			wax.shared.AnticheatName = "Adonis"
 		end
 	end
+
+	return
 end
+
+-- If no executor is detected, we default to a generic bypass
+if wax.shared.AlternativeEnabled or shared.CobaltDebugHooked then
+	return
+end
+
+shared.CobaltDebugHooked = true
+local function ValidTraceback(s)
+	local dotPos = string.find(s, "%.")
+	local colonPos = string.find(s, ":")
+
+	if not dotPos then
+		return false
+	end
+
+	if not colonPos then
+		return true
+	end
+
+	return dotPos < colonPos
+end
+
+local function TracebackLines(str)
+	local pos = 1
+	return function()
+		if not pos then
+			return nil
+		end
+		local p1, p2 = string.find(str, "\r?\n", pos)
+		local line
+		if p1 then
+			line = str:sub(pos, p1 - 1)
+			pos = p2 + 1
+		else
+			line = str:sub(pos)
+			pos = nil
+		end
+		return line
+	end
+end
+
+local OldFenv
+OldFenv = hookfunction(getrenv().getfenv, function(...)
+	local ResultingEnv = OldFenv(...)
+
+	if
+		not checkcaller()
+		and typeof(ResultingEnv["getgenv"]) == "function"
+		and isexecutorclosure(ResultingEnv["getgenv"])
+	then
+		return getrenv()
+	end
+
+	return ResultingEnv
+end)
+
+local OldDebugTraceback
+OldDebugTraceback = hookfunction(getrenv().debug.traceback, function()
+	if checkcaller() then
+		return OldDebugTraceback()
+	end
+
+	local Traceback = OldDebugTraceback()
+	local NewTraceback = {}
+
+	for Line in TracebackLines(Traceback) do
+		if not ValidTraceback(Line) then
+			continue
+		end
+
+		table.insert(NewTraceback, Line)
+	end
+
+	return table.concat(NewTraceback, "\n")
+end)
+
+local OldDebugInfo
+OldDebugInfo = hookfunction(getrenv().debug.info, function(...)
+	local LevelOrFunction: number | (...any) -> ...any = select(1, ...)
+	local WantedInfo: string = select(2, ...)
+
+	if
+		checkcaller()
+		or typeof(LevelOrFunction) == "function"
+		or typeof(LevelOrFunction) == "thread"
+		or not pcall(function(...)
+			local Yo = { ... }
+
+			local Level = Yo[1]
+			table.remove(Yo, 1)
+
+			-- account for the pcall and the function
+			if typeof(Level) == "number" then
+				Level += 2
+			end
+
+			local _Gurt = OldDebugInfo(Level, table.unpack(Yo))
+		end, ...)
+	then
+		return OldDebugInfo(...)
+	end
+
+	local ReconstructedConstructedStack = {}
+	for Level = 2, 19997 do
+		local Function, Source, Line, Name, NumberOfArgs, Varargs = OldDebugInfo(Level, "fslna")
+
+		if not Function or not Source or not Line or not Name then
+			break
+		end
+
+		if isexecutorclosure(Function) and not wax.shared.Hooking.IgnoreStackFunctions[Function] then
+			continue
+		end
+
+		table.insert(ReconstructedConstructedStack, {
+			f = Function,
+			s = Source,
+			l = Line,
+			n = Name,
+			a = { NumberOfArgs, Varargs },
+		})
+	end
+
+	local InfoLevel = ReconstructedConstructedStack[LevelOrFunction]
+
+	if not InfoLevel then
+		-- Max level is 19997 so this guarantees that it will return nothing
+		return OldDebugInfo(3e4, WantedInfo)
+	end
+
+	local Result = {}
+	for idx, info in string.split(WantedInfo, "") do
+		local Value = InfoLevel[info]
+
+		if typeof(Value) == "table" then
+			for _, v in Value do
+				table.insert(Result, v)
+			end
+
+			continue
+		end
+
+		table.insert(Result, Value)
+	end
+
+	return table.unpack(Result)
+end)

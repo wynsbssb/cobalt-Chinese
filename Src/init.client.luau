@@ -84,6 +84,7 @@ wax.shared.newcclosure = wax.shared.ExecutorName == "AWP"
 			local nf = function(...)
 				return __F(...)
 			end
+
 			setfenv(nf, x) -- set func env (env of nf gets deoptimized)
 			return newcclosure(nf)
 		end

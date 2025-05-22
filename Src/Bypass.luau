@@ -51,7 +51,7 @@ if AdonisDetected then
 	return
 end
 
--- If no executor is detected, we default to a generic bypass
+-- If no bypass is detected, we default to a generic bypass
 if wax.shared.AlternativeEnabled or shared.CobaltDebugHooked then
 	return
 end

@@ -178,7 +178,14 @@ OldFenv = hookfunction(getrenv().getfenv, function(...)
 		return OldFenv(...)
 	end
 
-	local ToInspect: (...any) -> ...any | number = ...
+	local ToInspect: (...any) -> (...any) | number = ...
+
+	if ToInspect == 0 then
+		return getrenv()
+	elseif ToInspect == nil then
+		return OldFenv(...)
+	end
+
 	local Success, ResultingEnv = pcall(function()
 		if typeof(ToInspect) == "number" then
 			return OldFenv(ToInspect + 3)

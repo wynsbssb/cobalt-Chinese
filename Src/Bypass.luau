@@ -57,6 +57,9 @@ if wax.shared.AlternativeEnabled or shared.CobaltDebugHooked then
 end
 
 shared.CobaltDebugHooked = true
+
+local OldDebugTraceback, OldDebugInfo, OldFenv = debug.traceback, debug.info, getfenv
+
 local function ValidTraceback(s)
 	local dotPos = string.find(s, "%.")
 	local colonPos = string.find(s, ":")
@@ -91,22 +94,6 @@ local function TracebackLines(str)
 	end
 end
 
-local OldFenv
-OldFenv = hookfunction(getrenv().getfenv, function(...)
-	local ResultingEnv = OldFenv(...)
-
-	if
-		not checkcaller()
-		and typeof(ResultingEnv["getgenv"]) == "function"
-		and isexecutorclosure(ResultingEnv["getgenv"])
-	then
-		return getrenv()
-	end
-
-	return ResultingEnv
-end)
-
-local OldDebugTraceback
 OldDebugTraceback = hookfunction(getrenv().debug.traceback, function()
 	if checkcaller() then
 		return OldDebugTraceback()
@@ -126,28 +113,16 @@ OldDebugTraceback = hookfunction(getrenv().debug.traceback, function()
 	return table.concat(NewTraceback, "\n")
 end)
 
-local OldDebugInfo
 OldDebugInfo = hookfunction(getrenv().debug.info, function(...)
-	local LevelOrFunction: number | (...any) -> ...any = select(1, ...)
-	local WantedInfo: string = select(2, ...)
+	local ToInspect, LevelOrInfo, _ThreadInfo = ...
 
 	if
 		checkcaller()
-		or typeof(LevelOrFunction) == "function"
-		or typeof(LevelOrFunction) == "thread"
-		or not pcall(function(...)
-			local Yo = { ... }
-
-			local Level = Yo[1]
-			table.remove(Yo, 1)
-
-			-- account for the pcall and the function
-			if typeof(Level) == "number" then
-				Level += 2
-			end
-
-			local _Gurt = OldDebugInfo(Level, table.unpack(Yo))
-		end, ...)
+		or typeof(ToInspect) == "function"
+		or typeof(ToInspect) == "thread"
+		or not pcall(function(LevelOrInfo) -- Validate arguments
+			OldDebugInfo(function() end, LevelOrInfo)
+		end, LevelOrInfo)
 	then
 		return OldDebugInfo(...)
 	end
@@ -160,7 +135,7 @@ OldDebugInfo = hookfunction(getrenv().debug.info, function(...)
 			break
 		end
 
-		if isexecutorclosure(Function) and not wax.shared.Hooking.IgnoreStackFunctions[Function] then
+		if isexecutorclosure(Function) and not wax.shared.Hooking.IncludeInStackFunctions[Function] then
 			continue
 		end
 
@@ -173,27 +148,90 @@ OldDebugInfo = hookfunction(getrenv().debug.info, function(...)
 		})
 	end
 
-	local InfoLevel = ReconstructedConstructedStack[LevelOrFunction]
+	local InfoLevel = ReconstructedConstructedStack[ToInspect]
 
 	if not InfoLevel then
 		-- Max level is 19997 so this guarantees that it will return nothing
-		return OldDebugInfo(3e4, WantedInfo)
+		return OldDebugInfo(3e4, LevelOrInfo)
 	end
 
-	local Result = {}
-	for idx, info in string.split(WantedInfo, "") do
+	local ReturnResult = {}
+	for idx, info in string.split(LevelOrInfo, "") do
 		local Value = InfoLevel[info]
 
 		if typeof(Value) == "table" then
 			for _, v in Value do
-				table.insert(Result, v)
+				table.insert(ReturnResult, v)
 			end
 
 			continue
 		end
 
-		table.insert(Result, Value)
+		table.insert(ReturnResult, Value)
 	end
 
-	return table.unpack(Result)
+	return table.unpack(ReturnResult, 1, #ReturnResult)
+end)
+
+OldFenv = hookfunction(getrenv().getfenv, function(...)
+	if checkcaller() then
+		return OldFenv(...)
+	end
+
+	local ToInspect: (...any) -> ...any | number = ...
+	local Success, ResultingEnv = pcall(function()
+		if typeof(ToInspect) == "number" then
+			return OldFenv(ToInspect + 3)
+		end
+
+		return OldFenv(ToInspect)
+	end)
+
+	if not Success then
+		return OldFenv(...)
+	end
+
+	if typeof(ToInspect) == "function" then
+		if typeof(ResultingEnv["getgenv"]) == "function" and isexecutorclosure(ResultingEnv["getgenv"]) then
+			return getrenv()
+		end
+
+		return ResultingEnv
+	end
+
+	local ReconstructedConstructedStack = {}
+	for Level = 2, 19997 do
+		local StackInfoSuccess, Data = pcall(function()
+			return {
+				Environement = OldFenv(Level + 3),
+				Function = OldDebugInfo(Level + 3, "f"),
+			}
+		end)
+
+		if not StackInfoSuccess or not Data then
+			break
+		end
+
+		local Environement = Data.Environement
+		local Function = Data.Function
+
+		if typeof(Environement["getgenv"]) == "function" and isexecutorclosure(Environement["getgenv"]) then
+			if wax.shared.Hooking.IncludeInStackFunctions[Function] then
+				Environement = getrenv()
+			else
+				continue
+			end
+		end
+
+		table.insert(ReconstructedConstructedStack, Environement)
+	end
+
+	local InfoLevel = ReconstructedConstructedStack[ToInspect]
+
+	if not InfoLevel then
+		-- Max level is 19997 so this guarantees that it will return error
+		return OldFenv(3e4)
+	end
+
+	return InfoLevel
 end)

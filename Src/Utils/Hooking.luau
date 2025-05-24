@@ -1,5 +1,5 @@
 local Hooking = {
-	IgnoreStackFunctions = {},
+	IncludeInStackFunctions = {},
 }
 
 local UseAltHooks = wax.shared.SaveManager:GetState("UseAlternativeHooks")
@@ -7,14 +7,14 @@ local AlternativeEnabled = typeof(UseAltHooks) == "boolean" and UseAltHooks or f
 wax.shared.AlternativeEnabled = AlternativeEnabled
 
 Hooking.HookFunction = function(Original, Replacement)
-	Hooking.IgnoreStackFunctions[Original] = true
+	Hooking.IncludeInStackFunctions[Original] = true
 	return hookfunction(Original, Replacement)
 end
 Hooking.HookMetaMethod = function(object, method, hook)
 	local Metatable = wax.shared.getrawmetatable(object)
 	local originalMethod = rawget(Metatable, method)
 
-	Hooking.IgnoreStackFunctions[originalMethod] = true
+	Hooking.IncludeInStackFunctions[originalMethod] = true
 
 	if AlternativeEnabled then
 		setreadonly(Metatable, false)

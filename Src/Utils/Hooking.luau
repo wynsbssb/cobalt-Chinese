@@ -38,7 +38,7 @@ Hooking.SetStackHidden = sethiddenstack
 				"invalid argument #2 to 'setstackhidden' (boolean expected, got " .. typeof(hidden) .. ")"
 			)
 
-			Hooking.IncludeInStackFunctions[CallingFunction] = not hidden
+			shared.Hooking.IncludeInStackFunctions[CallingFunction] = not hidden
 		end
 
 		if restorefunction then
@@ -54,6 +54,7 @@ Hooking.SetStackHidden = sethiddenstack
 		end
 
 		shared.CobaltSetStackHiddenLuau = true
+		shared.Hooking = Hooking
 
 		local function ValidTraceback(s)
 			local dotPos = string.find(s, "%.")
@@ -130,7 +131,7 @@ Hooking.SetStackHidden = sethiddenstack
 					break
 				end
 
-				if isexecutorclosure(Function) and not wax.shared.Hooking.IncludeInStackFunctions[Function] then
+				if isexecutorclosure(Function) and not shared.Hooking.IncludeInStackFunctions[Function] then
 					continue
 				end
 
@@ -212,7 +213,7 @@ Hooking.SetStackHidden = sethiddenstack
 				local Function = Data.Function
 
 				if typeof(Environement["getgenv"]) == "function" and isexecutorclosure(Environement["getgenv"]) then
-					if wax.shared.Hooking.IncludeInStackFunctions[Function] then
+					if shared.Hooking.IncludeInStackFunctions[Function] then
 						Environement = setmetatable(ResultingEnv, {
 							__index = getrenv()
 						})

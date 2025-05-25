@@ -199,6 +199,8 @@ local ConnectionKeys = {
 	"ConnectParallel",
 	"connect",
 	"connectParallel",
+	"once",
+	"Once",
 }
 
 local SignalMetatable = wax.shared.getrawmetatable(Instance.new("Part").Touched)

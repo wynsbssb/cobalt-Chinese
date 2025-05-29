@@ -22,15 +22,20 @@ if wax.shared.ActorsEnabled then
 	local UseAltHooks = wax.shared.SaveManager:GetState("UseAlternativeHooks")
 	local AlternativeEnabled = typeof(UseAltHooks) == "boolean" and UseAltHooks or false
 
+	local IgnorePlayerModule = wax.shared.SaveManager:GetState("IgnorePlayerModule")
+	local IngoredRemotesDropdown = wax.shared.SaveManager:GetState("IgnoredRemotesDropdown")
+
 	local ActorData = wax.shared.LuaEncode({
 		Channel = CommunicationChannelID,
 		Token = wax.shared.CobaltVerificationToken,
 
-		IgnorePlayerModule = wax.shared.SaveManager:GetState("IgnorePlayerModule") or true,
-		IgnoredRemotesDropdown = wax.shared.SaveManager:GetState("IgnoredRemotesDropdown") or {
-			["BindableEvent"] = true,
-			["BindableFunction"] = true,
-		},
+		IgnorePlayerModule = if typeof(IgnorePlayerModule) == "boolean" then IgnorePlayerModule else true,
+		IgnoredRemotesDropdown = if typeof(IngoredRemotesDropdown) == "table"
+			then IngoredRemotesDropdown
+			else {
+				["BindableEvent"] = true,
+				["BindableFunction"] = true,
+			},
 		UseAlternativeHooks = AlternativeEnabled,
 	})
 

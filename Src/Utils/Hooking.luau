@@ -7,6 +7,9 @@ local AlternativeEnabled = typeof(UseAltHooks) == "boolean" and UseAltHooks or f
 wax.shared.AlternativeEnabled = AlternativeEnabled
 wax.shared.CobaltLuaSetStackHidden = false
 
+local BypassState = wax.shared.SaveManager:GetState("AnticheatBypass")
+local BypassEnabled = if typeof(BypassState) == "boolean" then BypassState else true
+
 Hooking.SetStackHidden = sethiddenstack
 	or setstackhidden
 	or (function()
@@ -239,14 +242,19 @@ Hooking.SetStackHidden = sethiddenstack
 	end)()
 
 Hooking.HookFunction = function(Original, Replacement)
-	Hooking.SetStackHidden(Original, false)
+	if BypassEnabled then
+		Hooking.SetStackHidden(Original, false)
+	end
+
 	return hookfunction(Original, Replacement)
 end
 Hooking.HookMetaMethod = function(object, method, hook)
 	local Metatable = wax.shared.getrawmetatable(object)
 	local originalMethod = rawget(Metatable, method)
 
-	Hooking.SetStackHidden(originalMethod, false)
+	if BypassEnabled then
+		Hooking.SetStackHidden(originalMethod, false)
+	end
 
 	if AlternativeEnabled then
 		setreadonly(Metatable, false)

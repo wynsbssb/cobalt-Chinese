@@ -44,7 +44,7 @@ Hooking.SetStackHidden = sethiddenstack
 			shared.Hooking.IncludeInStackFunctions[CallingFunction] = not hidden
 		end
 
-		if restorefunction then
+		if restorefunction and isfunctionhooked then
 			for _, callback in pairs({ OldDebugTraceback, OldDebugInfo }) do
 				if not isfunctionhooked(callback) then
 					continue

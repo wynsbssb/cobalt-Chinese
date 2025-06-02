@@ -11,6 +11,10 @@ if not BypassEnabled then
 	return
 end
 
+if not getreg or not getgc or not isfunctionhooked then
+	return
+end
+
 local AdonisDetected = false
 
 for _, thread in getreg() do

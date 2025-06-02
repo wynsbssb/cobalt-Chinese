@@ -11,6 +11,11 @@ local NamecallMethods = {
 local AllowedClassNames =
 	{ "RemoteEvent", "RemoteFunction", "UnreliableRemoteEvent", "BindableEvent", "BindableFunction" }
 
+--[[
+	Returns the calling function via `debug.info`
+
+	@return `function | nil` The calling function or nil if not found.
+]]
 local function getcallingfunction()
 	for i = 4, 10 do
 		local Function, Source = debug.info(i, "fs")
@@ -27,6 +32,12 @@ local function getcallingfunction()
 
 	return debug.info(4, "f")
 end
+
+--[[
+	Returns the calling line of the script that called the function via `debug.info`
+
+	@return number Returns the line number of the calling script.
+]]
 local function getcallingline()
 	for i = 4, 10 do
 		local Source, Line = debug.info(i, "sl")
@@ -42,16 +53,6 @@ local function getcallingline()
 	end
 
 	return debug.info(4, "l")
-end
-
-OnUnload = function()
-	for Function, Original in pairs(wax.shared.Hooks) do
-		task.spawn(pcall, wax.shared.restorefunction, Function, true)
-	end
-
-	if not restorefunction or wax.shared.AlternativeEnabled then
-		wax.shared.Hooking.HookMetaMethod(game, "__namecall", wax.shared.NamecallHook)
-	end
 end
 
 -- metamethod hooks
@@ -85,6 +86,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 					IsExecutor = checkcaller(),
 				}
 				Log:Call(Info)
+				wax.shared.Communicator.Fire(wax.shared.Communicator, Log.Instance, "Outgoing", Info, #Log.Calls)
 
 				-- For RemoteFunction return value (ex: local result = RemoteFunction:InvokeServer())
 				if self.ClassName == "RemoteFunction" and (Method == "InvokeServer" or Method == "invokeServer") then
@@ -98,7 +100,6 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 					end
 
 					local Result = table.pack(wax.shared.NamecallHook(self, ...))
-
 					if not Log.Ignored then
 						local RFResultInfo = {
 							Arguments = { table.unpack(Result, 1, Result.n) },
@@ -110,6 +111,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 							OriginalInvokeArgs = { ... },
 						}
 						Log:Call(RFResultInfo)
+						wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
 					end
 
 					return table.unpack(Result, 1, Result.n)
@@ -159,6 +161,7 @@ for _, Function in pairs(FunctionsToHook) do
 						IsExecutor = checkcaller(),
 					}
 					Log:Call(Info)
+					wax.shared.Communicator:Fire(Log.Instance, "Outgoing", Info, #Log.Calls)
 
 					-- For RemoteFunction return value (ex: local result = RemoteFunction:InvokeServer())
 					if
@@ -186,6 +189,7 @@ for _, Function in pairs(FunctionsToHook) do
 								OriginalInvokeArgs = { ... },
 							}
 							Log:Call(RFResultInfo)
+							wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
 						end
 
 						return table.unpack(Result, 1, Result.n)

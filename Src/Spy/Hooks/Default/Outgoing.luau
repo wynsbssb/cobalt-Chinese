@@ -11,6 +11,11 @@ local NamecallMethods = {
 local AllowedClassNames =
 	{ "RemoteEvent", "RemoteFunction", "UnreliableRemoteEvent", "BindableEvent", "BindableFunction" }
 
+--[[
+	Returns the calling function via `debug.info`
+
+	@return `function | nil` The calling function or nil if not found.
+]]
 local function getcallingfunction()
 	for i = 4, 10 do
 		local Function, Source = debug.info(i, "fs")
@@ -27,6 +32,12 @@ local function getcallingfunction()
 
 	return debug.info(4, "f")
 end
+
+--[[
+	Returns the calling line of the script that called the function via `debug.info`
+
+	@return number Returns the line number of the calling script.
+]]
 local function getcallingline()
 	for i = 4, 10 do
 		local Source, Line = debug.info(i, "sl")

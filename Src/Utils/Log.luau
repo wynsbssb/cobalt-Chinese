@@ -50,12 +50,38 @@ function Log:Ignore()
 	self.Ignored = not self.Ignored
 end
 
+local ClassesConnectionsToggle = {
+	RemoteEvent = "OnClientEvent",
+	UnreliableRemoteEvent = "OnClientEvent",
+	BindableEvent = "Event",
+}
+
+function Log:SetConnectionsEnabled(enabled: boolean)
+	if not self.Instance or not ClassesConnectionsToggle[self.Instance.ClassName] then
+		return
+	end
+
+	local ConnectionName = ClassesConnectionsToggle[self.Instance.ClassName]
+	if self.Type ~= "Incoming" or not ConnectionName then
+		return
+	end
+
+	for _, Connection in pairs(getconnections(self.Instance[ConnectionName])) do
+		if enabled then
+			Connection:Enable()
+		else
+			Connection:Disable()
+		end
+	end
+end
+
 function Log:Block()
 	if wax.shared.ActorCommunicator then
 		wax.shared.ActorCommunicator:Fire("MainBlock", self.Instance, self.Type)
 	end
 
 	self.Blocked = not self.Blocked
+	Log:SetConnectionsEnabled(not self.Blocked)
 end
 
 function Log:SetButton(Instance, Name, Calls)

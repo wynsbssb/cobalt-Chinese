@@ -604,7 +604,9 @@ local function CreateSettingsCheckbox(
 )
 	local Checkbox = {
 		Default = Options.Default or false,
-		Value = if typeof(wax.shared.SaveManager:GetState(Idx)) == "boolean" then wax.shared.SaveManager:GetState(Idx) else (Options.Default or false),
+		Value = if typeof(wax.shared.SaveManager:GetState(Idx)) == "boolean"
+			then wax.shared.SaveManager:GetState(Idx)
+			else (Options.Default or false),
 	}
 
 	local CheckboxUI = wax.shared.Interface.New("TextButton", {
@@ -3217,7 +3219,7 @@ function CreateCallFrame(CallInfo)
 		BackgroundTransparency = 1,
 		Size = UDim2.new(1, 0, 0, 22),
 
-		wax.shared.Interface.NewIcon(CallInfo.Origin and "gamepad-2" or "terminal", {
+		wax.shared.Interface.NewIcon(CallInfo.IsExecutor and "terminal" or "gamepad-2", {
 			AnchorPoint = Vector2.yAxis,
 			ImageTransparency = 0.5,
 			Position = UDim2.new(0, 2, 1, 0),

@@ -94,6 +94,10 @@ end
 local function CreateConnectionFunction(Instance: InstancesToHook, Method: MethodsToHook)
 	local ConnectionFunction = function(...)
 		for _, Connection in pairs(getconnections((Instance :: any)[Method])) do
+			if Connection.ForeignState then
+				continue
+			end
+
 			local Function = typeof(Connection.Function) == "function" and Connection.Function or nil
 			local Thread = Connection.Thread
 
@@ -237,7 +241,7 @@ wax.shared.Hooks[SignalMetatable.__index] = wax.shared.Hooking.HookFunction(Sign
 
 				if Log and Log.Blocked then
 					for _, Connection in pairs(getconnections(Instance[Method])) do
-						if Connection.Function ~= callback then
+						if not Connection.ForeignState and Connection.Function ~= callback then
 							continue
 						end
 

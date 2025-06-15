@@ -5,7 +5,7 @@ local CodeGen = {
 
 type SupportedRemoteTypes = RemoteEvent | RemoteFunction | BindableEvent | BindableFunction | UnreliableRemoteEvent
 type CallInfo = {
-	Arguments: { any },
+	Arguments: { [number]: any, n: number },
 	Time: string,
 	Origin: BaseScript?,
 	Function: (
@@ -22,7 +22,7 @@ type CallInfo = {
 	Instance: SupportedRemoteTypes,
 	Order: number,
 	Type: "Incoming" | "Outgoing",
-	OriginalInvokeArgs: { any }?,
+	OriginalInvokeArgs: { [number]: any, n: number }?,
 	IsActor: boolean?,
 }
 
@@ -268,11 +268,11 @@ end]],
 			string.format(
 				[[%s
 local mtHook; mtHook = hookmetamethod(game, "__namecall", function(self, ...)
-	local Args = {...}
+	local Args = table.pack(...)
 
 	if self == Event and getnamecallmethod() == "%s" then
 		print(`Intercepted (__namecall) {Event.Name}:%s()`, ...)
-		return mtHook(self, table.unpack(Args))
+		return mtHook(self, table.unpack(Args, 1, Args.n))
 	end
 
 	return mtHook(self, ...)
@@ -302,12 +302,12 @@ end)]],
 		)
 end
 
-function CreateArgsString(SerializedArgs: string, Args: { any }, Prefix: string?)
-	if wax.shared.GetTableLength(Args) == 0 then
+function CreateArgsString(SerializedArgs: string, Args: { [number]: any, n: number }, Prefix: string?)
+	if Args.n == 0 then
 		return ""
-	else
-		return `{Prefix == nil and "" or Prefix}table.unpack({SerializedArgs})`
 	end
+
+	return `{Prefix == nil and "" or Prefix}{string.sub(SerializedArgs, 2, #SerializedArgs - 1)}`
 end
 
 function CodeGen:BuildCallCode(CallInfo: CallInfo)
@@ -316,7 +316,7 @@ function CodeGen:BuildCallCode(CallInfo: CallInfo)
 	local Path = self.GetFullPath(CallInfo.Instance, false, "Event")
 	local Method = wax.shared.FunctionForClasses[Type][CallInfo.Instance.ClassName]
 	local SerializedArgs, DidInsertNilFunction =
-		wax.shared.LuaEncode(CallInfo.Arguments, { Prettify = true, InsertCycles = true, GetNilFunctionInsert = true })
+		wax.shared.LuaEncode({table.unpack(CallInfo.Arguments, 1, CallInfo.Arguments.n)}, { Prettify = true, InsertCycles = true, GetNilFunctionInsert = true })
 
 	local CodeGenHeader = CodeGenHeaderTemplate
 
@@ -324,7 +324,7 @@ function CodeGen:BuildCallCode(CallInfo: CallInfo)
 		if DoesUseCallbackValue(CallInfo.Instance) then
 			if CallInfo.OriginalInvokeArgs then
 				local PrettifiedOutput, InsertedNilFunction =
-					wax.shared.LuaEncode(CallInfo.OriginalInvokeArgs, { Prettify = true, InsertCycles = true })
+					wax.shared.LuaEncode({table.unpack(CallInfo.OriginalInvokeArgs, 1, CallInfo.OriginalInvokeArgs.n)}, { Prettify = true, InsertCycles = true })
 
 				Method = wax.shared.FunctionForClasses.Outgoing[CallInfo.Instance.ClassName]
 
@@ -436,6 +436,13 @@ wax.shared.ReplayCallInfo = function(CallInfo: CallInfo)
 
 	if Type == "Incoming" then
 		if DoesUseCallbackValue(CallInfo.Instance) then
+			if CallInfo.OriginalInvokeArgs then
+				Method = wax.shared.FunctionForClasses.Outgoing[CallInfo.Instance.ClassName]
+	
+				CallInfo.Instance[Method](CallInfo.Instance, table.unpack(CallInfo.OriginalInvokeArgs, 1, CallInfo.OriginalInvokeArgs.n))
+				return
+			end
+
 			local Callback = getcallbackvalue(CallInfo.Instance, Method)
 
 			if not Callback then
@@ -449,17 +456,17 @@ wax.shared.ReplayCallInfo = function(CallInfo: CallInfo)
 		assert(firesignal or getconnections, "No firesignal or getconnections found")
 
 		if firesignal then
-			firesignal(CallInfo.Instance[Method], table.unpack(CallInfo.Arguments))
+			firesignal(CallInfo.Instance[Method], table.unpack(CallInfo.Arguments, 1, CallInfo.Arguments.n))
 		elseif getconnections then
 			for _, conn in getconnections(CallInfo.Instance[Method]) do
-				conn:Fire(table.unpack(CallInfo.Arguments))
+				conn:Fire(table.unpack(CallInfo.Arguments, 1, CallInfo.Arguments.n))
 			end
 		end
 
 		return
 	end
 
-	CallInfo.Instance[Method](CallInfo.Instance, table.unpack(CallInfo.Arguments))
+	CallInfo.Instance[Method](CallInfo.Instance, table.unpack(CallInfo.Arguments, 1, CallInfo.Arguments.n))
 end
 
 return CodeGen

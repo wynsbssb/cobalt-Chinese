@@ -78,7 +78,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 				return
 			elseif not Log.Ignored then
 				local Info = {
-					Arguments = { ... },
+					Arguments = table.pack(...),
 					Time = os.date("%X"),
 					Origin = getcallingscript(),
 					Function = getcallingfunction(),
@@ -102,13 +102,13 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 					local Result = table.pack(wax.shared.NamecallHook(self, ...))
 					if not Log.Ignored then
 						local RFResultInfo = {
-							Arguments = { table.unpack(Result, 1, Result.n) },
+							Arguments = Result,
 							Time = os.date("%X"),
 							Origin = getcallingscript(),
 							Function = getcallingfunction(),
 							Line = getcallingline(),
 							IsExecutor = checkcaller(),
-							OriginalInvokeArgs = { ... },
+							OriginalInvokeArgs = table.pack(...),
 						}
 						Log:Call(RFResultInfo)
 						wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)
@@ -153,7 +153,7 @@ for _, Function in pairs(FunctionsToHook) do
 					return
 				elseif not Log.Ignored then
 					local Info = {
-						Arguments = { ... },
+						Arguments = table.pack(...),
 						Time = os.date("%X"),
 						Origin = getcallingscript(),
 						Function = getcallingfunction(),
@@ -180,13 +180,13 @@ for _, Function in pairs(FunctionsToHook) do
 						local Result = table.pack(wax.shared.Hooks[Function](self, ...))
 						if not Log.Ignored then
 							local RFResultInfo = {
-								Arguments = { table.unpack(Result, 1, Result.n) },
+								Arguments = Result,
 								Time = os.date("%X"),
 								Origin = getcallingscript(),
 								Function = getcallingfunction(),
 								Line = getcallingline(),
 								IsExecutor = checkcaller(),
-								OriginalInvokeArgs = { ... },
+								OriginalInvokeArgs = table.pack(...),
 							}
 							Log:Call(RFResultInfo)
 							wax.shared.Communicator:Fire(Log.Instance, "Incoming", RFResultInfo, #Log.Calls)

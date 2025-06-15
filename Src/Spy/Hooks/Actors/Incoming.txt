@@ -49,7 +49,7 @@ local function LogRemote(
 	Method: MethodsToHook,
 	Function: (...any) -> ...any,
 	Info: {
-		Arguments: { any },
+		Arguments: { [number]: any, n: number },
 		Time: string,
 		Origin: Instance,
 		Function: (...any) -> ...any,
@@ -69,7 +69,7 @@ local function LogRemote(
 		elseif not Log.Ignored then
 			local CallInfo = Info
 				or {
-					Arguments = { ... },
+					Arguments = table.pack(...),
 					Time = os.date("%X"),
 					Origin = getcallingscript(),
 					Function = Function,
@@ -116,7 +116,7 @@ local function CreateConnectionFunction(Instance: InstancesToHook, Method: Metho
 			end
 
 			LogRemote(Instance, Method, Function, {
-				Arguments = { ... },
+				Arguments = table.pack(...),
 				Time = os.date("%X"),
 				Origin = Origin,
 				Function = Function,

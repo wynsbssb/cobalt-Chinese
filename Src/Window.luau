@@ -1725,7 +1725,7 @@ CreateInfoDropdownButton("code", "Code", {
 							and (iscclosure(CurrentInfo.Function) and "C Closure" or "Luau function")
 						or "N/A",
 					Address = tostring(CurrentInfo.Function),
-					Arguments = CurrentInfo.Arguments,
+					Arguments = table.unpack(CurrentInfo.Arguments, 1, CurrentInfo.Arguments.n),
 				} or CurrentInfo.Function,
 				Script = CurrentInfo.Origin,
 				Line = CurrentInfo.Line,
@@ -3188,7 +3188,7 @@ function CreateCallFrame(CallInfo)
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundColor3 = Color3.fromRGB(15, 15, 15),
 		Size = UDim2.fromScale(1, 0),
-		Visible = #CallInfo.Arguments > 0,
+		Visible = CallInfo.Arguments.n > 0,
 
 		["UIListLayout"] = {
 			Padding = UDim.new(0, 6),
@@ -3206,11 +3206,12 @@ function CreateCallFrame(CallInfo)
 		Parent = CallFrame,
 	})
 	do
-		for Index, Value in pairs(CallInfo.Arguments) do
+		for Index = 1, CallInfo.Arguments.n do
 			if Index % 15 == 0 then
 				task.wait()
 			end
 
+			local Value = CallInfo.Arguments[Index]
 			CreateArgHolder(Index, Value, ArgumentsFrame)
 		end
 	end
@@ -3378,11 +3379,12 @@ function OpenInfo(CallInfo)
 			Object:Destroy()
 		end
 
-		for Index, Value in pairs(CallInfo.Arguments) do
+		for Index = 1, CallInfo.Arguments.n do
 			if Index % 25 == 0 then
 				task.wait()
 			end
 
+			local Value = CallInfo.Arguments[Index]
 			CreateArgHolder(Index, Value, ArgumentsInfoFrame)
 		end
 	end

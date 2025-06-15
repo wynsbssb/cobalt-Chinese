@@ -3432,7 +3432,7 @@ wax.shared.Drag.Setup(RemoteListLine, RemoteListResize, function(Info, Input: In
 	LogsWrapper.Size = UDim2.new(1, -(Offset + 2), 1, -36)
 end)
 
-wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type, CallInfo, CallIndex)
+wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type, CallIndex)
 	if not (CurrentTab and CurrentTab.Name == Type) then
 		return
 	end
@@ -3441,6 +3441,8 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 	if not Log then
 		return
 	end
+
+	local CallInfo = Log.Calls[CallIndex]
 
 	local Page = CurrentPage[Log]
 	if not Page then

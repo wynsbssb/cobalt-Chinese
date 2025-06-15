@@ -232,11 +232,13 @@ wax.shared.SetupLoggingConnection = function()
 	wax.shared.LogFileName = `Cobalt/Logs/{DateTime.now():ToIsoDate():gsub(":", "_")}.log`
 	local FileLog = FileLogger.new(wax.shared.LogFileName, FileLogger.LOG_LEVELS.INFO, true)
 
-	return function(RemoteInstance, Type, CallDataFromHook, CallOrderInLog)
+	return function(RemoteInstance, Type, CallOrderInLog)
 		local LogEntry = wax.shared.Logs[Type][RemoteInstance]
 		if not LogEntry then
 			return
 		end
+
+		local CallDataFromHook = LogEntry.Calls[CallOrderInLog]
 
 		local success, err = pcall(function()
 			local generatedCode = wax.shared.CodeGen:BuildCallCode(setmetatable({

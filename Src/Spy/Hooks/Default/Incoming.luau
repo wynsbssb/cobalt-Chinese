@@ -77,7 +77,7 @@ local function LogRemote(
 					IsExecutor = checkcaller(),
 				}
 			Log:Call(CallInfo)
-			wax.shared.Communicator:Fire(Log.Instance, "Incoming", CallInfo, #Log.Calls)
+			wax.shared.Communicator:Fire(Log.Instance, "Incoming", #Log.Calls)
 		end
 	end
 

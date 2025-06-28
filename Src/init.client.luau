@@ -111,6 +111,10 @@ wax.shared.IsPlayerModule = function(Origin: LocalScript | ModuleScript, Instanc
 		return false
 	end
 
+	if not Origin or typeof(Origin) ~= "Instance" or not Origin.IsA(Origin, "LuaSourceContainer") then
+		return false
+	end
+
 	local PlayerModule = Origin and Origin.FindFirstAncestor(Origin, "PlayerModule") or nil
 	if not PlayerModule then
 		return false

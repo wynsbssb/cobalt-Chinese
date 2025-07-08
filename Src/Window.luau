@@ -29,6 +29,13 @@ local Images = {
 	BindableFunction = "rbxassetid://112264959079193",
 }
 
+-- Functions
+local function UpdateLogNameSize(Log)
+	local TextSizeX, _TextSizeY =
+		wax.shared.GetTextBounds("x" .. #Log.Calls, Log.Button.Calls.FontFace, Log.Button.Calls.TextSize)
+	Log.Button.Name.Size = UDim2.new(1, -(TextSizeX + 24), 1, 0)
+end
+
 -- ContentProvider PreloadAsync bypass
 Images = wax.shared.ImageFetcher.GetRemoteImages(Images)
 
@@ -1928,6 +1935,7 @@ CreateInfoDropdownButton("network", "Event", {
 			CleanLogsList()
 
 			CurrentLog.Button.Calls.Text = "x" .. #CurrentLog.Calls
+			UpdateLogNameSize(CurrentLog)
 
 			ShowPagination(CurrentLog)
 			ShowCalls(CurrentLog, 1)
@@ -2555,6 +2563,7 @@ function ShowTab(Tab)
 
 		Log.Button.Name.Text = Log.Instance.Name
 		Log.Button.Calls.Text = "x" .. #Log.Calls
+		UpdateLogNameSize(Log)
 		Log.Button.Instance.Parent = RemoteList
 	end
 end
@@ -2861,6 +2870,7 @@ function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 		Text = "",
 		TextSize = 15,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
 
 		Parent = Button,
 	})
@@ -2954,6 +2964,7 @@ function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 				Log.Calls = {}
 				CurrentPage[Log] = 1
 				Log.Button.Calls.Text = "x" .. #Log.Calls
+				UpdateLogNameSize(Log)
 
 				if CurrentLog == Log then
 					PaginationHelper:Update(#Log.Calls)
@@ -3456,6 +3467,7 @@ wax.shared.Connect(wax.shared.Communicator.Event:Connect(function(Instance, Type
 	end
 
 	Log.Button.Name.Text = Log.Instance.Name
+	UpdateLogNameSize(Log)
 	Log.Button.Calls.Text = "x" .. #Log.Calls
 	Log.Button.Instance.Parent = RemoteList
 

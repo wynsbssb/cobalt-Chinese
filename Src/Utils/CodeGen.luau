@@ -45,7 +45,7 @@ wax.shared.FunctionForClasses = {
 }
 
 local GetNilCode = [[local function GetNil(Name, DebugId)
-	for _, Object in pairs(getnilinstances()) do
+	for _, Object in getnilinstances() do
 		if Object.Name == Name and Object:GetDebugId() == DebugId then
 			return Object
 		end
@@ -315,16 +315,20 @@ function CodeGen:BuildCallCode(CallInfo: CallInfo)
 	local IsFromActor = CallInfo.IsActor or false
 	local Path = self.GetFullPath(CallInfo.Instance, false, "Event")
 	local Method = wax.shared.FunctionForClasses[Type][CallInfo.Instance.ClassName]
-	local SerializedArgs, DidInsertNilFunction =
-		wax.shared.LuaEncode({table.unpack(CallInfo.Arguments, 1, CallInfo.Arguments.n)}, { Prettify = true, InsertCycles = true, GetNilFunctionInsert = true })
+	local SerializedArgs, DidInsertNilFunction = wax.shared.LuaEncode(
+		{ table.unpack(CallInfo.Arguments, 1, CallInfo.Arguments.n) },
+		{ Prettify = true, InsertCycles = true, GetNilFunctionInsert = true }
+	)
 
 	local CodeGenHeader = CodeGenHeaderTemplate
 
 	if Type == "Incoming" then
 		if DoesUseCallbackValue(CallInfo.Instance) then
 			if CallInfo.OriginalInvokeArgs then
-				local PrettifiedOutput, InsertedNilFunction =
-					wax.shared.LuaEncode({table.unpack(CallInfo.OriginalInvokeArgs, 1, CallInfo.OriginalInvokeArgs.n)}, { Prettify = true, InsertCycles = true })
+				local PrettifiedOutput, InsertedNilFunction = wax.shared.LuaEncode(
+					{ table.unpack(CallInfo.OriginalInvokeArgs, 1, CallInfo.OriginalInvokeArgs.n) },
+					{ Prettify = true, InsertCycles = true }
+				)
 
 				Method = wax.shared.FunctionForClasses.Outgoing[CallInfo.Instance.ClassName]
 
@@ -438,8 +442,11 @@ wax.shared.ReplayCallInfo = function(CallInfo: CallInfo)
 		if DoesUseCallbackValue(CallInfo.Instance) then
 			if CallInfo.OriginalInvokeArgs then
 				Method = wax.shared.FunctionForClasses.Outgoing[CallInfo.Instance.ClassName]
-	
-				CallInfo.Instance[Method](CallInfo.Instance, table.unpack(CallInfo.OriginalInvokeArgs, 1, CallInfo.OriginalInvokeArgs.n))
+
+				CallInfo.Instance[Method](
+					CallInfo.Instance,
+					table.unpack(CallInfo.OriginalInvokeArgs, 1, CallInfo.OriginalInvokeArgs.n)
+				)
 				return
 			end
 

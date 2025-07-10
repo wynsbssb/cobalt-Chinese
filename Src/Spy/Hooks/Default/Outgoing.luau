@@ -59,13 +59,14 @@ end
 wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 	game,
 	"__namecall",
-	wax.shared.newcclosure(function(self, ...)
+	wax.shared.newcclosure(function(...)
+		local self = ...
 		local Method = getnamecallmethod()
 
 		if
 			typeof(self) == "Instance"
 			and table.find(AllowedClassNames, self.ClassName)
-			and self ~= wax.shared.Communicator
+			and not rawequal(self, wax.shared.Communicator)
 			and table.find(NamecallMethods, Method)
 			and not wax.shared.ShouldIgnore(self, getcallingscript())
 		then
@@ -78,7 +79,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 				return
 			elseif not Log.Ignored then
 				local Info = {
-					Arguments = table.pack(...),
+					Arguments = table.pack(select(2, ...)),
 					Time = os.date("%X"),
 					Origin = getcallingscript(),
 					Function = getcallingfunction(),
@@ -99,7 +100,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 						return
 					end
 
-					local Result = table.pack(wax.shared.NamecallHook(self, ...))
+					local Result = table.pack(wax.shared.NamecallHook(...))
 					if not Log.Ignored then
 						local RFResultInfo = {
 							Arguments = Result,
@@ -108,7 +109,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 							Function = getcallingfunction(),
 							Line = getcallingline(),
 							IsExecutor = checkcaller(),
-							OriginalInvokeArgs = table.pack(...),
+							OriginalInvokeArgs = table.pack(select(2, ...)),
 						}
 						Log:Call(RFResultInfo)
 						wax.shared.Communicator:Fire(Log.Instance, "Incoming", #Log.Calls)
@@ -119,7 +120,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 			end
 		end
 
-		return wax.shared.NamecallHook(self, ...)
+		return wax.shared.NamecallHook(...)
 	end)
 )
 
@@ -137,11 +138,13 @@ for _, Function in pairs(FunctionsToHook) do
 
 	wax.shared.Hooks[Function] = wax.shared.Hooking.HookFunction(
 		Function,
-		wax.shared.newcclosure(function(self, ...)
+		wax.shared.newcclosure(function(...)
+			local self = ...
+
 			if
 				typeof(self) == "Instance"
 				and table.find(AllowedClassNames, self.ClassName)
-				and self ~= wax.shared.Communicator
+				and not rawequal(self, wax.shared.Communicator)
 				and not wax.shared.ShouldIgnore(self, getcallingscript())
 			then
 				local Log = wax.shared.Logs.Outgoing[self]
@@ -153,7 +156,7 @@ for _, Function in pairs(FunctionsToHook) do
 					return
 				elseif not Log.Ignored then
 					local Info = {
-						Arguments = table.pack(...),
+						Arguments = table.pack(select(2, ...)),
 						Time = os.date("%X"),
 						Origin = getcallingscript(),
 						Function = getcallingfunction(),
@@ -177,7 +180,7 @@ for _, Function in pairs(FunctionsToHook) do
 							return
 						end
 
-						local Result = table.pack(wax.shared.Hooks[Function](self, ...))
+						local Result = table.pack(wax.shared.Hooks[Function](...))
 						if not Log.Ignored then
 							local RFResultInfo = {
 								Arguments = Result,
@@ -186,7 +189,7 @@ for _, Function in pairs(FunctionsToHook) do
 								Function = getcallingfunction(),
 								Line = getcallingline(),
 								IsExecutor = checkcaller(),
-								OriginalInvokeArgs = table.pack(...),
+								OriginalInvokeArgs = table.pack(select(2, ...)),
 							}
 							Log:Call(RFResultInfo)
 							wax.shared.Communicator:Fire(Log.Instance, "Incoming", #Log.Calls)
@@ -197,7 +200,7 @@ for _, Function in pairs(FunctionsToHook) do
 				end
 			end
 
-			return wax.shared.Hooks[Function](self, ...)
+			return wax.shared.Hooks[Function](...)
 		end)
 	)
 end

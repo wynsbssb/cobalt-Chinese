@@ -257,7 +257,7 @@ local mtHook; mtHook = hookmetamethod(game, "__newindex", function(...)
 		Callback = value
 	end
 
-	return mtHook(self, key, value)
+	return mtHook(...)
 end)]],
 						Path,
 						Method,
@@ -320,7 +320,7 @@ local Old%s; Old%s = hookfunction(Event.%s, function(...)
 		)
 
 		print(`Intercepted (__index) {Event.Name}:%s()`, self, table.unpack(Result, 1, Result.n))
-		
+
 		return table.unpack(Result, 1, Result.n)
 	end
 

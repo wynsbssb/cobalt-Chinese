@@ -192,8 +192,6 @@ function Resize.new(Options: {
 		end
 	end
 
-	local parentObject = self.Parent
-
 	local function createDragHandler(resizeTypeX, resizeTypeY)
 		return function(Info, Input: InputObject)
 			local mouseDelta = Input.Position - Info.StartPosition

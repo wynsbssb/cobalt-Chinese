@@ -23,34 +23,39 @@ for _, thread in getreg() do
 	end
 
 	local Source = debug.info(thread, 1, "s")
-	if Source == ".Core.Anti" or Source == ".Plugins.Anti_Cheat" then
+	if Source and (Source:match(".Core.Anti") or Source:match(".Plugins.Anti_Cheat")) then
 		AdonisDetected = true
-		break
+		coroutine.close(thread)
 	end
 end
 
-if AdonisDetected then
-	for _, value in getgc(true) do
-		if typeof(value) ~= "table" then
-			continue
-		end
+if not AdonisDetected then
+	return
+end
 
-		local DetectedFunction = rawget(value, "Detected")
-		if typeof(DetectedFunction) == "function" and debug.info(DetectedFunction, "s") == ".Core.Anti" then
-			-- Just in case they already loaded a custom anticheat bypass for adonis
-			if not isfunctionhooked(DetectedFunction) then
-				wax.shared.Hooks[DetectedFunction] = wax.shared.Hooking.HookFunction(
-					DetectedFunction,
-					function(action, info, nocrash)
-						return task.wait(9e9)
-					end
-				)
-			end
-
-			wax.shared.AnticheatDisabled = true
-			wax.shared.AnticheatName = "Adonis"
-		end
+for _, value in getgc(true) do
+	if typeof(value) ~= "table" then
+		continue
 	end
 
-	return
+	local IsAdonisOrigin = typeof(rawget(value, "Detected")) == "function" and rawget(value, "RLocked")
+	if IsAdonisOrigin then
+		for _, DetectionFunc in value do
+			-- Just in case they already loaded a custom anticheat bypass for adonis
+			if typeof(DetectionFunc) ~= "function" or isfunctionhooked(DetectionFunc) then
+				continue
+			end
+			
+			wax.shared.Hooks[DetectionFunc] = wax.shared.Hooking.HookFunction(
+				DetectionFunc,
+				function(action, info, nocrash)
+					coroutine.yield(coroutine.running())
+					return task.wait(9e9)
+				end
+			)
+		end
+
+		wax.shared.AnticheatDisabled = true
+		wax.shared.AnticheatName = "Adonis"
+	end
 end

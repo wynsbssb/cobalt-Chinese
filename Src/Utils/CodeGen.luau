@@ -191,30 +191,38 @@ function CodeGen:BuildHookCode(CallInfo: CallInfo)
 					.. WrapCodeInActor(
 						string.format(
 							[[%s
-local mtHook; mtHook = hookmetamethod(game, "__namecall", function(self, ...)
-	if self == Event and getnamecallmethod() == "%s" then
-		local Result = table.pack(mtHook(self, ...))
+local mtHook; mtHook = hookmetamethod(game, "__namecall", function(...)
+	local self = ...
 
-		print(`Intercepted (__namecall) {Event.Name}:%s()`, self, getnamecallmethod(), table.unpack(Result, 1, Result.n))
+	if rawequal(self, Event) and getnamecallmethod() == "%s" then
+		local Args = table.pack(...)
+
+		local Result = table.pack(
+			mtHook(table.unpack(Args, 1, Args.n))
+		)
+
 		return table.unpack(Result, 1, Result.n)
 	end
 
 	return mtHook(self, ...)
 end)
 
-local Old%s; Old%s = hookfunction(Event.%s, function(self, ...)
-	if self == Event then
-		local Result = table.pack(Old%s(self, ...))
+local Old%s; Old%s = hookfunction(Event.%s, function(...)
+	local self = ...
 
-		print(`Intercepted (__index) {Event.Name}:%s()`, self, table.unpack(Result, 1, Result.n))
+	if rawequal(self, Event) then
+		local Args = table.pack(...)
+
+		local Result = table.pack(
+			Old%s(table.unpack(Args, 1, Args.n))
+		)
+
 		return table.unpack(Result, 1, Result.n)
 	end
 
 	return Old%s(self, ...)
 end)]],
 							Path,
-							Method,
-							Method,
 							Method,
 							Method,
 							Method,
@@ -235,8 +243,24 @@ local Callback = getcallbackvalue(Event, "%s")
 Event.%s = function(...)
 	print(`Intercepted (Callback) {Event.Name}.%s`, ...)
 	return Callback(...)
-end]],
+end
+
+local mtHook; mtHook = hookmetamethod(game, "__newindex", function(...)
+	local self, key, value = ...
+	
+	if (
+		rawequal(self, Event) and
+		rawequal(key, "%s") and
+		typeof(value) == "function" and
+		not checkcaller()
+	) then
+		Callback = value
+	end
+
+	return mtHook(self, key, value)
+end)]],
 						Path,
+						Method,
 						Method,
 						Method,
 						Method
@@ -267,22 +291,36 @@ end]],
 		.. WrapCodeInActor(
 			string.format(
 				[[%s
-local mtHook; mtHook = hookmetamethod(game, "__namecall", function(self, ...)
-	local Args = table.pack(...)
+local mtHook; mtHook = hookmetamethod(game, "__namecall", function(...)
+	local self = ...
 
-	if self == Event and getnamecallmethod() == "%s" then
+	if rawequal(self, Event) and getnamecallmethod() == "%s" then
+		local Args = table.pack(...)
+		
+		local Result = table.pack(
+			mtHook(self, table.unpack(Args, 1, Args.n))
+		)
+
 		print(`Intercepted (__namecall) {Event.Name}:%s()`, ...)
-		return mtHook(self, table.unpack(Args, 1, Args.n))
+
+		return table.unpack(Result, 1, Result.n)
 	end
 
-	return mtHook(self, ...)
+	return mtHook(...)
 end)
 
-local Old%s; Old%s = hookfunction(Event.%s, function(self, ...)
-	if self == Event then
-		local Result = table.pack(Old%s(self, ...))
+local Old%s; Old%s = hookfunction(Event.%s, function(...)
+	local self = ...
+
+	if rawequal(self, Event) then
+		local Args = table.pack(...)
+
+		local Result = table.pack(
+			Old%s(table.unpack(Args, 1, Args.n))
+		)
 
 		print(`Intercepted (__index) {Event.Name}:%s()`, self, table.unpack(Result, 1, Result.n))
+		
 		return table.unpack(Result, 1, Result.n)
 	end
 

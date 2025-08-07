@@ -19,7 +19,10 @@ end
 
 function DeepClone(orig, copies)
 	copies = copies or {}
-	if type(orig) ~= "table" then
+
+	if type(orig) == "Instance" then
+		return cloneref(orig)
+	elseif type(orig) ~= "table" then
 		return orig
 	elseif copies[orig] then
 		return copies[orig]

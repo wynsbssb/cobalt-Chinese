@@ -362,15 +362,15 @@ function CodeGen:BuildCallCode(CallInfo: CallInfo)
 
 	if Type == "Incoming" then
 		if DoesUseCallbackValue(CallInfo.Instance) then
+			local PrettifiedExpectedResult, DidInsertNilFunctionInExpectation = wax.shared.LuaEncode(
+				{ table.unpack(CallInfo.Arguments, 1, CallInfo.Arguments.n) },
+				{ Prettify = true, InsertCycles = true, GetNilFunctionInsert = true }
+			)
+
 			if CallInfo.OriginalInvokeArgs then
 				local PrettifiedOutput, InsertedNilFunction = wax.shared.LuaEncode(
 					{ table.unpack(CallInfo.OriginalInvokeArgs, 1, CallInfo.OriginalInvokeArgs.n) },
 					{ Prettify = true, InsertCycles = true }
-				)
-
-				local PrettifiedExpectedResult, DidInsertNilFunctionInExpectation = wax.shared.LuaEncode(
-					{ table.unpack(CallInfo.Arguments, 1, CallInfo.Arguments.n) },
-					{ Prettify = true, InsertCycles = true, GetNilFunctionInsert = true }
 				)
 
 				Method = wax.shared.FunctionForClasses.Outgoing[CallInfo.Instance.ClassName]
@@ -395,12 +395,16 @@ local ExpectedResult = table.unpack(%s)
 					string.format(
 						[[%s%s
 local Callback = getcallbackvalue(Event, "%s")
+Callback(%s)
 
-Callback(%s)]],
-						(DidInsertNilFunction and GetNilCode .. "\n\n" or ""),
+local ExpectedResult = table.unpack(%s)
+
+]],
+						(DidInsertNilFunction or DidInsertNilFunctionInExpectation and GetNilCode .. "\n\n" or ""),
 						Path,
-						Method,
-						CreateArgsString(SerializedArgs, CallInfo.Arguments)
+						Method, CreateArgsString(SerializedArgs, CallInfo.Arguments),
+
+						PrettifiedExpectedResult
 					),
 					IsFromActor
 				)

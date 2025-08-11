@@ -368,16 +368,25 @@ function CodeGen:BuildCallCode(CallInfo: CallInfo)
 					{ Prettify = true, InsertCycles = true }
 				)
 
+				local PrettifiedExpectedResult, DidInsertNilFunctionInExpectation = wax.shared.LuaEncode(
+					{ table.unpack(CallInfo.Arguments, 1, CallInfo.Arguments.n) },
+					{ Prettify = true, InsertCycles = true, GetNilFunctionInsert = true }
+				)
+
 				Method = wax.shared.FunctionForClasses.Outgoing[CallInfo.Instance.ClassName]
 
 				return CodeGenHeader
 					.. string.format(
 						[[%s%s
-local Result = Event:%s(%s)]],
-						(InsertedNilFunction or DidInsertNilFunction and GetNilCode .. "\n\n" or ""),
+local Result = Event:%s(%s)
+
+local ExpectedResult = table.unpack(%s)
+
+]],
+						(InsertedNilFunction or DidInsertNilFunction or DidInsertNilFunctionInExpectation and GetNilCode .. "\n\n" or ""),
 						Path,
-						Method,
-						CreateArgsString(PrettifiedOutput, CallInfo.OriginalInvokeArgs)
+						Method, CreateArgsString(PrettifiedOutput, CallInfo.OriginalInvokeArgs),
+						PrettifiedExpectedResult
 					)
 			end
 

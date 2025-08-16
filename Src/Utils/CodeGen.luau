@@ -103,11 +103,13 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
 
 			local Parent = CurrentObject.Parent
 			if Parent then
+				local Children = Parent.GetChildren(Parent)
+				local FoundIndex = table.find(Children, CurrentObject)
+
 				if Parent == game and game.FindService(game, CurrentObject.ClassName) == CurrentObject then
 					IndexName = ':GetService("' .. CurrentObject.ClassName .. '")'
-				elseif Parent.FindFirstChild(Parent, CurrentObject.Name) ~= CurrentObject then
-					local Children = Parent.GetChildren(Parent)
-					IndexName = ":GetChildren()[" .. tostring(table.find(Children, CurrentObject)) .. "]"
+				elseif Parent[CurrentObject.Name] ~= CurrentObject and FoundIndex then
+					IndexName = ":GetChildren()[" .. tostring(FoundIndex) .. "]"
 				end
 			elseif Parent == nil then
 				IsNil = true

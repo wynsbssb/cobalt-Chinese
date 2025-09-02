@@ -89,6 +89,7 @@ wax.shared.newcclosure = wax.shared.ExecutorName == "AWP"
 			return newcclosure(nf)
 		end
 	or newcclosure
+wax.shared.queue_on_teleport = queue_on_teleport or queueonteleport or function(...) end
 
 wax.shared.IsClickInput = function(Input: InputObject): boolean
 	return Input.UserInputState == Enum.UserInputState.Begin
@@ -330,6 +331,14 @@ end
 
 require("Window")
 require("Spy/Init")
+
+wax.shared.LocalPlayer.OnTeleport:Connect(function()
+	if not wax.shared.SaveManager:GetState("ExecuteOnTeleport") then
+		return
+	end
+
+	wax.shared.queue_on_teleport('loadstring(game:HttpGet("https://github.com/notpoiu/cobalt/releases/latest/download/Cobalt.luau"))()')
+end)
 
 task.wait(1)
 if wax.shared.AnticheatDisabled then

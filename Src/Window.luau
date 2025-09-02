@@ -1048,6 +1048,12 @@ end
 
 local MainSection = CreateSettingsSection("Main")
 
+CreateSettingsCheckbox("ExecuteOnTeleport", {
+	Text = "Execute On Teleport",
+	Default = false,
+	Section = MainSection,
+})
+
 CreateSettingsCheckbox("UseAlternativeHooks", {
 	Text = "Use alternative metamethod hook",
 	Default = false,

@@ -337,7 +337,16 @@ wax.shared.Connect(wax.shared.LocalPlayer.OnTeleport:Connect(function()
 		return
 	end
 
-	wax.shared.queue_on_teleport('loadstring(game:HttpGet("https://github.com/notpoiu/cobalt/releases/latest/download/Cobalt.luau"))()')
+	-- getgenv().COBALT_LATEST_URL for dev environments
+	local CobaltURL = getgenv().COBALT_LATEST_URL or "https://github.com/notpoiu/cobalt/releases/latest/download/Cobalt.luau"
+	wax.shared.queue_on_teleport(string.format([[
+		if getgenv().CobaltAutoExecuted then
+			return
+		end
+
+		getgenv().CobaltAutoExecuted = true
+		loadstring(game:HttpGet("%s"))()
+	]], CobaltURL))
 end))
 
 task.wait(1)

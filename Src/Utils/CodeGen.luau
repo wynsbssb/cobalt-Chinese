@@ -385,7 +385,7 @@ local Result = Event:%s(%s)
 local ExpectedResult = table.unpack(%s)
 
 ]],
-						(InsertedNilFunction or DidInsertNilFunction or DidInsertNilFunctionInExpectation and GetNilCode .. "\n\n" or ""),
+						((InsertedNilFunction or DidInsertNilFunction or DidInsertNilFunctionInExpectation) and GetNilCode .. "\n\n" or ""),
 						Path,
 						Method, CreateArgsString(PrettifiedOutput, CallInfo.OriginalInvokeArgs),
 						PrettifiedExpectedResult

@@ -103,13 +103,31 @@ function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
 
 			local Parent = CurrentObject.Parent
 			if Parent then
-				local Children = Parent.GetChildren(Parent)
-				local FoundIndex = table.find(Children, CurrentObject)
+				local DirectChildPtr = Parent:FindFirstChild(CurrentObject.Name)
 
-				if Parent == game and game.FindService(game, CurrentObject.ClassName) == CurrentObject then
+				if Parent == game and game:FindService(CurrentObject.ClassName) == CurrentObject then
 					IndexName = ':GetService("' .. CurrentObject.ClassName .. '")'
-				elseif Parent[CurrentObject.Name] ~= CurrentObject and FoundIndex then
-					IndexName = ":GetChildren()[" .. tostring(FoundIndex) .. "]"
+				elseif DirectChildPtr then
+					local Children = Parent:GetChildren()
+					local FoundIndex = nil
+
+					if wax.shared.ExecutorSupport["compareinstances"].IsWorking and not compareinstances(DirectChildPtr, CurrentObject) then
+						for Index, Child in Children do
+							if not compareinstances(Child, CurrentObject) then
+								continue
+							end
+							
+							FoundIndex = Index
+							break
+						end
+					elseif DirectChildPtr ~= CurrentObject then
+						FoundIndex = table.find(Children, CurrentObject)
+					end
+
+					if FoundIndex then
+						IndexName = ":GetChildren()[" .. tostring(FoundIndex) .. "]"
+					end
+
 				end
 			elseif Parent == nil then
 				IsNil = true

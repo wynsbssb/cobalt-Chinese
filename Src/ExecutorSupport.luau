@@ -225,6 +225,20 @@ test("firesignal", function()
 
 	assert(fired, "Failed to fire a BindableEvent")
 end)
+test("cloneref", function()
+	assert(typeof(cloneref) == "function", "cloneref is not a function")
+
+	local ref = cloneref(game)
+	assert(ref ~= game, "cloneref did not create a ref to instance")
+	assert(typeof(ref) == "Instance", "cloneref did not return an instance")
+end)
+test("compareinstances", function()
+	assert(typeof(compareinstances) == "function", "compareinstances is not a function")
+	assert(typeof(cloneref) == "function", "cloneref is required for this test")
+
+	assert(compareinstances(game, cloneref(game)) == true, "compareinstances did not return true for the same instance")
+	assert(compareinstances(game, workspace) == false, "compareinstances did not return false for different instances")
+end)
 
 if CheckFFlagValue("DebugRunParallelLuaOnMainThread", false) and not ExecutorSupport["run_on_actor"].IsWorking then
 	task.spawn(function()

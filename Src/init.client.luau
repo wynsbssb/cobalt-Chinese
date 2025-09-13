@@ -21,6 +21,9 @@ wax.shared.Settings = {}
 
 wax.shared.Hooks = {}
 
+-- Executor Support
+wax.shared.ExecutorSupport = require("ExecutorSupport")
+
 -- UI
 require("Utils/Connect")
 
@@ -44,7 +47,7 @@ if not wax.shared.Players.LocalPlayer then
 end
 wax.shared.LocalPlayer = wax.shared.Players.LocalPlayer
 wax.shared.PlayerScripts = cloneref(wax.shared.LocalPlayer:WaitForChild("PlayerScripts"))
-wax.shared.ExecutorName = string.split(identifyexecutor(), " ")[1]
+wax.shared.ExecutorName = identifyexecutor()
 
 -- Functions
 wax.shared.gethui = gethui or function()
@@ -70,7 +73,12 @@ wax.shared.restorefunction = function(Function: (...any) -> ...any, Silent: bool
 
 	wax.shared.Hooks[Function] = nil
 end
-wax.shared.getrawmetatable = getrawmetatable or debug.getmetatable
+wax.shared.getrawmetatable = wax.shared.ExecutorSupport["getrawmetatable"].IsWorking and (getrawmetatable or debug.getmetatable) or function()
+	return setmetatable({}, {
+		__index = function() return function() end end
+	})
+end
+
 wax.shared.newcclosure = wax.shared.ExecutorName == "AWP"
 		and function(f)
 			local env = getfenv(f)
@@ -223,7 +231,6 @@ wax.shared.Unload = function()
 	wax.shared.Unloaded = true
 end
 
-require("ExecutorSupport")
 require("Bypass")
 
 -- Load Script

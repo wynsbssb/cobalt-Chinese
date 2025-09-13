@@ -175,7 +175,12 @@ end
 wax.shared.Connect(game.DescendantAdded:Connect(HandleInstance))
 
 -- getinstances() was unreliable and failed to find some instances... ts pmo bro..
-for _, Category in pairs({ getnilinstances(), game:GetDescendants() }) do
+local CategoryToSearch = { game:GetDescendants() }
+if wax.shared.ExecutorSupport["getnilinstances"].IsWorking then
+	table.insert(CategoryToSearch, getnilinstances())
+end
+
+for _, Category in CategoryToSearch do
 	for _, Instance in pairs(Category) do
 		HandleInstance(Instance)
 	end

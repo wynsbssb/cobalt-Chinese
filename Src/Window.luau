@@ -1046,6 +1046,50 @@ local function CreateSettingsRemoteList(
 	return RemoteList
 end
 
+
+local ExecSupportSection = CreateSettingsSection("Support Info")
+do
+	wax.shared.Interface.New("TextLabel", {
+		Text = table.concat({
+			`Executor: <b>{wax.shared.ExecutorName}</b>`,
+			`Support: {#wax.shared.ExecutorSupport.FailedChecks == 0 and "<b>Full</b>" or "<b>Partial</b> (" .. #wax.shared.ExecutorSupport.FailedChecks .. " check(s) failed)"}`,
+		}, "\n"),
+		TextSize = 16,
+		Size = UDim2.fromScale(1, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		BackgroundTransparency = 1,
+		Parent = ExecSupportSection,
+		TextWrapped = true,
+
+		["UIPadding"] = {
+			PaddingBottom = UDim.new(0, 2),
+		},
+	})
+
+	local PartialSupportText = ""
+	local SupportSuffix = "\n\n"
+	for _, Name in wax.shared.ExecutorSupport.FailedChecks do
+		PartialSupportText ..= `❌ <b><font color="#ff0000">{Name}</font></b>\n<i><font size="14" transparency="0.5">{wax.shared.ExecutorSupport[Name].Details}</font></i>{SupportSuffix}`
+	end
+
+	PartialSupportText = PartialSupportText:sub(1, (#SupportSuffix * -1) - 1)
+
+	if #wax.shared.ExecutorSupport.FailedChecks > 0 then
+		wax.shared.Interface.New("TextLabel", {
+			Text = PartialSupportText,
+			TextSize = 16,
+			Size = UDim2.fromScale(1, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			BackgroundTransparency = 1,
+			Parent = ExecSupportSection,
+			TextWrapped = true,
+		})
+	end
+end
+
+
 local MainSection = CreateSettingsSection("Main")
 
 CreateSettingsCheckbox("ExecuteOnTeleport", {

@@ -11,6 +11,8 @@ type ActorData = {
 	IgnorePlayerModule: boolean,
 	UseAlternativeHooks: boolean,
 	IgnoredRemotesDropdown: { [string]: boolean },
+
+	ExecutorSupport: { [string]: { IsWorking: boolean } },
 }
 
 local Data: ActorData = COBALT_ACTOR_DATA
@@ -48,7 +50,11 @@ wax.shared.newcclosure = wax.shared.ExecutorName == "AWP"
 		end
 	or newcclosure
 
-wax.shared.getrawmetatable = getrawmetatable or debug.getmetatable
+wax.shared.getrawmetatable = wax.shared.ExecutorSupport["getrawmetatable"].IsWorking and (getrawmetatable or debug.getmetatable) or function()
+	return setmetatable({}, {
+		__index = function() return function() end end
+	})
+end
 
 wax.shared.restorefunction = function(Function: (...any) -> ...any, Silent: boolean?)
 	local Original = wax.shared.Hooks[Function]
@@ -70,20 +76,56 @@ end
 
 local Hooking = {}
 
-Hooking.HookFunction = hookfunction
+Hooking.HookFunction = function(Original, Replacement)
+	if not wax.shared.ExecutorSupport["hookfunction"].IsWorking then
+		return Original
+	end
+
+	return hookfunction(Original, Replacement)
+end
 
 wax.shared.AlternativeEnabled = Data.UseAlternativeHooks
 
 Hooking.HookMetaMethod = function(object, method, hook)
-	if Data.UseAlternativeHooks then
+	if Data.UseAlternativeHooks or (not wax.shared.ExecutorSupport["hookmetamethod"].IsWorking and wax.shared.ExecutorSupport["getrawmetatable"].IsWorking) then
 		local Metatable = wax.shared.getrawmetatable(object)
 		local originalMethod = rawget(Metatable, method)
-
+		
 		setreadonly(Metatable, false)
-		rawset(Metatable, method, wax.shared.newcclosure(hook))
+		rawset(Metatable, method, hook)
 		setreadonly(Metatable, true)
-
+	
 		return originalMethod
+	end
+
+	if not wax.shared.ExecutorSupport["hookmetamethod"].IsWorking then
+		if method == "__index" then
+			local _, Metamethod = xpcall(function()
+				return object[tostring(math.random())]
+			end, function(err)
+				return debug.info(2, "f")
+			end)
+
+			return Metamethod
+		elseif method == "__newindex" then
+			local _, Metamethod = xpcall(function()
+				object[tostring(math.random())] = true
+			end, function(err)
+				return debug.info(2, "f")
+			end)
+
+			return Metamethod
+		elseif method == "__namecall" then
+			local _, Metamethod = xpcall(function()
+				object:Mustard()
+			end, function(err)
+				return debug.info(2, "f")
+			end)
+
+			return Metamethod
+		end
+
+		return nil
 	end
 
 	return hookmetamethod(object, method, hook)

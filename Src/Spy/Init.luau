@@ -37,6 +37,8 @@ if wax.shared.ActorsEnabled then
 				["BindableFunction"] = true,
 			},
 		UseAlternativeHooks = AlternativeEnabled,
+
+		ExecutorSupport = wax.shared.ExecutorSupport,
 	})
 
 	ActorEnvironementCode = ActorEnvironementCode:gsub("COBALT_ACTOR_DATA", ActorData)

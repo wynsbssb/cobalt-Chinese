@@ -26,7 +26,6 @@ if wax.shared.ActorsEnabled then
 	local IngoredRemotesDropdown = wax.shared.SaveManager:GetState("IgnoredRemotesDropdown")
 
 	local ActorData = wax.shared.LuaEncode({
-		Channel = CommunicationChannelID,
 		Token = wax.shared.CobaltVerificationToken,
 
 		IgnorePlayerModule = if typeof(IgnorePlayerModule) == "boolean" then IgnorePlayerModule else true,
@@ -111,7 +110,7 @@ if wax.shared.ActorsEnabled then
 	end))
 
 	for _, ActorHook in ipairs(Hooks.Actors:GetChildren()) do
-		run_on_actor(TargetActor, ActorEnvironementCode .. ActorHook.Value)
+		run_on_actor(TargetActor, ActorEnvironementCode .. ActorHook.Value, CommunicationChannelID)
 	end
 
 	run_on_actor(TargetActor, ActorsUtils.Unload.Value, CommunicationChannelID)

@@ -17,7 +17,7 @@ type ActorData = {
 
 local Data: ActorData = COBALT_ACTOR_DATA
 
-local RelayChannel = get_comm_channel(Data.Channel)
+local RelayChannel = get_comm_channel(...)
 
 local wax = { shared = {} }
 

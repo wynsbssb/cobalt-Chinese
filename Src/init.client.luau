@@ -183,6 +183,10 @@ wax.shared.DisplayArgument = function(Argument)
 end
 
 wax.shared.GetTableLength = function(Table)
+	if Table["n"] then
+		return Table.n
+	end
+	
 	local Length = 0
 	for _, _ in pairs(Table) do
 		Length += 1

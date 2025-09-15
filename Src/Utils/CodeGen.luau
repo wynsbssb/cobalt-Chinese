@@ -65,6 +65,10 @@ function CodeGen.FormatLuaString(str)
 end
 
 function CodeGen.GetFullPath(Object, ExcludeCode, VariableName, IsInTable)
+	if rawequal(Object, game) or (wax.shared.ExecutorSupport["compareinstances"].IsWorking and compareinstances(Object, game)) then
+		return "game"
+	end
+	
 	local CurrentObject = Object
 	local DidInsertNilFunction = false
 	local IsNil = false

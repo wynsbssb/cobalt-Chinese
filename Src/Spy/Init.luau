@@ -103,7 +103,7 @@ if wax.shared.ActorsEnabled then
 			return
 		elseif not Log.Ignored then
 			local ReconstructedInfo = ReconstructTable(RawInfo, CyclicRefs)
-
+			
 			Log:Call(ReconstructedInfo)
 			wax.shared.Communicator:Fire(Log.Instance, Type, #Log.Calls)
 		end

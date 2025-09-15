@@ -1155,13 +1155,11 @@ CreateSettingsDropdown("IgnoredRemotesDropdown", {
 	Section = FilterSection,
 })
 
-if wax.shared.ActorsEnabled then
-	CreateSettingsCheckbox("LogActors", {
-		Text = "Log Events from Actors",
-		Default = true,
-		Section = FilterSection,
-	})
-end
+CreateSettingsCheckbox("LogActors", {
+	Text = "Log Events from Actors",
+	Default = true,
+	Section = FilterSection,
+})
 
 CreateSettingsCheckbox("IgnorePlayerModule", {
 	Text = "Ignore Player Module Remotes",

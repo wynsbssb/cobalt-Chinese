@@ -5,7 +5,6 @@
 ]]
 
 type ActorData = {
-	Channel: number,
 	Token: string,
 
 	IgnorePlayerModule: boolean,

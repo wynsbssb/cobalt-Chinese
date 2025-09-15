@@ -21,6 +21,8 @@ local RelayChannel = get_comm_channel(Data.Channel)
 
 local wax = { shared = {} }
 
+wax.shared.ExecutorSupport = Data.ExecutorSupport
+
 for _, Service in pairs({
 	"Players",
 	"HttpService",

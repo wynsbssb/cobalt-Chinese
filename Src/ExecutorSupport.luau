@@ -201,7 +201,13 @@ test("getconnections", function()
 
 	local FoundFunctions = {}
 	for _, Connection in Connections do
-		table.insert(FoundFunctions, Connection.Function)
+		local _, ConnFunc = pcall(function()
+			return Connection.Function
+		end)
+
+		if typeof(ConnFunc) == "function" then
+			table.insert(FoundFunctions, ConnFunc)
+		end
 	end
 
 	assert(table.find(FoundFunctions, ConnectionFunction) ~= nil, "getconnections did not return the correct connection [:Connect()]")

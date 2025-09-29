@@ -708,6 +708,10 @@ local function LuaEncode(inputTable, options)
 		end
 
 		TypeCases["buffer"] = function(value)
+			if wax.shared.SaveManager:GetState("PreferBufferFromString") then
+				return `buffer.fromstring("{SerializeString(buffer.tostring(value))}")`
+			end
+
 			local Bytes = {}
 			for i = 1, buffer.len(value) do
 				table.insert(Bytes, buffer.readu8(value, i - 1))

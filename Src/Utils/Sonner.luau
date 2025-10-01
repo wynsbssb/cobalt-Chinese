@@ -1,20 +1,26 @@
 --[[[
+Sonner 的 Luau 移植版（由 upio 制作）
+原版 Sonner 作者：Emil Kowalski (https://sonner.emilkowal.ski/)
 
-Sonner Luau Port by upio
-Original Sonner by Emil Kowalski (https://sonner.emilkowal.ski/)
-
-TODO (which will almost probably never be done):
- - Add a way to view the previous notifications (hovering over the notifs but im lazy)
- - Handle too many notifications breaking the UI
- - Fix inconsistant notification positioning
+TODO（几乎不会实现的功能）:
+ - 添加一种方式查看历史通知（比如鼠标悬停时显示，但我懒得写）
+ - 处理过多通知导致 UI 崩坏的问题
+ - 修复通知定位不一致的问题
 ]]
 
 local Sonner = {
-	Queue = {},
-	TweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Exponential),
-	Wrapper = nil,
+	Queue = {}, -- 通知队列
+	TweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Exponential), -- 动画信息
+	Wrapper = nil, -- UI 容器
 }
 
+--[[
+	内部函数：创建一个通知对象
+	@param zindex number 图层顺序
+	@param image string? 图标（可以是 Roblox 资产 ID 或自定义 icon 名）
+	@param text string 通知文本
+	@return Frame 通知 UI 对象
+]]
 local function InternalCreateNotificationObject(zindex, image, text)
 	local NotificationTemplate = wax.shared.Interface.New("Frame", {
 		BorderSizePixel = 0,
@@ -58,10 +64,10 @@ local function InternalCreateNotificationObject(zindex, image, text)
 		ImageLabel.Visible = false
 	end
 
+	-- 定义淡入淡出动画
 	wax.shared.Animations.SetFadeExpectation("In", ImageLabel, {
 		ImageTransparency = 0,
 	})
-
 	wax.shared.Animations.SetFadeExpectation("Out", ImageLabel, {
 		ImageTransparency = 1,
 	})
@@ -80,6 +86,7 @@ local function InternalCreateNotificationObject(zindex, image, text)
 
 	wax.shared.Animations.AddFadeExclusion(Frame)
 
+	-- 文本标签
 	wax.shared.Interface.New("TextLabel", {
 		BorderSizePixel = 0,
 		TextSize = 14,
@@ -99,11 +106,18 @@ local function InternalCreateNotificationObject(zindex, image, text)
 	return NotificationTemplate
 end
 
+--[[
+	显示一个通知
+	@param image string? 图标（可选）
+	@param text string 通知文本
+	@param internalTime number? 显示时长（默认 4.5 秒）
+	@param removeCallback function? 自定义移除逻辑（可选）
+]]
 local function toast(image, text, internalTime, removeCallback)
-	assert(Sonner.Wrapper, "Sonner has not been initialized")
-	assert(typeof(image) == "string" or image == nil, "Image must be a string or nil")
-	assert(typeof(text) == "string", "Text is required!")
-	assert(typeof(internalTime) == "number" or internalTime == nil, "Time must be a number or nil")
+	assert(Sonner.Wrapper, "Sonner 未初始化")
+	assert(typeof(image) == "string" or image == nil, "Image 必须是字符串或 nil")
+	assert(typeof(text) == "string", "必须提供 Text")
+	assert(typeof(internalTime) == "number" or internalTime == nil, "Time 必须是数字或 nil")
 
 	local time = internalTime or 4.5
 
@@ -117,6 +131,7 @@ local function toast(image, text, internalTime, removeCallback)
 	local ScaleMultiplier = 0.9
 	local RemovalQueue = {}
 
+	-- 调整已有通知的布局
 	for index, object in Sonner.Queue do
 		if object == Notif then
 			continue
@@ -124,7 +139,7 @@ local function toast(image, text, internalTime, removeCallback)
 
 		object.ZIndex = 500 - (#Sonner.Queue - index)
 
-		-- shift them down
+		-- 向下偏移并缩小
 		wax.shared.TweenService
 			:Create(object.UIScale, Sonner.TweenInfo, {
 				Scale = object.UIScale.Scale * ScaleMultiplier,
@@ -137,6 +152,7 @@ local function toast(image, text, internalTime, removeCallback)
 			})
 			:Play()
 
+		-- 如果通知超过 3 个，就强制移除旧的
 		if ((#Sonner.Queue - index) + 1) >= 4 then
 			wax.shared.Animations.FadeOut(object)
 			task.delay(0.5, function()
@@ -146,10 +162,12 @@ local function toast(image, text, internalTime, removeCallback)
 		end
 	end
 
+	-- 清理被移除的对象
 	for _, obj in RemovalQueue do
 		table.remove(Sonner.Queue, table.find(Sonner.Queue, obj))
 	end
 
+	-- 新通知弹出动画
 	wax.shared.TweenService
 		:Create(Notif, Sonner.TweenInfo, {
 			Position = UDim2.new(0.5, 0, 1, -20),
@@ -157,6 +175,7 @@ local function toast(image, text, internalTime, removeCallback)
 		:Play()
 	wax.shared.Animations.FadeIn(Notif)
 
+	-- 移除逻辑
 	if removeCallback then
 		task.spawn(removeCallback, Notif, time)
 	else
@@ -178,6 +197,7 @@ local function toast(image, text, internalTime, removeCallback)
 	end
 end
 
+-- 预设类型的通知
 function Sonner.info(text, internalTime)
 	toast("info", text, internalTime)
 end
@@ -198,6 +218,11 @@ function Sonner.toast(text, internalTime)
 	toast(nil, text, internalTime)
 end
 
+--[[
+	显示带有异步结果的通知（类似 promise）
+	@param func function 要执行的函数
+	@param options { loadingText, successText, errorText, time }
+]]
 function Sonner.promise(func, options)
 	local loadingText = options.loadingText or "Loading..."
 	local successText = options.successText or "Success!"
@@ -207,10 +232,10 @@ function Sonner.promise(func, options)
 	toast("loader-circle", loadingText, internalTime, function(notif, time)
 		local success, resultOrError = nil, nil
 
+		-- 旋转加载图标
 		local spinnerThread = task.spawn(function()
 			repeat
 				wax.shared.RunService.RenderStepped:Wait()
-
 				local icon = notif:FindFirstChild("ImageLabel")
 				if not icon then
 					continue
@@ -219,14 +244,13 @@ function Sonner.promise(func, options)
 			until success == false or resultOrError ~= nil
 		end)
 
-		success, resultOrError = pcall(func) -- yes mstudio45, your famous pcall is better (- deivid)
+		-- 执行异步函数
+		success, resultOrError = pcall(func)
 
 	   	task.spawn(function()
 			setthreadidentity(8)
-			
-			-- The thread identity is 8 when setting it on the parent thread (Sonner.promise), but it still lacks capabilities when running another child thread
-			-- Capabilities here should pass from a thread to another... Could be an upstream (executor) issue ?
-			
+
+			-- 移除加载图标
 			wax.shared.Animations.FadeOut(notif.ImageLabel, 0.15)
 			wax.shared.TweenService
 				:Create(notif.ImageLabel, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
@@ -240,6 +264,7 @@ function Sonner.promise(func, options)
 			end
 			notif.ImageLabel.Rotation = 0
 
+			-- 成功 / 失败消息
 			if success then
 				wax.shared.Icons.SetIcon(notif.ImageLabel, "check")
 				local message = (
@@ -262,6 +287,7 @@ function Sonner.promise(func, options)
 				)
 			end
 
+			-- 显示结果图标
 			wax.shared.Animations.FadeIn(notif.ImageLabel)
 			wax.shared.TweenService
 				:Create(notif.ImageLabel, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
@@ -269,6 +295,7 @@ function Sonner.promise(func, options)
 				})
 				:Play()
 
+			-- 延迟销毁
 			task.delay(time, function()
 				if not table.find(Sonner.Queue, notif) then
 					return
@@ -289,6 +316,10 @@ function Sonner.promise(func, options)
 	end)
 end
 
+--[[
+	显示自定义通知
+	@param options { image, text, time }
+]]
 function Sonner.rawtoast(options)
 	local image = options.image
 	local text = options.text or "No Text Provided"
@@ -297,6 +328,7 @@ function Sonner.rawtoast(options)
 	toast(image, text, internalTime)
 end
 
+-- 初始化，设置通知容器
 function Sonner.init(wrapper)
 	Sonner.Wrapper = wrapper
 end

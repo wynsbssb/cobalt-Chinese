@@ -13,9 +13,9 @@ local LogConnectionFunctions = {}
 local SignalMapping = setmetatable({}, { __mode = "kv" })
 
 --[[
-	Returns the calling line of the script that called the function via `debug.info`
+	返回调用函数的脚本所在的行号，使用 `debug.info`
 
-	@return number Returns the line number of the calling script.
+	@return number 返回调用脚本的行号
 ]]
 local function getcallingline()
 	for i = 4, 10 do
@@ -35,14 +35,14 @@ local function getcallingline()
 end
 
 --[[
-	Individually logs an incoming remote call.
+	单独记录一次接收到的远程调用。
 
-	@param Instance The instance that was called.
-	@param Method The method that was called (e.g., "OnClientEvent").
-	@param Function The function that was called, if applicable.
-	@param Info The information about the call, including arguments and origin. Can be nil.
-	@param ... The arguments passed from the server to the client.
-	@return boolean Returns true if the call was blocked, false otherwise.
+	@param Instance 被调用的实例
+	@param Method 被调用的方法 (例如 "OnClientEvent")
+	@param Function 被调用的函数，如果有的话
+	@param Info 关于调用的信息，包括参数和来源。可以为 nil
+	@param ... 从服务端传给客户端的参数
+	@return boolean 如果调用被拦截则返回 true，否则返回 false
 ]]
 local function LogRemote(
 	Instance: InstancesToHook,
@@ -84,11 +84,12 @@ local function LogRemote(
 end
 
 --[[
-	Creates a function that can be used to pass to `Connect` which will log all the incoming calls. It will additonally add the function to a ignore list (`LogConnectionFunctions`) to prevent unneccessary logging.
+	创建一个函数，用于传递给 `Connect`，它会记录所有进入的调用。  
+	同时会将该函数添加到忽略列表 (`LogConnectionFunctions`)，以避免不必要的重复记录。
 	
-	@param Instance The instance to log.
-	@param Method The method to log (e.g., "OnClientEvent").
-	@return function Returns a function that logs all calls to the given instance and method.
+	@param Instance 要记录的实例
+	@param Method 要记录的方法 (例如 "OnClientEvent")
+	@return function 返回一个函数，该函数会记录所有该实例和方法的调用
 ]]
 local function CreateConnectionFunction(Instance: InstancesToHook, Method: MethodsToHook)
 	local ConnectionFunction = function(...)
@@ -105,8 +106,8 @@ local function CreateConnectionFunction(Instance: InstancesToHook, Method: Metho
 			if Thread and getscriptfromthread then
 				Origin = getscriptfromthread(Thread)
 			elseif Function then
-				-- ts is unreliable because people could js set the script global to nil
-				-- if only debug.getinfo(Function).source or debug.info(Function, "s") returned an Instance...
+				-- ts（ThreadScript）不可靠，因为可能有人直接把全局 script 置为 nil
+				-- 如果 debug.getinfo(Function).source 或 debug.info(Function, "s") 能返回 Instance 就好了...
 
 				local Script = rawget(getfenv(Function), "script")
 				if typeof(Script) == "Instance" then
@@ -130,9 +131,9 @@ local function CreateConnectionFunction(Instance: InstancesToHook, Method: Metho
 end
 
 --[[
-	Handles setting up logging for the appropriate instances.
+	处理某个实例的日志挂钩设置
 
-	@param Instance The instance to handle.
+	@param Instance 要处理的实例
 ]]
 local function HandleInstance(Instance: any)
 	if not ClassesToHook[Instance.ClassName] or Instance == wax.shared.Communicator then
@@ -173,7 +174,7 @@ end
 
 wax.shared.Connect(game.DescendantAdded:Connect(HandleInstance))
 
--- getinstances() was unreliable and failed to find some instances... ts pmo bro..
+-- getinstances() 不可靠，漏掉了一些实例... ts 兄弟真坑
 local CategoryToSearch = { game:GetDescendants() }
 if wax.shared.ExecutorSupport["getnilinstances"].IsWorking then
 	table.insert(CategoryToSearch, getnilinstances())

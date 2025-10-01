@@ -1,18 +1,20 @@
 -- Logger
 -- ActualMasterOogway
--- December 8, 2024
+-- 2024年12月8日
 
 --[=[
-    A simple logging utility that writes messages to a file. Supports different log levels
-    and can be configured to overwrite or append to the log file.
+    一个简单的日志工具，可以将消息写入文件。
+    支持不同的日志等级，并可配置为覆盖或追加写入日志文件。
 
-    Log Format:  2024-12-04T15:28:31.131Z,0.131060,MyThread,Warning [FLog::RobloxStarter] Roblox stage ReadyForFlagFetch completed
-                 <timestamp>,<elapsed_time>,<thread_id>,<level> <message>
+    日志格式:  
+    2024-12-04T15:28:31.131Z,0.131060,MyThread,Warning [FLog::RobloxStarter] Roblox stage ReadyForFlagFetch completed
+    <时间戳>,<运行耗时>,<线程ID>,<日志等级> <日志消息>
 ]=]
 
 local Logger = {}
 Logger.__index = Logger
 
+-- 日志等级
 Logger.LOG_LEVELS = {
 	ERROR = 1,
 	WARNING = 2,
@@ -20,6 +22,7 @@ Logger.LOG_LEVELS = {
 	DEBUG = 4,
 }
 
+-- 日志等级对应的字符串
 local LOG_LEVEL_STRINGS = {
 	[Logger.LOG_LEVELS.ERROR] = "ERROR",
 	[Logger.LOG_LEVELS.WARNING] = "WARNING",
@@ -27,8 +30,10 @@ local LOG_LEVEL_STRINGS = {
 	[Logger.LOG_LEVELS.DEBUG] = "DEBUG",
 }
 
+-- 程序启动时间，用于计算运行耗时
 local startTime = tick()
 
+-- 递归创建目录
 local function createDirectoryRecursive(path)
 	local currentPath = ""
 	for part in path:gmatch("[^\\/]+") do
@@ -41,11 +46,11 @@ local function createDirectoryRecursive(path)
 end
 
 --[=[
-    Generates a unique file name for the log file. The file name is based on the current
-    job ID, ensuring it is unique per server instance but consistent across multiple
-    executions within the same server.
+    生成一个唯一的日志文件名。  
+    文件名基于当前 JobId，确保在每个服务器实例中唯一，
+    但在同一服务器的多次执行中保持一致。
 
-    @return string A unique file name for the log file.
+    @return string 唯一的日志文件名
 ]=]
 function Logger:GenerateFileName()
 	local JobIdNumber = game.JobId:gsub("%D", "")
@@ -55,12 +60,12 @@ function Logger:GenerateFileName()
 end
 
 --[=[
-    Creates a new Logger instance.
+    创建一个新的 Logger 实例。
 
-    @param logFilePath string The path to the log file.
-    @param logLevel number The minimum log level to write to the file. Defaults to INFO.
-    @param overwrite boolean Whether to overwrite the log file or append to it. Defaults to false (append).
-    @return Logger A new Logger instance.
+    @param logFilePath string 日志文件路径
+    @param logLevel number 最低记录日志的等级（默认为 INFO）
+    @param overwrite boolean 是否覆盖已有日志文件（默认为 false，即追加写入）
+    @return Logger 新的 Logger 实例
 ]=]
 function Logger.new(logFilePath: string, logLevel: number?, overwrite: boolean?)
 	local self = setmetatable({}, Logger)
@@ -71,28 +76,30 @@ function Logger.new(logFilePath: string, logLevel: number?, overwrite: boolean?)
 
 	local folderPath, fileName = logFilePath:match("(.*[\\/])(.*)")
 
+	-- 确保日志目录存在
 	if folderPath and not isfolder(folderPath) then
 		createDirectoryRecursive(folderPath)
 	end
 
+	-- 如果是覆盖模式，先清空日志文件
 	if self.overwrite then
 		local success, err = pcall(writefile, self.logFilePath, "")
 		if not success then
-			warn(debug.traceback(`Failed to clear log file: {self.logFilePath} - {err}`, 2))
+			warn(debug.traceback(`清空日志文件失败: {self.logFilePath} - {err}`, 2))
 		end
 	end
 
-	self:Info("Logger", "Logger initialized")
+	self:Info("Logger", "日志系统已初始化")
 
 	return self
 end
 
 --[=[
-    Logs a message to the file.
+    写入日志消息到文件。
 
-    @param level number The log level of the message.
-    @param threadId string The ID of the thread or source of the log message.
-    @param message string The message to log.
+    @param level number 日志等级
+    @param threadId string 线程或日志来源的 ID
+    @param message string 要记录的消息
 ]=]
 function Logger:Log(level: number, threadId: string, message: string)
 	if level <= self.logLevel then
@@ -105,46 +112,46 @@ function Logger:Log(level: number, threadId: string, message: string)
 
 		local success, err = pcall(appendfile, self.logFilePath, logMessage)
 		if not success then
-			warn(debug.traceback(`Failed to write to log file: {self.logFilePath} - {err}`, 2))
+			warn(debug.traceback(`写入日志文件失败: {self.logFilePath} - {err}`, 2))
 		end
 	end
 end
 
 --[=[
-    Logs a debug message.
+    写入 Debug 日志。
 
-    @param threadId string The ID of the thread or source of the log message.
-    @param message string The message to log.
+    @param threadId string 线程或日志来源 ID
+    @param message string 消息内容
 ]=]
 function Logger:Debug(threadId: string, message: string)
 	self:Log(Logger.LOG_LEVELS.DEBUG, threadId, message)
 end
 
 --[=[
-    Logs an info message.
+    写入 Info 日志。
 
-    @param threadId string The ID of the thread or source of the log message.
-    @param message string The message to log.
+    @param threadId string 线程或日志来源 ID
+    @param message string 消息内容
 ]=]
 function Logger:Info(threadId: string, message: string)
 	self:Log(Logger.LOG_LEVELS.INFO, threadId, message)
 end
 
 --[=[
-    Logs a warning message.
+    写入 Warning 日志。
 
-    @param threadId string The ID of the thread or source of the log message.
-    @param message string The message to log.
+    @param threadId string 线程或日志来源 ID
+    @param message string 消息内容
 ]=]
 function Logger:Warning(threadId: string, message: string)
 	self:Log(Logger.LOG_LEVELS.WARNING, threadId, message)
 end
 
 --[=[
-    Logs an error message.
+    写入 Error 日志。
 
-    @param threadId string The ID of the thread or source of the log message.
-    @param message string The message to log.
+    @param threadId string 线程或日志来源 ID
+    @param message string 消息内容
 ]=]
 function Logger:Error(threadId: string, message: string)
 	self:Log(Logger.LOG_LEVELS.ERROR, threadId, message)

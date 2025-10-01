@@ -12,9 +12,9 @@ local AllowedClassNames =
 	{ "RemoteEvent", "RemoteFunction", "UnreliableRemoteEvent", "BindableEvent", "BindableFunction" }
 
 --[[
-	Returns the calling function via `debug.info`
+	通过 `debug.info` 获取调用函数
 
-	@return `function | nil` The calling function or nil if not found.
+	@return `function | nil` 调用的函数，如果找不到则返回 nil。
 ]]
 local function getcallingfunction()
 	for i = 4, 10 do
@@ -34,9 +34,9 @@ local function getcallingfunction()
 end
 
 --[[
-	Returns the calling line of the script that called the function via `debug.info`
+	通过 `debug.info` 获取调用该函数的脚本所在的行号
 
-	@return number Returns the line number of the calling script.
+	@return number 返回调用该函数的脚本的行号。
 ]]
 local function getcallingline()
 	for i = 4, 10 do
@@ -55,7 +55,7 @@ local function getcallingline()
 	return debug.info(4, "l")
 end
 
--- metamethod hooks
+-- 元方法钩子（hook metamethods）
 wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 	game,
 	"__namecall",
@@ -63,6 +63,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 		local self = ...
 		local Method = getnamecallmethod()
 
+		-- 检查是否为受支持的远程对象（并且不是内部通信器）
 		if
 			typeof(self) == "Instance"
 			and table.find(AllowedClassNames, self.ClassName)
@@ -88,7 +89,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 				}
 				Log:Call(Info)
 
-				-- For RemoteFunction return value (ex: local result = RemoteFunction:InvokeServer())
+				-- 针对 RemoteFunction 的返回值进行处理（例如：local result = RemoteFunction:InvokeServer()）
 				if self.ClassName == "RemoteFunction" and (Method == "InvokeServer" or Method == "invokeServer") then
 					Log = wax.shared.Logs.Incoming[self]
 					if not Log then
@@ -122,7 +123,7 @@ wax.shared.NamecallHook = wax.shared.Hooking.HookMetaMethod(
 	end)
 )
 
--- function hooks
+-- 普通函数钩子（function hooks）
 local FunctionsToHook = {
 	Instance.new("BindableFunction").Invoke,
 	Instance.new("RemoteFunction").InvokeServer,
@@ -163,7 +164,7 @@ for _, Function in pairs(FunctionsToHook) do
 					}
 					Log:Call(Info)
 
-					-- For RemoteFunction return value (ex: local result = RemoteFunction:InvokeServer())
+					-- 针对 RemoteFunction 的返回值进行处理（例如：local result = RemoteFunction:InvokeServer()）
 					if
 						self.ClassName == "RemoteFunction"
 						and (Method == "InvokeServer" or Method == "invokeServer")

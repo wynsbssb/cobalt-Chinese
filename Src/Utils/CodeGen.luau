@@ -465,20 +465,20 @@ end
 function CodeGen:BuildFunctionInfo(CallInfo: CallInfo)
 	if CallInfo.IsActor and typeof(CallInfo.Function) == "table" then
 		return string.format(
-			[[<b>Function Address:</b> %s
-<b>Name:</b> %s
-<b>Source:</b> %s
-<b>Calling Line:</b> %s
-<b>From Actor:</b> true
+			[[<b>函数地址:</b> %s
+<b>名称:</b> %s
+<b>来源:</b> %s
+<b>调用行:</b> %s
+<b>来自 Actor:</b> true
 %s]],
 			CallInfo.Function.Address:match("0x%x+") or tostring(CallInfo.Function),
 			CallInfo.Function.Name ~= "" and CallInfo.Function.Name or "Anonymous",
 			CallInfo.Origin and self.GetFullPath(CallInfo.Origin, true) or wax.shared.ExecutorName,
 			tostring(CallInfo.Line),
 
-			CallInfo.Function.IsC and "<b>Closure Type</b>: C closure"
+			CallInfo.Function.IsC and "<b>闭包类型</b>: C 闭包"
 				or string.format(
-					"<b>Closure Type</b>: Luau closure\n<b>Constants:</b> %s\n<b>Upvalues:</b> %s\n<b>Protos:</b> %s",
+					"<b>闭包类型</b>: Luau 闭包\n<b>常量:</b> %s\n<b>上值:</b> %s\n<b>原型:</b> %s",
 					debug.getconstants and tostring(#CallInfo.Function.Constants) or "N/A",
 					debug.getupvalues and tostring(#CallInfo.Function.Upvalues) or "N/A",
 					debug.getprotos and tostring(#CallInfo.Function.Protos) or "N/A"
@@ -489,19 +489,19 @@ function CodeGen:BuildFunctionInfo(CallInfo: CallInfo)
 	local FunctionName = debug.info(CallInfo.Function, "n")
 
 	return string.format(
-		[[<b>Function Address:</b> %s
-<b>Name:</b> %s
-<b>Source:</b> %s
-<b>Calling Line:</b> %s
+		[[<b>函数地址:</b> %s
+<b>名称:</b> %s
+<b>来源:</b> %s
+<b>调用行:</b> %s
 %s]],
 		tostring(CallInfo.Function):match("0x%x+") or tostring(CallInfo.Function),
 		FunctionName ~= "" and FunctionName or "Anonymous",
 		CallInfo.Origin and self.GetFullPath(CallInfo.Origin, true) or wax.shared.ExecutorName,
 		tostring(CallInfo.Line),
 
-		iscclosure(CallInfo.Function) and "<b>Closure Type</b>: C closure"
+		iscclosure(CallInfo.Function) and "<b>闭包类型</b>: C 闭包"
 			or string.format(
-				"<b>Closure Type</b>: Luau closure\n<b>Constants:</b> %s\n<b>Upvalues:</b> %s\n<b>Protos:</b> %s",
+				"<b>闭包类型</b>: Luau 闭包\n<b>常量:</b> %s\n<b>上值:</b> %s\n<b>原型:</b> %s",
 				debug.getconstants and tostring(#debug.getconstants(CallInfo.Function)) or "N/A",
 				debug.getupvalues and tostring(#debug.getupvalues(CallInfo.Function)) or "N/A",
 				debug.getprotos and tostring(#debug.getprotos(CallInfo.Function)) or "N/A"

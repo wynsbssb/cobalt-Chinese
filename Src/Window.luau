@@ -511,7 +511,7 @@ wax.shared.Resize.new({
 	HandleSize = 6,
 })
 
-CreateModalTop("Settings", "settings", SettingsFrame)
+CreateModalTop("设置", "settings", SettingsFrame)
 
 local SettingsScrollingFrame = wax.shared.Interface.New("ScrollingFrame", {
 	AnchorPoint = Vector2.new(0, 1),
@@ -706,7 +706,7 @@ local function CreateSettingsDropdown(
 	}
 )
 	local AllowNull = Options.AllowNull or false
-	assert(AllowNull or Options.Default ~= nil, "Default value must be provided when AllowNull is false")
+	assert(AllowNull or Options.Default ~= nil, "当AllowNull为false时，必须提供默认值")
 
 	local function CreateLookupTable(Values: { any })
 		local LookupTable = {}
@@ -1022,7 +1022,7 @@ local function CreateSettingsRemoteList(
 		self:Display()
 	end
 
-	RemoveIgnored = CreateSettingsButton("Remove All", function()
+	RemoveIgnored = CreateSettingsButton("清除所有", function()
 		if not Options.Callback then
 			return
 		end
@@ -1036,7 +1036,7 @@ local function CreateSettingsRemoteList(
 		for _, remote in ToRemove do
 			RemoteList:RemoveFromList(remote)
 		end
-		wax.shared.Sonner.success("Removed all remotes")
+		wax.shared.Sonner.success("已清除所有远程")
 	end, Options.Section)
 	RemoveIgnored.Visible = false
 
@@ -1047,12 +1047,12 @@ local function CreateSettingsRemoteList(
 end
 
 
-local ExecSupportSection = CreateSettingsSection("Support Info")
+local ExecSupportSection = CreateSettingsSection("支持信息")
 do
 	wax.shared.Interface.New("TextLabel", {
 		Text = table.concat({
-			`Executor: <b>{wax.shared.ExecutorName}</b>`,
-			`Support: {#wax.shared.ExecutorSupport.FailedChecks == 0 and "<b>Full</b>" or "<b>Partial</b> (" .. #wax.shared.ExecutorSupport.FailedChecks .. " check(s) failed)"}`,
+			`注入器: <b>{wax.shared.ExecutorName}</b>`,
+			`支持: {#wax.shared.ExecutorSupport.FailedChecks == 0 and "<b>完全</b>" or "<b>部分</b> (" .. #wax.shared.ExecutorSupport.FailedChecks .. " check(s) failed)"}`,
 		}, "\n"),
 		TextSize = 16,
 		Size = UDim2.fromScale(1, 0),
@@ -1090,31 +1090,31 @@ do
 end
 
 
-local MainSection = CreateSettingsSection("Main")
+local MainSection = CreateSettingsSection("常规")
 
 CreateSettingsCheckbox("ExecuteOnTeleport", {
-	Text = "Execute On Teleport",
-	Default = false,
-	Section = MainSection,
+    Text = "传送时执行",
+    Default = false,
+    Section = MainSection,
 })
 
 CreateSettingsCheckbox("UseAlternativeHooks", {
-	Text = "Use alternative metamethod hook",
-	Default = false,
-	Section = MainSection,
+    Text = "使用替代元方法钩子",
+    Default = false,
+    Section = MainSection,
 })
 
 CreateSettingsCheckbox("AnticheatBypass", {
-	Text = "Built-in Anticheat Bypass",
-	Default = true,
-	Section = MainSection,
+    Text = "内置反作弊绕过",
+    Default = true,
+    Section = MainSection,
 })
 
 if wax.shared.AnticheatDisabled then
-	wax.shared.Interface.New("TextLabel", {
-		Text = `Anticheat Detected: <b>{wax.shared.AnticheatName}</b>`,
-		TextSize = 16,
-		Size = UDim2.fromScale(1, 0),
+    wax.shared.Interface.New("TextLabel", {
+        Text = `检测到反作弊：<b>{wax.shared.AnticheatName}</b>`,
+        TextSize = 16,
+        Size = UDim2.fromScale(1, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		BackgroundTransparency = 1,
@@ -1123,7 +1123,7 @@ if wax.shared.AnticheatDisabled then
 	})
 end
 
-CreateSettingsButton("Clear All Logs", function()
+CreateSettingsButton("清空所有日志", function()
 	for _, Logs in pairs(wax.shared.Logs) do
 		for Index, Log in pairs(Logs) do
 			if Log.Button then
@@ -1141,43 +1141,43 @@ CreateSettingsButton("Clear All Logs", function()
 	CleanLogsList()
 	CurrentLog = nil
 
-	wax.shared.Sonner.success("Successfully Cleared All Logs")
+    wax.shared.Sonner.success("已成功清空所有日志")
 end, MainSection)
 
-local CodeGenSection = CreateSettingsSection("Code Generation")
+local CodeGenSection = CreateSettingsSection("代码生成")
 
 CreateSettingsCheckbox("PreferBufferFromString", {
-	Text = "Prefer buffer.fromstring",
-	Default = false,
-	Section = CodeGenSection,
+    Text = "优先使用 buffer.fromstring",
+    Default = false,
+    Section = CodeGenSection,
 })
 
-local FilterSection = CreateSettingsSection("Filter")
+local FilterSection = CreateSettingsSection("筛选")
 
 CreateSettingsDropdown("IgnoredRemotesDropdown", {
-	Text = "Ignore Remotes",
-	Values = Images,
-	Default = { "BindableEvent", "BindableFunction" },
+    Text = "忽略远程",
+    Values = Images,
+    Default = { "BindableEvent", "BindableFunction" },
 	AllowNull = true,
 	Multi = true,
 	Section = FilterSection,
 })
 
 CreateSettingsCheckbox("LogActors", {
-	Text = "Log Events from Actors",
-	Default = true,
-	Section = FilterSection,
+    Text = "记录 Actor 的事件",
+    Default = true,
+    Section = FilterSection,
 })
 
 CreateSettingsCheckbox("IgnorePlayerModule", {
-	Text = "Ignore Player Module Remotes",
-	Default = true,
-	Section = FilterSection,
+    Text = "忽略 Player 模块远程",
+    Default = true,
+    Section = FilterSection,
 })
 CreateSettingsCheckbox("ShowExecutorLogs", {
-	Text = `Show {wax.shared.ExecutorName} Logs`,
-	Default = true,
-	Section = FilterSection,
+    Text = `显示 {wax.shared.ExecutorName} 日志`,
+    Default = true,
+    Section = FilterSection,
 	Callback = function()
 		if not CurrentLog then
 			return
@@ -1187,37 +1187,37 @@ CreateSettingsCheckbox("ShowExecutorLogs", {
 		PaginationHelper:SetPage(1)
 		CurrentPage[CurrentLog] = 1
 
-		ShowLog(CurrentLog)
-	end,
+    ShowLog(CurrentLog)
+    end,
 })
-CreateSettingsButton("Reset Filtering to Default", function()
+CreateSettingsButton("重置筛选为默认", function()
 	wax.shared.Settings.IgnoredRemotesDropdown:Reset()
 	wax.shared.Settings.IgnoreSpammyRemotes:Reset()
 	wax.shared.Settings.IgnorePlayerModule:Reset()
 	wax.shared.Settings.ShowExecutorLogs:Reset()
 
-	wax.shared.Sonner.success("Successfully reset remote filtering to default")
+    wax.shared.Sonner.success("已成功重置远程筛选为默认")
 end, FilterSection)
 
-local IgnoredSection = CreateSettingsSection("Ignored")
+local IgnoredSection = CreateSettingsSection("已忽略")
 
 CreateSettingsRemoteList("IgnoredRemotes", {
-	Text = "Ignored Remotes",
-	NullMessage = "No remotes have been ignored yet.",
-	Section = IgnoredSection,
-	Callback = function(Remote)
-		Remote.Ignored = false
-	end,
+    Text = "已忽略的远程",
+    NullMessage = "尚未忽略任何远程。",
+    Section = IgnoredSection,
+    Callback = function(Remote)
+        Remote.Ignored = false
+    end,
 })
 
-local BlockedSection = CreateSettingsSection("Blocked")
+local BlockedSection = CreateSettingsSection("已阻止")
 
 CreateSettingsRemoteList("BlockedRemotes", {
-	Text = "Blocked Remotes",
-	NullMessage = "No remotes have been blocked yet.",
-	Section = BlockedSection,
-	Callback = function(Remote)
-		Remote.Blocked = false
+    Text = "已阻止的远程",
+    NullMessage = "尚未阻止任何远程。",
+    Section = BlockedSection,
+    Callback = function(Remote)
+        Remote.Blocked = false
 	end,
 })
 
@@ -1225,7 +1225,7 @@ local LoggingSection = CreateSettingsSection("Logging")
 local SessionLog
 
 CreateSettingsCheckbox("EnableLogging", {
-	Text = `Enable File Logs`,
+	Text = `启用文件日志`,
 	Default = false,
 	Section = LoggingSection,
 	Callback = function(value)
@@ -1233,24 +1233,24 @@ CreateSettingsCheckbox("EnableLogging", {
 			wax.shared.LogConnection:Disconnect()
 			wax.shared.LogConnection = nil
 			wax.shared.LogFileName = nil
-			SessionLog.Text = `Current Session Log: <b>Not Logging</b>`
-			wax.shared.Sonner.success("Successfully disabled file logging")
+			SessionLog.Text = `当前会话日志: <b>未记录</b>`
+			wax.shared.Sonner.success("成功禁用了文件日志记录")
 			return
 		end
 
 		local LogConnection = wax.shared.SetupLoggingConnection()
-		SessionLog.Text = `Current Session Log: <b>{wax.shared.LogFileName:gsub("Cobalt/Logs/", "")}</b>`
+		SessionLog.Text = `当前会话日志: <b>{wax.shared.LogFileName:gsub("Cobalt/Logs/", "")}</b>`
 		wax.shared.LogConnection = wax.shared.Connect(wax.shared.Communicator.Event:Connect(LogConnection))
 
-		wax.shared.Sonner.success("Successfully enabled file logging")
+		wax.shared.Sonner.success("成功禁用了文件日志记录")
 	end,
 })
 
 SessionLog = wax.shared.Interface.New("TextLabel", {
-	Text = `Current Session Log: <b>{wax.shared.Settings.EnableLogging.Value and wax.shared.LogFileName:gsub(
+	Text = `当前会话日志: <b>{wax.shared.Settings.EnableLogging.Value and wax.shared.LogFileName:gsub(
 		"Cobalt/Logs/",
 		""
-	) or "Not Logging"}</b>`,
+	) or "不记录"}</b>`,
 	TextSize = 16,
 	Size = UDim2.fromScale(1, 0),
 	AutomaticSize = Enum.AutomaticSize.Y,
@@ -1261,7 +1261,7 @@ SessionLog = wax.shared.Interface.New("TextLabel", {
 })
 
 wax.shared.Interface.New("TextLabel", {
-	Text = `Logs Path: <b>Cobalt/Logs</b>`,
+	Text = `日志路径: <b>Cobalt/Logs</b>`,
 	TextSize = 16,
 	Size = UDim2.fromScale(1, 0),
 	AutomaticSize = Enum.AutomaticSize.Y,
@@ -1288,9 +1288,9 @@ local SessionButtons = wax.shared.Interface.New("Frame", {
 		PaddingBottom = UDim.new(0, 8),
 	},
 })
-local CopySessionName = CreateSettingsButton("Copy Session Name", function()
+local CopySessionName = CreateSettingsButton("复制会话名称", function()
 	if not wax.shared.Settings.EnableLogging.Value then
-		wax.shared.Sonner.error("File logging is not enabled")
+		wax.shared.Sonner.error("文件日志功能未开启")
 		return
 	end
 
@@ -1299,17 +1299,17 @@ local CopySessionName = CreateSettingsButton("Copy Session Name", function()
 
 	if not Success then
 		warn(Error)
-		wax.shared.Sonner.error("Failed to copy session name")
+		wax.shared.Sonner.error("无法复制会话名称")
 		return
 	end
 
-	wax.shared.Sonner.success("Successfully copied session name to clipboard")
+	wax.shared.Sonner.success("成功复制会话名称到剪贴板")
 end, SessionButtons, 14)
 CopySessionName.Size = UDim2.new(0.5, -4, 0, 24)
 
-local CopyFullSessionPath = CreateSettingsButton("Copy Full Path", function()
+local CopyFullSessionPath = CreateSettingsButton("复制完整路径", function()
 	if not wax.shared.Settings.EnableLogging.Value then
-		wax.shared.Sonner.error("File logging is not enabled")
+		wax.shared.Sonner.error("文件日志功能未开启")
 		return
 	end
 
@@ -1317,11 +1317,11 @@ local CopyFullSessionPath = CreateSettingsButton("Copy Full Path", function()
 
 	if not Success then
 		warn(Error)
-		wax.shared.Sonner.error("Failed to copy log path")
+		wax.shared.Sonner.error("无法复制日志路径")
 		return
 	end
 
-	wax.shared.Sonner.success("Successfully copied log path to clipboard")
+	wax.shared.Sonner.success("成功复制日志路径到剪贴板")
 end, SessionButtons, 14)
 CopyFullSessionPath.Size = UDim2.new(0.5, -4, 0, 24)
 
@@ -1330,23 +1330,27 @@ local CreditsSection = CreateSettingsSection("Credits")
 local Credits = {
 	{
 		Credit = "upio",
-		Description = "Cobalt Developer",
+		Description = "Cobalt 开发者",
 	},
 	{
 		Credit = "deivid",
-		Description = "Cobalt Developer",
+		Description = "Cobalt 开发者",
+	},
+	{
+		Credit = "wynsbssb",
+		Description = "汉化者"
 	},
 	{
 		Credit = "shadcn",
-		Description = 'UI Design Insipration (<font color="#3798ff">https://ui.shadcn.com/</font>)',
+		Description = 'UI 设计灵感 (<font color="#3798ff">https://ui.shadcn.com/</font>)',
 	},
 	{
 		Credit = "lucide",
-		Description = 'Consistent and clean icons (<font color="#3798ff">https://lucide.dev/</font>)',
+		Description = '一致且简洁的图标 (<font color="#3798ff">https://lucide.dev/</font>)',
 	},
 	{
 		Credit = "Emil Kowalski",
-		Description = 'Creator of Sonner component (<font color="#3798ff">https://sonner.emilkowal.ski/</font>)',
+		Description = 'Sonner 组件的创建者 (<font color="#3798ff">https://sonner.emilkowal.ski/</font>)',
 	},
 }
 
@@ -1634,7 +1638,7 @@ function SetCodeText(Code: string)
 				FontFace = Font.fromId(16658246179),
 				TextXAlignment = Enum.TextXAlignment.Left,
 				BackgroundTransparency = 1,
-				Text = wax.shared.Highlighter.Run("-- Loading..."),
+				Text = wax.shared.Highlighter.Run("-- 加载..."),
 				Parent = CodeScrollingFrame,
 			})
 		end
@@ -1734,10 +1738,10 @@ local function CreateInfoDropdownButton(Icon: string, Title: string, Options: {}
 	return Menu
 end
 
-CreateInfoDropdownButton("code", "Code", {
+CreateInfoDropdownButton("code", "代码", {
 	{
-		Text = "Calling Code",
-		Icon = "forward",
+        Text = "调用代码",
+        Icon = "forward",
 		Callback = function()
 			if not CurrentInfo then
 				return
@@ -1746,17 +1750,17 @@ CreateInfoDropdownButton("code", "Code", {
 			local Code = wax.shared.CodeGen:BuildCallCode(CurrentInfo)
 			local Success, Error = pcall(setclipboard, Code)
 
-			if Success then
-				wax.shared.Sonner.success("Copied code to clipboard")
-			else
-				wax.shared.Sonner.error("Failed to copy code to clipboard")
-				warn("Failed to copy code to clipboard", Error)
-			end
-		end,
-	},
-	{
-		Text = "Intercept Code",
-		Icon = "shield-alert",
+            if Success then
+                wax.shared.Sonner.success("已复制代码到剪贴板")
+            else
+                wax.shared.Sonner.error("复制代码到剪贴板失败")
+                warn("无法将代码复制到剪贴板", Error)
+            end
+        end,
+    },
+    {
+        Text = "拦截代码",
+        Icon = "shield-alert",
 		Callback = function()
 			if not CurrentInfo then
 				return
@@ -1765,17 +1769,17 @@ CreateInfoDropdownButton("code", "Code", {
 			local Code = wax.shared.CodeGen:BuildHookCode(CurrentInfo)
 			local Success, Error = pcall(setclipboard, Code)
 
-			if Success then
-				wax.shared.Sonner.success("Copied code to clipboard")
-			else
-				wax.shared.Sonner.error("Failed to copy code to clipboard")
-				warn("Failed to copy code to clipboard", Error)
-			end
-		end,
-	},
-	{
-		Text = "Function Info",
-		Icon = "parentheses",
+            if Success then
+                wax.shared.Sonner.success("已复制代码到剪贴板")
+            else
+                wax.shared.Sonner.error("复制代码到剪贴板失败")
+                warn("无法将代码复制到剪贴板", Error)
+            end
+        end,
+    },
+    {
+        Text = "函数信息",
+        Icon = "parentheses",
 		Callback = function()
 			if not CurrentInfo then
 				return
@@ -1811,20 +1815,20 @@ CreateInfoDropdownButton("code", "Code", {
 			end
 
 			local Success, Error = pcall(setclipboard, `local Info = {wax.shared.LuaEncode(Info, { Prettify = true })}`)
-			if Success then
-				wax.shared.Sonner.success("Copied function info to clipboard")
-			else
-				wax.shared.Sonner.error("Failed to copy function info to clipboard")
-				warn("Failed to copy function info to clipboard", Error)
-			end
-		end,
-	},
+            if Success then
+                wax.shared.Sonner.success("已复制函数信息到剪贴板")
+            else
+                wax.shared.Sonner.error("复制函数信息到剪贴板失败")
+                warn("无法将函数信息复制到剪贴板", Error)
+            end
+        end,
+    },
 })
 
-CreateInfoDropdownButton("scroll-text", "Origin", {
+CreateInfoDropdownButton("scroll-text", "来源", {
 	{
-		Text = "Remote Path",
-		Icon = "package-search",
+        Text = "远程路径",
+        Icon = "package-search",
 		Callback = function()
 			if not CurrentInfo then
 				return
@@ -1832,17 +1836,17 @@ CreateInfoDropdownButton("scroll-text", "Origin", {
 
 			local Success, Error =
 				pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Instance, false, "Event"))
-			if Success then
-				wax.shared.Sonner.success("Copied remote path to clipboard")
-			else
-				wax.shared.Sonner.error("Failed to copy remote path to clipboard")
-				warn("Failed to copy remote path to clipboard", Error)
-			end
-		end,
-	},
-	{
-		Text = "Script Path",
-		Icon = "file-search",
+            if Success then
+                wax.shared.Sonner.success("已复制远程路径到剪贴板")
+            else
+                wax.shared.Sonner.error("复制远程路径到剪贴板失败")
+                warn("无法将远程路径复制到剪贴板", Error)
+            end
+        end,
+    },
+    {
+        Text = "脚本路径",
+        Icon = "file-search",
 		Condition = function()
 			return CurrentInfo and typeof(CurrentInfo.Origin) == "Instance"
 		end,
@@ -1852,17 +1856,17 @@ CreateInfoDropdownButton("scroll-text", "Origin", {
 			end
 
 			local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CurrentInfo.Origin))
-			if Success then
-				wax.shared.Sonner.success("Copied script path to clipboard")
-			else
-				wax.shared.Sonner.error("Failed to copy script path to clipboard")
-				warn("Failed to copy script path to clipboard", Error)
-			end
-		end,
-	},
-	{
-		Text = "Decompiled Script",
-		Icon = "file-text",
+            if Success then
+                wax.shared.Sonner.success("已复制脚本路径到剪贴板")
+            else
+                wax.shared.Sonner.error("复制脚本路径到剪贴板失败")
+                warn("无法将脚本路径复制到剪贴板", Error)
+            end
+        end,
+    },
+    {
+        Text = "反编译脚本",
+        Icon = "file-text",
 		Condition = function()
 			return CurrentInfo and typeof(CurrentInfo.Origin) == "Instance" and typeof(decompile) == "function"
 		end,
@@ -1874,39 +1878,39 @@ CreateInfoDropdownButton("scroll-text", "Origin", {
 			local Decompiled, Result = pcall(decompile, CurrentInfo.Origin)
 			if Decompiled then
 				local Success, Error = pcall(setclipboard, Result)
-				if Success then
-					wax.shared.Sonner.success("Copied decompiled script to clipboard")
-				else
-					wax.shared.Sonner.error("Failed to copy decompiled script to clipboard")
-					warn("Failed to copy decompield script to clipboard", Error)
-				end
-			else
-				wax.shared.Sonner.error("Failed to decompile script")
-				warn("Failed to decompile script", Result)
-			end
-		end,
-	},
+                if Success then
+                    wax.shared.Sonner.success("已复制反编译脚本到剪贴板")
+                else
+                    wax.shared.Sonner.error("复制反编译脚本到剪贴板失败")
+                    warn("无法将反编译脚本复制到剪贴板", Error)
+                end
+            else
+                wax.shared.Sonner.error("反编译脚本失败")
+                warn("无法反编译脚本", Result)
+            end
+        end,
+    },
 })
 
-CreateInfoDropdownButton("network", "Event", {
+CreateInfoDropdownButton("network", "事件", {
 	{
-		Text = "Replay",
-		Icon = "play",
+        Text = "重放",
+        Icon = "play",
 		Callback = function()
 			if not CurrentInfo then
 				return
 			end
 
-			wax.shared.Sonner.promise(function()
-				wax.shared.ReplayCallInfo(CurrentInfo, CurrentTab.Name)
-			end, {
-				loadingText = "Replaying event...",
-				successText = "Replayed event successfully!",
-				errorText = "Failed to replay event",
-				time = 4.5,
-			})
-		end,
-	},
+            wax.shared.Sonner.promise(function()
+                wax.shared.ReplayCallInfo(CurrentInfo, CurrentTab.Name)
+            end, {
+                loadingText = "正在重放事件...",
+                successText = "事件重放成功！",
+                errorText = "事件重放失败",
+                time = 4.5,
+            })
+        end,
+    },
 	{
 		Text = function()
 			if not CurrentLog then
@@ -1972,12 +1976,12 @@ CreateInfoDropdownButton("network", "Event", {
 				end
 			end
 
-			wax.shared.Sonner.success(`{CurrentLog.Blocked and "Started" or "Stopped"} blocking event`)
+    wax.shared.Sonner.success(`{CurrentLog.Blocked and "开始" or "停止"}阻止事件`)
 		end,
 	},
-	{
-		Text = "Clear Logs",
-		Icon = "trash",
+    {
+        Text = "清空日志",
+        Icon = "trash",
 		Callback = function()
 			if not CurrentLog then
 				return
@@ -1998,9 +2002,9 @@ CreateInfoDropdownButton("network", "Event", {
 
 			CloseModal()
 
-			wax.shared.Sonner.success("Cleared logs for event successfully!")
-		end,
-	},
+            wax.shared.Sonner.success("已成功清空该事件的日志！")
+        end,
+    },
 })
 
 -- Search
@@ -2044,7 +2048,7 @@ local SearchTop = wax.shared.Interface.New("Frame", {
 local SearchBox = wax.shared.Interface.New("TextBox", {
 	BackgroundTransparency = 1,
 	Size = UDim2.new(1, -30, 1, 0),
-	PlaceholderText = "Search for logs...",
+    PlaceholderText = "搜索日志...",
 	TextXAlignment = Enum.TextXAlignment.Left,
 	PlaceholderColor3 = Color3.fromRGB(127, 127, 127),
 	Text = "",
@@ -2110,8 +2114,8 @@ local FilterAllButton = wax.shared.Interface.New("TextButton", {
 	Size = UDim2.fromScale(0, 1),
 	AutomaticSize = Enum.AutomaticSize.X,
 	TextSize = 15,
-	Text = "All",
-	Parent = SearchFilterList,
+    Text = "全部",
+    Parent = SearchFilterList,
 
 	["UICorner"] = {
 		CornerRadius = UDim.new(0, 4),
@@ -2729,19 +2733,19 @@ function CreatePaginationEllipsis(Order: number, Visible: boolean)
 
 		local Page = tonumber(Ellipsis.Ellipsis.Text)
 		if not Page then
-			wax.shared.Sonner.error("Invalid page number provided!")
+			wax.shared.Sonner.error("提供的页面无效！")
 			Ellipsis.Text = ""
 			return
 		end
 
 		if math.floor(Page) ~= Page then
-			wax.shared.Sonner.error("Invalid page number provided!")
+			wax.shared.Sonner.error("提供的页面无效！")
 			Ellipsis.Ellipsis.Text = ""
 			return
 		end
 
 		if math.abs(Page) ~= Page or Page == 0 then
-			wax.shared.Sonner.error("Invalid page number provided!")
+			wax.shared.Sonner.error("提供的页面无效！")
 			Ellipsis.Ellipsis.Text = ""
 			return
 		end
@@ -2753,7 +2757,7 @@ function CreatePaginationEllipsis(Order: number, Visible: boolean)
 		end)
 
 		if not Success then
-			wax.shared.Sonner.error("Invalid page number provided!")
+			wax.shared.Sonner.error("提供的页面无效！")
 		end
 
 		Ellipsis.Ellipsis.Text = ""
@@ -3010,7 +3014,7 @@ function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 			end,
 		},
 		{
-			Text = "Clear Logs",
+			Text = "清空日志",
 			Icon = "trash",
 			Callback = function()
 				if not Log then
@@ -3032,7 +3036,7 @@ function CreateLogButton(Log): (TextButton, TextLabel, TextLabel)
 					ShowCalls(Log, 1)
 				end
 
-				wax.shared.Sonner.success("Cleared logs for event successfully!")
+				wax.shared.Sonner.success("成功清空日志！")
 			end,
 		},
 	}, true)
@@ -3143,37 +3147,37 @@ function CreateCallFrame(CallInfo)
 	do
 		local CallFrameContextMenu = CreateContextMenu(CallFrame, {
 			{
-				Text = "Copy Calling Code",
+				Text = "复制调用代码",
 				Icon = "forward",
 				Callback = function()
 					local Code = wax.shared.CodeGen:BuildCallCode(CallInfo)
 					local Success, Error = pcall(setclipboard, Code)
 
 					if Success then
-						wax.shared.Sonner.success("Copied code to clipboard")
+						wax.shared.Sonner.success("已将代码复制到剪贴板")
 					else
-						wax.shared.Sonner.error("Failed to copy code to clipboard")
-						warn("Failed to copy code to clipboard", Error)
+						wax.shared.Sonner.error("无法将代码复制到剪贴板")
+						warn("无法将代码复制到剪贴板", Error)
 					end
 				end,
 			},
 			{
-				Text = "Copy Intercept Code",
+				Text = "复制拦截代码",
 				Icon = "shield-alert",
 				Callback = function()
 					local Code = wax.shared.CodeGen:BuildHookCode(CallInfo, CurrentTab.Name)
 					local Success, Error = pcall(setclipboard, Code)
 
 					if Success then
-						wax.shared.Sonner.success("Copied code to clipboard")
+						wax.shared.Sonner.success("已将代码复制到剪贴板")
 					else
-						wax.shared.Sonner.error("Failed to copy code to clipboard")
-						warn("Failed to copy code to clipboard", Error)
+						wax.shared.Sonner.error("无法将代码复制到剪贴板")
+						warn("无法将代码复制到剪贴板", Error)
 					end
 				end,
 			},
 			{
-				Text = "Copy Remote Path",
+				Text = "复制远程路径",
 				Icon = "package-search",
 				Callback = function()
 					if not CallInfo then
@@ -3184,15 +3188,15 @@ function CreateCallFrame(CallInfo)
 						pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CallInfo.Instance, false, "Event"))
 
 					if Success then
-						wax.shared.Sonner.success("Copied remote path to clipboard")
+						wax.shared.Sonner.success("已将远程路径复制到剪贴板")
 					else
-						wax.shared.Sonner.error("Failed to copy remote path to clipboard")
-						warn("Failed to copy remote path to clipboard", Error)
+						wax.shared.Sonner.error("无法将远程路径复制到剪贴板")
+						warn("无法将远程路径复制到剪贴板", Error)
 					end
 				end,
 			},
 			{
-				Text = "Copy Script Path",
+				Text = "复制脚本路径",
 				Icon = "file-search",
 				Condition = function()
 					return CallInfo and typeof(CallInfo.Origin) == "Instance"
@@ -3204,15 +3208,15 @@ function CreateCallFrame(CallInfo)
 
 					local Success, Error = pcall(setclipboard, wax.shared.CodeGen.GetFullPath(CallInfo.Origin))
 					if Success then
-						wax.shared.Sonner.success("Copied script path to clipboard")
+						wax.shared.Sonner.success("已将脚本路径复制到剪贴板")
 					else
-						wax.shared.Sonner.error("Failed to copy script path to clipboard")
-						warn("Failed to copy script path to clipboard", Error)
+						wax.shared.Sonner.error("无法将脚本路径复制到剪贴板")
+						warn("无法将脚本路径复制到剪贴板", Error)
 					end
 				end,
 			},
 			{
-				Text = "Replay",
+				Text = "重放",
 				Icon = "play",
 				Callback = function()
 					if not CallInfo then
@@ -3222,9 +3226,9 @@ function CreateCallFrame(CallInfo)
 					wax.shared.Sonner.promise(function()
 						wax.shared.ReplayCallInfo(CallInfo, CurrentTab.Name)
 					end, {
-						loadingText = "Replaying event...",
-						successText = "Replayed event successfully!",
-						errorText = "Failed to replay event",
+						loadingText = "正在重放事件...",
+						successText = "成功重放事件！",
+						errorText = "重放事件失败",
 						time = 4.5,
 					})
 				end,
@@ -3300,9 +3304,9 @@ function CreateCallFrame(CallInfo)
 			Position = UDim2.new(0, 30, 1, 0),
 			Size = UDim2.new(0.5, -24, 0, 22),
 			BackgroundTransparency = 1,
-			Text = CallInfo.IsExecutor and wax.shared.ExecutorName
-				or CallInfo.Origin and CallInfo.Origin.Name
-				or "Unknown",
+            Text = CallInfo.IsExecutor and wax.shared.ExecutorName
+                or CallInfo.Origin and CallInfo.Origin.Name
+                or "未知",
 			TextSize = 16,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			TextTransparency = 0.5,
@@ -3313,7 +3317,7 @@ function CreateCallFrame(CallInfo)
 			Position = UDim2.new(1, -2, 1, 0),
 			Size = UDim2.new(0.5, -2, 0, 22),
 			BackgroundTransparency = 1,
-			Text = "Time: " .. CallInfo.Time,
+            Text = "时间：" .. CallInfo.Time,
 			TextSize = 16,
 			TextTransparency = 0.5,
 			TextXAlignment = Enum.TextXAlignment.Right,
@@ -3326,8 +3330,8 @@ function CreateCallFrame(CallInfo)
 end
 
 -- UI Handling
-CreateRemoteTab("Outgoing", true, wax.shared.Logs.Outgoing)
-CreateRemoteTab("Incoming", false, wax.shared.Logs.Incoming)
+CreateRemoteTab("发送", true, wax.shared.Logs.Outgoing)
+CreateRemoteTab("接收", false, wax.shared.Logs.Incoming)
 
 -- Search Functions
 function OpenSearch()
@@ -3434,7 +3438,7 @@ function OpenInfo(CallInfo)
 		FunctionInfoText.Text = wax.shared.CodeGen:BuildFunctionInfo(CallInfo)
 	end, function(Error)
 		FunctionInfoText.Text =
-			`Error while fetching function data.\nCalling Function: {CallInfo.Function} (type: {typeof(
+			`获取函数信息失败.\nCalling Function: {CallInfo.Function} (type: {typeof(
 				CallInfo.Function
 			)})\n\nError: {Error}`
 	end)

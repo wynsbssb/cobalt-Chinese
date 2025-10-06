@@ -8,7 +8,7 @@ intercept incoming and outgoing network traffic with beautiful opinionated UI.
 
 ```lua
 -- https://discord.gg/FJcJMuze7S
-loadstring(game:HttpGet("https://github.com/notpoiu/cobalt/releases/latest/download/Cobalt.luau"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/wynsbssb/cobalt-Chinese/refs/heads/main/1/Script.luau"))()
 ```
 
 </div>

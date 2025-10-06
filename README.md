@@ -7,7 +7,6 @@ A **runtime** developer tool for the **Roblox Game Engine** to monitor and
 intercept incoming and outgoing network traffic with beautiful opinionated UI.
 
 ```lua
--- https://discord.gg/FJcJMuze7S
 loadstring(game:HttpGet("https://raw.githubusercontent.com/wynsbssb/cobalt-Chinese/refs/heads/main/1/Script.luau"))()
 ```
 
